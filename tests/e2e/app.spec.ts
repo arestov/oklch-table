@@ -38,6 +38,15 @@ test("adds consecutive colors and preserves OKLCH serialization", async ({ page 
   await expect(page.getByRole("textbox", { name: "CSS color for row 2" })).toHaveValue("#ffffff");
 });
 
+test("compares two accent colors through the text-contrast details", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "oklch(0.5 0.15 260)");
+  await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
+  await addColor(page, "oklch(0.6 0.15 260)");
+  await page.getByRole("button", { name: "Text contrast for row 1" }).click();
+  await expect(page.getByText("Color 2", { exact: false })).toBeVisible();
+});
+
 test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
   page,
 }) => {
