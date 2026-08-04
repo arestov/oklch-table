@@ -47,3 +47,18 @@ suite. It launches NVDA through Guidepup and therefore requires a Windows
 machine with NVDA installed and the Guidepup environment prepared. It is not
 part of `pnpm verify`; a missing OS-level screen-reader setup must not make the
 ordinary local hook unstable.
+
+Before native acceptance, run the Guidepup setup commands in an interactive
+Windows session with permission to create its local assets:
+
+```text
+npx @guidepup/setup setup
+npx @guidepup/setup install
+```
+
+Native status at the latest verification: **blocked externally**. NVDA is
+installed, but Guidepup could not create its required
+`AppData\\Local\\guidepup` preferences/assets under the sandboxed session. The
+screen-reader test therefore remains a failing acceptance gate until those
+OS-level prerequisites are provisioned; it is not counted as automated pass
+coverage in the matrix.
