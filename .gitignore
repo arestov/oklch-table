@@ -82,6 +82,8 @@ out
 .nuxt
 dist
 .output
+playwright-report/
+test-results/
 
 # Gatsby files
 .cache/
