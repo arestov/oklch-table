@@ -1,5 +1,6 @@
 <script lang="ts">
 import ColorRow from "./components/ColorRow.svelte";
+import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import { announcementStore, visibleFeedbackStore } from "./core/feedback/index.ts";
 import {
   addColorFromDraft,
@@ -27,6 +28,8 @@ const onDraftKeydown = (event: KeyboardEvent) => {
 <main id="workspace" aria-labelledby="page-title">
   <h1 id="page-title">Accessible OKLCH color workspace</h1>
   <p class="intro">Edit a color table with immediate, non-visual feedback.</p>
+  <button type="button" popovertarget="shortcut-help">Keyboard shortcuts</button>
+  <ShortcutHelpPopover />
   <div class="table-shell">
     <table>
       <caption>
