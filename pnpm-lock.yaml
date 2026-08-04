@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      nanoid:
+        specifier: ^6.0.1
+        version: 6.0.1
       nanostores:
         specifier: ^1.0.0
         version: 1.4.2
@@ -1000,6 +1003,11 @@ packages:
   nanoid@3.3.16:
     resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
+  nanoid@6.0.1:
+    resolution: {integrity: sha512-3wVS3i51pE2pi1k5FFL/95BGfVS0kSsvDVuGXHOtxox/TywUmtgq+3qiTOTbs9J7KfHaXPiN171k/A6dBnaXFw==}
+    engines: {node: ^22 || ^24 || >=26}
     hasBin: true
 
   nanospinner@1.2.2:
@@ -2085,6 +2093,8 @@ snapshots:
   nano-staged@1.0.2: {}
 
   nanoid@3.3.16: {}
+
+  nanoid@6.0.1: {}
 
   nanospinner@1.2.2:
     dependencies:

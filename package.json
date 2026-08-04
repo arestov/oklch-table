@@ -29,6 +29,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
+    "nanoid": "^6.0.1",
     "nanostores": "^1.0.0",
     "svelte": "^5.0.0"
   },

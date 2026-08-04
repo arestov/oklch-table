@@ -9,5 +9,5 @@
     "target": "ES2024",
     "verbatimModuleSyntax": true
   },
-  "include": ["src/domain/**/*.ts", "src/feedback/**/*.ts", "src/state/**/*.ts"]
+  "include": ["src/core/**/*.ts", "src/domain/**/*.ts", "src/feedback/**/*.ts", "src/state/**/*.ts"]
 }
