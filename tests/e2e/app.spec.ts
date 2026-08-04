@@ -78,3 +78,23 @@ test("cancels and rejects unavailable column jumps without moving draft focus", 
   await expect(draft).toBeFocused();
   await expect(page.getByRole("alert")).toContainText("unavailable until a valid color is entered");
 });
+
+test("keeps each opened popover accessible and restores its trigger focus", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const checks = page.getByRole("button", { name: "Checks for row 1" });
+  await checks.click();
+  await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
+  expect(
+    (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze())
+      .violations,
+  ).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(checks).toBeFocused();
+
+  const help = page.getByRole("button", { name: "Keyboard shortcuts" });
+  await help.click();
+  await expect(page.getByRole("heading", { name: "Column shortcuts" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(help).toBeFocused();
+});
