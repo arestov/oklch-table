@@ -1,3 +1,4 @@
 {
-  "*.{js,mjs,cjs,ts,mts,cts,svelte,json,jsonc,css}": "biome check --write --no-errors-on-unmatched"
+  "*.css": ["biome check --write --no-errors-on-unmatched", "stylelint --fix"],
+  "*.{js,mjs,cjs,ts,mts,cts,svelte,json,jsonc}": "biome check --write --no-errors-on-unmatched"
 }
