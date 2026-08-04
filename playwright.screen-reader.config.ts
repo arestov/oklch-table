@@ -7,14 +7,10 @@ export default defineConfig({
   timeout: 120_000,
   fullyParallel: false,
   reporter: "list",
+  globalSetup: "./tests/screen-reader/server.ts",
   use: {
     baseURL: "http://127.0.0.1:4174",
     ...devices["Desktop Chrome"],
     headless: false,
-  },
-  webServer: {
-    command: "node ./node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4174",
-    port: 4174,
-    reuseExistingServer: false,
   },
 });
