@@ -53,6 +53,10 @@ const finish = (reason: "enter" | "blur") => {
 };
 const duplicate = async () => {
   const result = duplicateColor(colorId);
+  if (result.status === "invalid") {
+    announceAlert(result.message);
+    return;
+  }
   if (result.status === "accepted" && result.transaction.cause.type === "duplicate-color")
     await onAction({
       type: "duplicate",
@@ -66,8 +70,16 @@ const remove = async () => {
   const index = order.indexOf(colorId);
   const focusColorId = order[index + 1] ?? order[index - 1];
   const result = deleteColor(colorId);
+  if (result.status === "invalid") {
+    announceAlert(result.message);
+    return;
+  }
   if (result.status === "accepted")
     await onAction({ type: "delete", row: currentRow, focusColorId });
+};
+const setBackground = (enabled: boolean) => {
+  const result = setContrastBackground(colorId, enabled);
+  if (result.status === "invalid") announceAlert(result.message);
 };
 </script>
 
@@ -132,7 +144,7 @@ const remove = async () => {
       type="checkbox"
       checked={row.background}
       aria-label={`Contrast background for row ${row.row}`}
-      onchange={(event) => setContrastBackground(colorId, event.currentTarget.checked)}
+      onchange={(event) => setBackground(event.currentTarget.checked)}
     >
   </td>
   <td>
