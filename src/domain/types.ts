@@ -107,6 +107,11 @@ export interface SemanticSnapshot {
     colorVision: Record<ColorVisionKey, SemanticCvd>;
   };
 }
+/** The domain projection only needs an accepted document and its analysis. */
+export interface SemanticInput {
+  document: DocumentTree;
+  analysis: AnalysisTree;
+}
 export interface ValueChange<T> {
   before: T;
   after: T;

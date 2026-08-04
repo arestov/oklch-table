@@ -23,7 +23,7 @@ const analysis = analyze(document);
 const initial: AcceptedRevision<AnalysisTree, SemanticSnapshot> = {
   document,
   analysis,
-  semantic: createSemanticSnapshot({ status: "valid", document, analysis }),
+  semantic: createSemanticSnapshot({ document, analysis }),
 };
 
 export const acceptedRevisionStore = atom(initial);
