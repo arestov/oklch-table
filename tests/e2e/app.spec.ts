@@ -44,7 +44,7 @@ test("compares two accent colors through the text-contrast details", async ({ pa
   await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
   await addColor(page, "oklch(0.6 0.15 260)");
   await page.getByRole("button", { name: "Text contrast for row 1" }).click();
-  await expect(page.getByText("Color 2", { exact: false })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Background color 1" })).toBeVisible();
 });
 
 test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
