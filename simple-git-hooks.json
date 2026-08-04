@@ -1,3 +1,3 @@
 {
-  "pre-commit": "corepack pnpm exec nano-staged && corepack pnpm check:types && corepack pnpm test:unit"
+  "pre-commit": "corepack pnpm exec nano-staged && corepack pnpm check:css && corepack pnpm check:types && corepack pnpm test:unit"
 }

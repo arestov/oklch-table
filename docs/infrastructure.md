@@ -11,6 +11,7 @@ Every `VITE_*` environment variable is public and must never contain a secret.
 - `.browserslistrc` is the matching policy for Browserslist consumers.
 - Nano Stores implements Svelte's store contract directly and needs no framework adapter.
 - Biome formats and lints TypeScript, Svelte, CSS, and configuration files.
+- Stylelint enforces the project's OKLCH-oriented CSS color policy.
 - Svelte tooling uses TypeScript 6; TypeScript 7 checks framework-independent modules.
 - Vitest runs unit tests; Playwright and axe-core test the built application.
 - Size Limit budgets initial JavaScript and application CSS.
