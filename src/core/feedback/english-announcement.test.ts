@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import { createEmptyDocument } from "../workspace/model.ts";
-import { createTransaction } from "../workspace/transactions.ts";
+import { createActionTransaction } from "../workspace/transactions.ts";
 import { buildEnglishAnnouncement } from "./english-announcement.ts";
 
 describe("English announcements", () => {
   it("renders an action only from its transaction", () => {
     const document = createEmptyDocument();
-    const result = createTransaction({
+    const result = createActionTransaction({
       ids: createSequenceIds(),
       cause: { type: "add-color", createdId: "color_test_1" },
       before: {

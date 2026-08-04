@@ -15,12 +15,13 @@ export const announcementStore = atom<AnnouncementState>({
 export const visibleFeedbackStore = atom({
   edited: "No committed changes yet.",
   apca: "",
+  wcag: "",
   cvd: "",
 });
 export function announceResult(text: string): void {
   const current = announcementStore.get();
   announcementStore.set({ ...current, result: { id: current.result.id + 1, text } });
-  visibleFeedbackStore.set({ edited: text, apca: "", cvd: "" });
+  visibleFeedbackStore.set({ edited: text, apca: "", wcag: "", cvd: "" });
 }
 export function announceAlert(text: string): void {
   const current = announcementStore.get();
