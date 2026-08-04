@@ -1,7 +1,9 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import ColorRow from "./components/ColorRow.svelte";
+import FeedbackPanel from "./components/FeedbackPanel.svelte";
+import LiveRegions from "./components/LiveRegions.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
+import WorkspaceTable from "./components/WorkspaceTable.svelte";
 import {
   announceAlert,
   announcementStore,
@@ -17,12 +19,10 @@ import {
   previewStore,
   setNewColorDraft,
 } from "./core/workspace/index.ts";
-import { buildRows } from "./domain/presentation.ts";
-import type { ColorId } from "./domain/types.ts";
 import { executeUiEffects } from "./ui/focus-effects.ts";
 
-let draftInput: HTMLInputElement;
-let workspace: HTMLElement;
+let draftInput = $state<HTMLInputElement>();
+let workspace = $state<HTMLElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
 const feedbackCoordinator = createFeedbackCoordinator(() => {
@@ -32,7 +32,7 @@ const add = async () => {
   const result = addColorFromDraft();
   draftError = result.status === "invalid" ? result.message : "";
   if (result.status === "invalid") announceAlert(result.message);
-  if (result.status === "accepted") await executeUiEffects(workspace, result.effects);
+  if (result.status === "accepted") await executeUiEffects(workspace!, result.effects);
 };
 const onDraftKeydown = (event: KeyboardEvent) => {
   if (event.key === "Enter") {
@@ -41,7 +41,7 @@ const onDraftKeydown = (event: KeyboardEvent) => {
   }
 };
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
-  executeUiEffects(workspace, effects);
+  executeUiEffects(workspace!, effects);
 const onFinishEdit = (reason: "enter" | "blur") => {
   feedbackCoordinator.cancel();
   const result = finishEdit(reason);
@@ -129,80 +129,24 @@ onMount(() => {
   <button type="button" popovertarget="shortcut-help">Keyboard shortcuts</button>
   <ShortcutHelpPopover />
   <p class="jump-prompt">Column jump is active. Press 1 through 8, or Escape to cancel.</p>
-  <div class="table-shell">
-    <table>
-      <caption>
-        Colors in the current workspace
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Actions</th>
-          <th scope="col">CSS color</th>
-          <th scope="col">L</th>
-          <th scope="col">C</th>
-          <th scope="col">H</th>
-          <th scope="col">Contrast background</th>
-          <th scope="col">Text contrast</th>
-          <th scope="col">Checks</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each buildRows($previewStore) as row (row.id)}
-          <ColorRow
-            candidate={$previewStore}
-            colorId={row.id}
-            invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
-              ? $candidateStore.issue.field
-              : null}
-            {onAction}
-            onDraftChanged={() => feedbackCoordinator.schedule()}
-            {onFinishEdit}
-          />
-        {/each}
-        <tr data-draft="true">
-          <th scope="row">{$previewStore.document.colors.order.length + 1}</th>
-          <td colspan="2">
-            <input
-              bind:this={draftInput}
-              class="css-color"
-              type="text"
-              value={$draftStore.newColor.raw}
-              placeholder="fill color"
-              aria-label={`CSS color for new row ${$previewStore.document.colors.order.length + 1}`}
-              autocomplete="off"
-              spellcheck="false"
-              aria-invalid={draftError ? "true" : undefined}
-              aria-describedby="draft-help"
-              oninput={(event) => setNewColorDraft(event.currentTarget.value)}
-              onkeydown={onDraftKeydown}
-            >
-          </td>
-          <td colspan="6">New color</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <WorkspaceTable
+    candidate={$previewStore}
+    invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
+      ? $candidateStore.issue.field
+      : null}
+    draftRaw={$draftStore.newColor.raw}
+    {draftError}
+    bind:draftInput
+    {onAction}
+    onDraftChanged={() => feedbackCoordinator.schedule()}
+    {onFinishEdit}
+    onNewColorInput={setNewColorDraft}
+    onNewColorKeydown={onDraftKeydown}
+  />
   <p id="draft-help" class="visually-hidden">Paste a HEX, RGB, or OKLCH color and press Enter.</p>
   {#if draftError}
     <p class="error-message">{draftError}</p>
   {/if}
-  <section class="feedback-panel" aria-labelledby="last-update-heading">
-    <h2 id="last-update-heading">Last feedback checkpoint</h2>
-    <p>{$visibleFeedbackStore.edited}</p>
-  </section>
-  <aside class="announcement-stack" aria-label="Live announcement demonstration">
-    <div class="announcement-card" data-channel="Status" role="status" aria-atomic="true">
-      {$announcementStore.result.text}
-    </div>
-    <div
-      class="announcement-card"
-      data-channel="Alert"
-      data-kind="alert"
-      role="alert"
-      aria-atomic="true"
-    >
-      {$announcementStore.alert.text}
-    </div>
-  </aside>
+  <FeedbackPanel edited={$visibleFeedbackStore.edited} />
+  <LiveRegions status={$announcementStore.result.text} alert={$announcementStore.alert.text} />
 </main>
