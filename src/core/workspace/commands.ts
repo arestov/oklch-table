@@ -5,7 +5,6 @@ import {
   diffSemanticSnapshots,
 } from "../../domain/semantic.ts";
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
-import { announceResult } from "../feedback/stores.ts";
 import { type ColorId, type IdGenerator, nanoIdGenerator } from "../identity/ids.ts";
 import type { DraftEdit } from "./draft.ts";
 import {
@@ -33,11 +32,6 @@ function applyTransaction(
     draftStore.set({ active: null, newColor: { raw: "" } });
     lastTransactionStore.set(transaction);
   });
-  announceResult(
-    transaction.cause.type === "add-color"
-      ? `Color added as row ${transaction.after.document.colors.order.length}.`
-      : "Value updated. Checks updated.",
-  );
 }
 
 function accept(
