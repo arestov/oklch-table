@@ -1,4 +1,4 @@
-import type { ColorModel, ColorNode, Lch, Rgb } from "./types.ts";
+import type { ColorFormat, ColorNode, OklchValue, Rgb } from "./types.ts";
 
 export const APCA_LEVELS = [
   { min: 90, key: 4, label: "preferred body text", regular: 14, bold: 12 },
@@ -62,23 +62,23 @@ export function oklabToRgb({ L, a, b }: { L: number; a: number; b: number }): Rg
   };
 }
 
-export function oklabToOklch({ L, a, b }: { L: number; a: number; b: number }): Lch {
+export function oklabToOklch({ L, a, b }: { L: number; a: number; b: number }): OklchValue {
   const C = Math.sqrt(a * a + b * b);
   let H = (Math.atan2(b, a) * 180) / Math.PI;
   if (H < 0) H += 360;
   if (C < 0.000001) H = 0;
-  return { L, C, H };
+  return { l: L, c: C, h: H, alpha: 1 };
 }
 
-export function oklchToOklab({ L, C, H }: Lch): { L: number; a: number; b: number } {
-  const radians = (H * Math.PI) / 180;
-  return { L, a: C * Math.cos(radians), b: C * Math.sin(radians) };
+export function oklchToOklab({ l, c, h }: OklchValue): { L: number; a: number; b: number } {
+  const radians = (h * Math.PI) / 180;
+  return { L: l, a: c * Math.cos(radians), b: c * Math.sin(radians) };
 }
 
 interface ParsedColor {
-  model: ColorModel;
-  lPercent: boolean;
-  lch: Lch;
+  format: ColorFormat;
+  lightnessUnit: "number" | "percent";
+  value: OklchValue;
 }
 
 function parseHex(value: string): ParsedColor | null {
@@ -97,7 +97,7 @@ function parseHex(value: string): ParsedColor | null {
     g: parseInt(full.slice(2, 4), 16),
     b: parseInt(full.slice(4, 6), 16),
   };
-  return { model: "hex", lPercent: false, lch: oklabToOklch(rgbToOklab(rgb)) };
+  return { format: "hex", lightnessUnit: "number", value: oklabToOklch(rgbToOklab(rgb)) };
 }
 
 function parseRgb(value: string): ParsedColor | null {
@@ -114,7 +114,7 @@ function parseRgb(value: string): ParsedColor | null {
     g: clamp(percents[1] ? values[1] * 2.55 : values[1], 0, 255),
     b: clamp(percents[2] ? values[2] * 2.55 : values[2], 0, 255),
   };
-  return { model: "rgb", lPercent: false, lch: oklabToOklch(rgbToOklab(rgb)) };
+  return { format: "rgb", lightnessUnit: "number", value: oklabToOklch(rgbToOklab(rgb)) };
 }
 
 function parseOklch(value: string): ParsedColor | null {
@@ -129,9 +129,9 @@ function parseOklch(value: string): ParsedColor | null {
   const H = ((Number(match[4]) % 360) + 360) % 360;
   if (![L, C, H].every(Number.isFinite)) return null;
   return {
-    model: "oklch",
-    lPercent: Boolean(match[2]),
-    lch: { L: clamp(L, 0, 1), C: Math.max(0, C), H },
+    format: "oklch",
+    lightnessUnit: match[2] ? "percent" : "number",
+    value: { l: clamp(L, 0, 1), c: Math.max(0, C), h: H, alpha: 1 },
   };
 }
 
@@ -140,20 +140,23 @@ export function parseCssColor(value: string): ParsedColor | null {
 }
 
 export function rgbForColor(color: ColorNode): Rgb {
-  return oklabToRgb(oklchToOklab(color.lch));
+  return oklabToRgb(oklchToOklab(color.value));
 }
 
 export function serializeColor(color: ColorNode): string {
   const rgb = rgbForColor(color);
-  if (color.model === "hex") {
+  if (color.serialization.format === "hex") {
     const toHex = (channel: number) => Math.round(channel).toString(16).padStart(2, "0");
     return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
   }
-  if (color.model === "rgb") {
+  if (color.serialization.format === "rgb") {
     return `rgb(${Math.round(rgb.r)} ${Math.round(rgb.g)} ${Math.round(rgb.b)})`;
   }
-  const lightness = color.lPercent ? `${round(color.lch.L * 100, 1)}%` : round(color.lch.L, 3);
-  return `oklch(${lightness} ${round(color.lch.C, 3)} ${round(color.lch.H, 1)})`;
+  const lightness =
+    color.serialization.lightnessUnit === "percent"
+      ? `${round(color.value.l * 100, 1)}%`
+      : round(color.value.l, 3);
+  return `oklch(${lightness} ${round(color.value.c, 3)} ${round(color.value.h, 1)})`;
 }
 
 export function colorFromCss(
@@ -165,9 +168,8 @@ export function colorFromCss(
   if (!parsed) return null;
   return {
     id,
-    model: parsed.model,
-    lPercent: parsed.lPercent,
-    lch: { ...parsed.lch },
-    background,
+    value: { ...parsed.value },
+    serialization: { format: parsed.format, lightnessUnit: parsed.lightnessUnit },
+    roles: { contrastBackground: background },
   };
 }

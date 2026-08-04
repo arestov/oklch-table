@@ -1,12 +1,15 @@
+import type { ValidCandidate as CandidateRevision } from "../core/workspace/draft.ts";
 import { CVD_MODES } from "./analysis.ts";
 import { round } from "./color.ts";
 import type {
-  CandidateRevision,
   ColorId,
-  ComparisonKey,
+  ColorVisionKey,
   ContrastComparison,
+  ContrastKey,
   CvdComparison,
 } from "./types.ts";
+
+type Candidate = CandidateRevision<import("./types.ts").AnalysisTree>;
 
 export interface ResultSummary {
   text: string;
@@ -27,7 +30,7 @@ export interface RowView {
 }
 
 export interface ContrastRowView {
-  key: ComparisonKey;
+  key: ContrastKey;
   textRow: number;
   backgroundRow: number;
   recommendation: string;
@@ -39,7 +42,7 @@ export interface ContrastRowView {
 }
 
 export interface CvdRowView {
-  key: ComparisonKey;
+  key: ColorVisionKey;
   otherRow: number;
   modes: Record<string, { label: string; className: string }>;
   hasWarning: boolean;
@@ -49,8 +52,8 @@ function plural(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-export function rowNumber(candidate: CandidateRevision, id: ColorId): number {
-  return candidate.document.order.indexOf(id) + 1;
+export function rowNumber(candidate: Candidate, id: ColorId): number {
+  return candidate.document.colors.order.indexOf(id) + 1;
 }
 
 export function contrastClass(comparison: ContrastComparison): string {
@@ -66,7 +69,7 @@ function recommendationText(comparison: ContrastComparison): string {
 }
 
 export function comparisonsForColor(
-  candidate: CandidateRevision,
+  candidate: Candidate,
   id: ColorId,
 ): {
   asBackground: ContrastComparison[];
@@ -74,21 +77,21 @@ export function comparisonsForColor(
 } {
   const asBackground: ContrastComparison[] = [];
   const asText: ContrastComparison[] = [];
-  for (const comparison of Object.values(candidate.analysis.contrast)) {
+  for (const comparison of Object.values(candidate.analysis.comparisons.contrast)) {
     if (comparison.rightId === id) asBackground.push(comparison);
     if (comparison.leftId === id) asText.push(comparison);
   }
   return { asBackground, asText };
 }
 
-export function summarizeTextContrast(candidate: CandidateRevision, id: ColorId): ResultSummary {
-  const color = candidate.document.byId[id];
+export function summarizeTextContrast(candidate: Candidate, id: ColorId): ResultSummary {
+  const color = candidate.document.colors.byId[id];
   const comparisons = comparisonsForColor(candidate, id);
-  const list = color.background ? comparisons.asBackground : comparisons.asText;
+  const list = color.roles.contrastBackground ? comparisons.asBackground : comparisons.asText;
   if (!list.length) {
     return {
       text: "Not checked",
-      detail: color.background
+      detail: color.roles.contrastBackground
         ? "Add another color to use as text"
         : "Select a contrast background",
       className: "note",
@@ -105,13 +108,13 @@ export function summarizeTextContrast(candidate: CandidateRevision, id: ColorId)
   };
 }
 
-export function cvdComparisonsForColor(candidate: CandidateRevision, id: ColorId): CvdComparison[] {
-  return Object.values(candidate.analysis.cvd).filter(
+export function cvdComparisonsForColor(candidate: Candidate, id: ColorId): CvdComparison[] {
+  return Object.values(candidate.analysis.comparisons.colorVision).filter(
     (item) => item.leftId === id || item.rightId === id,
   );
 }
 
-export function summarizeChecks(candidate: CandidateRevision, id: ColorId): ResultSummary {
+export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummary {
   const comparisons = comparisonsForColor(candidate, id);
   const contrastIssues = [...comparisons.asBackground, ...comparisons.asText].filter(
     (item) => contrastClass(item) === "status-fail",
@@ -123,7 +126,7 @@ export function summarizeChecks(candidate: CandidateRevision, id: ColorId): Resu
     const hasAny =
       comparisons.asBackground.length ||
       comparisons.asText.length ||
-      candidate.document.order.length > 1;
+      candidate.document.colors.order.length > 1;
     return {
       text: hasAny ? "No issues" : "Not checked",
       detail: hasAny ? "All available signals pass" : "Add more colors",
@@ -140,18 +143,18 @@ export function summarizeChecks(candidate: CandidateRevision, id: ColorId): Resu
   };
 }
 
-export function buildRows(candidate: CandidateRevision): RowView[] {
-  return candidate.document.order.map((id, index) => {
-    const color = candidate.document.byId[id];
+export function buildRows(candidate: Candidate): RowView[] {
+  return candidate.document.colors.order.map((id, index) => {
+    const color = candidate.document.colors.byId[id];
     const analysis = candidate.analysis.colors[id];
     return {
       id,
       row: index + 1,
       css: analysis.css,
-      l: round(color.lch.L, 3),
-      c: round(color.lch.C, 3),
-      h: round(color.lch.H, 1),
-      background: color.background,
+      l: round(color.value.l, 3),
+      c: round(color.value.c, 3),
+      h: round(color.value.h, 1),
+      background: color.roles.contrastBackground,
       textContrast: summarizeTextContrast(candidate, id),
       checks: summarizeChecks(candidate, id),
     };
@@ -159,7 +162,7 @@ export function buildRows(candidate: CandidateRevision): RowView[] {
 }
 
 export function buildContrastRows(
-  candidate: CandidateRevision,
+  candidate: Candidate,
   id: ColorId,
   mode: "background" | "text" | "all",
 ): ContrastRowView[] {
@@ -185,7 +188,7 @@ export function buildContrastRows(
   }));
 }
 
-export function buildCvdRows(candidate: CandidateRevision, id: ColorId): CvdRowView[] {
+export function buildCvdRows(candidate: Candidate, id: ColorId): CvdRowView[] {
   return cvdComparisonsForColor(candidate, id).map((comparison) => {
     const otherId = comparison.leftId === id ? comparison.rightId : comparison.leftId;
     const modes = Object.fromEntries(

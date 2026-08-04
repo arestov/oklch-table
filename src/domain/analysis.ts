@@ -1,3 +1,4 @@
+import type { ValidCandidate } from "../core/workspace/draft.ts";
 import {
   APCA_LEVELS,
   CVD_WARNING_THRESHOLD,
@@ -12,10 +13,10 @@ import {
 import type {
   AnalysisTree,
   ApcaRecommendation,
-  CandidateRevision,
   ColorId,
   ColorNode,
-  ComparisonKey,
+  ColorVisionKey,
+  ContrastKey,
   CvdMode,
   DocumentTree,
   Rgb,
@@ -42,8 +43,12 @@ const CVD_MATRICES: Record<CvdMode, number[][]> = {
 
 export const CVD_MODES = Object.keys(CVD_MATRICES) as CvdMode[];
 
-export function comparisonKey(leftId: ColorId, rightId: ColorId): ComparisonKey {
-  return `${leftId}-${rightId}`;
+export function contrastKey(leftId: ColorId, rightId: ColorId): ContrastKey {
+  return `${leftId}|${rightId}`;
+}
+
+export function colorVisionKey(leftId: ColorId, rightId: ColorId): ColorVisionKey {
+  return [leftId, rightId].sort().join("|") as ColorVisionKey;
 }
 
 function relativeLuminance(rgb: Rgb): number {
@@ -112,23 +117,23 @@ function oklabDistance(rgbA: Rgb, rgbB: Rgb): number {
 
 export function deriveAnalysis(document: DocumentTree): AnalysisTree {
   const colors = {} as AnalysisTree["colors"];
-  for (const id of document.order) {
-    const color = document.byId[id];
+  for (const id of document.colors.order) {
+    const color = document.colors.byId[id];
     colors[id] = { id, css: serializeColor(color), rgb: rgbForColor(color) };
   }
 
-  const contrast = {} as AnalysisTree["contrast"];
-  for (const rightId of document.order) {
-    const background = document.byId[rightId];
-    if (!background.background) continue;
-    for (const leftId of document.order) {
+  const contrast = {} as AnalysisTree["comparisons"]["contrast"];
+  for (const rightId of document.colors.order) {
+    const background = document.colors.byId[rightId];
+    if (!background.roles.contrastBackground) continue;
+    for (const leftId of document.colors.order) {
       if (leftId === rightId) continue;
       const textAnalysis = colors[leftId];
       const backgroundAnalysis = colors[rightId];
       const apca = apcaContrast(textAnalysis.rgb, backgroundAnalysis.rgb);
       const recommendation = apcaRecommendation(apca);
       const ratio = wcagContrast(textAnalysis.rgb, backgroundAnalysis.rgb);
-      const key = comparisonKey(leftId, rightId);
+      const key = contrastKey(leftId, rightId);
       contrast[key] = {
         key,
         leftId,
@@ -142,13 +147,13 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
     }
   }
 
-  const cvd = {} as AnalysisTree["cvd"];
-  for (let leftIndex = 0; leftIndex < document.order.length; leftIndex++) {
-    for (let rightIndex = leftIndex + 1; rightIndex < document.order.length; rightIndex++) {
-      const leftId = document.order[leftIndex];
-      const rightId = document.order[rightIndex];
-      const key = comparisonKey(leftId, rightId);
-      const modes = {} as AnalysisTree["cvd"][ComparisonKey]["modes"];
+  const cvd = {} as AnalysisTree["comparisons"]["colorVision"];
+  for (let leftIndex = 0; leftIndex < document.colors.order.length; leftIndex++) {
+    for (let rightIndex = leftIndex + 1; rightIndex < document.colors.order.length; rightIndex++) {
+      const leftId = document.colors.order[leftIndex];
+      const rightId = document.colors.order[rightIndex];
+      const key = colorVisionKey(leftId, rightId);
+      const modes = {} as AnalysisTree["comparisons"]["colorVision"][ColorVisionKey]["modes"];
       for (const mode of CVD_MODES) {
         const distance = oklabDistance(
           simulateCvd(colors[leftId].rgb, CVD_MATRICES[mode]),
@@ -160,13 +165,13 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
     }
   }
 
-  return { colors, contrast, cvd };
+  return { colors, comparisons: { contrast, colorVision: cvd } };
 }
 
-export function createCandidate(document: DocumentTree): CandidateRevision {
-  return { document, analysis: deriveAnalysis(document) };
+export function createCandidate(document: DocumentTree): ValidCandidate<AnalysisTree> {
+  return { status: "valid", document, analysis: deriveAnalysis(document) };
 }
 
 export function createEmptyDocument(): DocumentTree {
-  return { order: [], byId: {} as Record<ColorId, ColorNode>, nextId: 1 };
+  return { colors: { order: [], byId: {} as Record<ColorId, ColorNode> } };
 }

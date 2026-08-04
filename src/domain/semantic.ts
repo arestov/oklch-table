@@ -1,178 +1,154 @@
+import type { ValidCandidate as CandidateRevision } from "../core/workspace/draft.ts";
 import { round } from "./color.ts";
 import type {
-  ActiveEdit,
-  CandidateRevision,
   ColorId,
-  ComparisonKey,
+  ColorVisionKey,
   ContrastChange,
+  ContrastKey,
   CvdChange,
-  SemanticChangesTree,
+  SemanticChanges,
   SemanticSnapshot,
   ValueChange,
 } from "./types.ts";
 
-function changed<T>(before: T, after: T): ValueChange<T> | undefined {
-  return Object.is(before, after) ? undefined : { before, after };
-}
+const changed = <T>(before: T, after: T): ValueChange<T> | undefined =>
+  Object.is(before, after) ? undefined : { before, after };
 
-export function createSemanticSnapshot(candidate: CandidateRevision): SemanticSnapshot {
+export function createSemanticSnapshot(
+  candidate: CandidateRevision<import("./types.ts").AnalysisTree>,
+): SemanticSnapshot {
   const rows = {} as SemanticSnapshot["rows"];
-  candidate.document.order.forEach((id, index) => {
-    const color = candidate.document.byId[id];
-    const analysis = candidate.analysis.colors[id];
+  candidate.document.colors.order.forEach((id, index) => {
+    const color = candidate.document.colors.byId[id];
     rows[id] = {
       id,
       row: index + 1,
-      css: analysis.css,
-      l: round(color.lch.L, 3),
-      c: round(color.lch.C, 3),
-      h: round(color.lch.H, 1),
-      background: color.background,
+      css: candidate.analysis.colors[id].css,
+      l: round(color.value.l),
+      c: round(color.value.c),
+      h: round(color.value.h, 1),
+      background: color.roles.contrastBackground,
     };
   });
-
-  const contrast = {} as SemanticSnapshot["contrast"];
-  for (const [key, comparison] of Object.entries(candidate.analysis.contrast) as [
-    ComparisonKey,
-    CandidateRevision["analysis"]["contrast"][ComparisonKey],
-  ][]) {
+  const contrast = {} as SemanticSnapshot["comparisons"]["contrast"];
+  for (const [key, value] of Object.entries(candidate.analysis.comparisons.contrast) as [
+    ContrastKey,
+    import("./types.ts").ContrastComparison,
+  ][])
     contrast[key] = {
       key,
-      leftId: comparison.leftId,
-      rightId: comparison.rightId,
-      leftRow: rows[comparison.leftId].row,
-      rightRow: rows[comparison.rightId].row,
-      apca: round(comparison.apca, 1),
-      recommendationKey: comparison.recommendation.key,
-      regular: comparison.recommendation.regular,
-      bold: comparison.recommendation.bold,
-      configuredTextSupported: comparison.configuredTextSupported,
-      wcagKey: comparison.wcag.key,
+      leftId: value.leftId,
+      rightId: value.rightId,
+      leftRow: rows[value.leftId].row,
+      rightRow: rows[value.rightId].row,
+      apca: round(value.apca, 1),
+      recommendationKey: value.recommendation.key,
+      regular: value.recommendation.regular,
+      bold: value.recommendation.bold,
+      configuredTextSupported: value.configuredTextSupported,
+      wcagKey: value.wcag.key,
     };
-  }
-
-  const cvd = {} as SemanticSnapshot["cvd"];
-  for (const [key, comparison] of Object.entries(candidate.analysis.cvd) as [
-    ComparisonKey,
-    CandidateRevision["analysis"]["cvd"][ComparisonKey],
-  ][]) {
-    cvd[key] = {
+  const colorVision = {} as SemanticSnapshot["comparisons"]["colorVision"];
+  for (const [key, value] of Object.entries(candidate.analysis.comparisons.colorVision) as [
+    ColorVisionKey,
+    import("./types.ts").CvdComparison,
+  ][])
+    colorVision[key] = {
       key,
-      leftId: comparison.leftId,
-      rightId: comparison.rightId,
-      leftRow: rows[comparison.leftId].row,
-      rightRow: rows[comparison.rightId].row,
-      warnings: Object.entries(comparison.modes)
+      leftId: value.leftId,
+      rightId: value.rightId,
+      leftRow: rows[value.leftId].row,
+      rightRow: rows[value.rightId].row,
+      warnings: Object.entries(value.modes)
         .filter(([, signal]) => signal.warning)
-        .map(([mode]) => mode as keyof typeof comparison.modes),
+        .map(([mode]) => mode as import("./types.ts").CvdMode),
     };
-  }
-
-  return { rows, contrast, cvd };
+  return { rows, comparisons: { contrast, colorVision } };
 }
 
 export function diffSemanticSnapshots(
   before: SemanticSnapshot,
   after: SemanticSnapshot,
-): SemanticChangesTree {
-  const rows = {} as SemanticChangesTree["rows"];
-  const rowIds = new Set<ColorId>([
+): SemanticChanges {
+  const rows = {} as SemanticChanges["rows"];
+  for (const id of new Set<ColorId>([
     ...(Object.keys(before.rows) as ColorId[]),
     ...(Object.keys(after.rows) as ColorId[]),
-  ]);
-  for (const id of rowIds) {
-    const oldRow = before.rows[id];
-    const nextRow = after.rows[id];
-    if (!oldRow || !nextRow) {
-      rows[id] = { id, before: oldRow, after: nextRow, fields: {} };
+  ])) {
+    const previous = before.rows[id];
+    const next = after.rows[id];
+    if (!previous || !next) {
+      rows[id] = { id, before: previous, after: next, fields: {} };
       continue;
     }
     const fields = {
-      css: changed(oldRow.css, nextRow.css),
-      l: changed(oldRow.l, nextRow.l),
-      c: changed(oldRow.c, nextRow.c),
-      h: changed(oldRow.h, nextRow.h),
-      background: changed(oldRow.background, nextRow.background),
+      css: changed(previous.css, next.css),
+      l: changed(previous.l, next.l),
+      c: changed(previous.c, next.c),
+      h: changed(previous.h, next.h),
+      background: changed(previous.background, next.background),
     };
     const compact = Object.fromEntries(
       Object.entries(fields).filter(([, value]) => value !== undefined),
-    );
+    ) as typeof fields;
     if (Object.keys(compact).length)
-      rows[id] = { id, before: oldRow, after: nextRow, fields: compact };
+      rows[id] = { id, before: previous, after: next, fields: compact };
   }
-
-  const contrast = {} as SemanticChangesTree["contrast"];
-  const contrastKeys = new Set<ComparisonKey>([
-    ...(Object.keys(before.contrast) as ComparisonKey[]),
-    ...(Object.keys(after.contrast) as ComparisonKey[]),
-  ]);
-  for (const key of contrastKeys) {
-    const oldValue = before.contrast[key];
-    const nextValue = after.contrast[key];
-    if (!oldValue || !nextValue) {
-      contrast[key] = { key, before: oldValue, after: nextValue };
+  const contrast = {} as SemanticChanges["comparisons"]["contrast"];
+  for (const key of new Set<ContrastKey>([
+    ...(Object.keys(before.comparisons.contrast) as ContrastKey[]),
+    ...(Object.keys(after.comparisons.contrast) as ContrastKey[]),
+  ])) {
+    const previous = before.comparisons.contrast[key];
+    const next = after.comparisons.contrast[key];
+    if (!previous || !next) {
+      contrast[key] = { key, before: previous, after: next };
       continue;
     }
     const item: ContrastChange = {
       key,
-      before: oldValue,
-      after: nextValue,
-      support: changed(oldValue.configuredTextSupported, nextValue.configuredTextSupported),
-      recommendationKey: changed(oldValue.recommendationKey, nextValue.recommendationKey),
-      regular: changed(oldValue.regular, nextValue.regular),
-      bold: changed(oldValue.bold, nextValue.bold),
-      wcagKey: changed(oldValue.wcagKey, nextValue.wcagKey),
+      before: previous,
+      after: next,
+      support: changed(previous.configuredTextSupported, next.configuredTextSupported),
+      recommendationKey: changed(previous.recommendationKey, next.recommendationKey),
+      regular: changed(previous.regular, next.regular),
+      bold: changed(previous.bold, next.bold),
+      wcagKey: changed(previous.wcagKey, next.wcagKey),
     };
     if (item.support || item.recommendationKey || item.regular || item.bold || item.wcagKey)
       contrast[key] = item;
   }
-
-  const cvd = {} as SemanticChangesTree["cvd"];
-  const cvdKeys = new Set<ComparisonKey>([
-    ...(Object.keys(before.cvd) as ComparisonKey[]),
-    ...(Object.keys(after.cvd) as ComparisonKey[]),
-  ]);
-  for (const key of cvdKeys) {
-    const oldValue = before.cvd[key];
-    const nextValue = after.cvd[key];
-    if (!oldValue || !nextValue) {
-      cvd[key] = {
+  const colorVision = {} as SemanticChanges["comparisons"]["colorVision"];
+  for (const key of new Set<ColorVisionKey>([
+    ...(Object.keys(before.comparisons.colorVision) as ColorVisionKey[]),
+    ...(Object.keys(after.comparisons.colorVision) as ColorVisionKey[]),
+  ])) {
+    const previous = before.comparisons.colorVision[key];
+    const next = after.comparisons.colorVision[key];
+    if (!previous || !next) {
+      colorVision[key] = {
         key,
-        before: oldValue,
-        after: nextValue,
-        warningsAdded: nextValue?.warnings ?? [],
-        warningsResolved: oldValue?.warnings ?? [],
+        before: previous,
+        after: next,
+        warningsAdded: next?.warnings ?? [],
+        warningsResolved: previous?.warnings ?? [],
       };
       continue;
     }
-    const warningsAdded = nextValue.warnings.filter((mode) => !oldValue.warnings.includes(mode));
-    const warningsResolved = oldValue.warnings.filter((mode) => !nextValue.warnings.includes(mode));
-    if (warningsAdded.length || warningsResolved.length) {
-      const item: CvdChange = {
+    const added = next.warnings.filter((mode) => !previous.warnings.includes(mode));
+    const resolved = previous.warnings.filter((mode) => !next.warnings.includes(mode));
+    if (added.length || resolved.length)
+      colorVision[key] = {
         key,
-        before: oldValue,
-        after: nextValue,
-        warningsAdded,
-        warningsResolved,
-      };
-      cvd[key] = item;
-    }
+        before: previous,
+        after: next,
+        warningsAdded: added,
+        warningsResolved: resolved,
+      } as CvdChange;
   }
-
-  return { rows, contrast, cvd };
+  return { rows, comparisons: { contrast, colorVision } };
 }
-
-export function changesAreEmpty(changes: SemanticChangesTree): boolean {
-  return (
-    !Object.keys(changes.rows).length &&
-    !Object.keys(changes.contrast).length &&
-    !Object.keys(changes.cvd).length
-  );
-}
-
-export function fieldChanged(changes: SemanticChangesTree, context: ActiveEdit | null): boolean {
-  if (!context) return Object.keys(changes.rows).length > 0;
-  const row = changes.rows[context.colorId];
-  if (!row) return false;
-  return Boolean(row.fields[context.field]);
-}
+export const changesAreEmpty = (changes: SemanticChanges): boolean =>
+  !Object.keys(changes.rows).length &&
+  !Object.keys(changes.comparisons.contrast).length &&
+  !Object.keys(changes.comparisons.colorVision).length;
