@@ -9,6 +9,7 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   ).toBeVisible();
 
   const draft = page.getByPlaceholder("fill color");
+  await expect(draft).toBeFocused();
   await draft.fill("#ffffff");
   await draft.press("Enter");
 

@@ -101,6 +101,7 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.key === "7" || event.key === "8") control.click();
 };
 onMount(() => {
+  draftInput?.focus();
   window.addEventListener("keydown", onWorkspaceKeydown);
   return () => {
     window.removeEventListener("keydown", onWorkspaceKeydown);
