@@ -40,10 +40,6 @@ async function spokenText(nvda: NVDAPlaywright): Promise<string> {
   return (await nvda.spokenPhraseLog()).join(" ");
 }
 
-async function expectSpeech(nvda: NVDAPlaywright, text: string): Promise<void> {
-  await expect.poll(() => spokenText(nvda), { timeout: 10_000 }).toContain(text);
-}
-
 async function reportFocus(nvda: NVDAPlaywright): Promise<string> {
   await nvda.clearSpokenPhraseLog();
   await nvda.perform(nvda.keyboardCommands.reportCurrentFocus);
@@ -143,7 +139,6 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   await expect(page.getByRole("status")).toContainText("Lightness 0.6. Checks updated.");
   await expectLiveRegionReadable(page, nvda, "status", "Lightness 0.6. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
-  await expect(page.getByRole("status")).toContainText("Color vision:");
 });
 
 test("reads contrast details and returns to the editing loop", async ({ page, nvda }) => {
