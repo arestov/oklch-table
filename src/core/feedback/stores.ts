@@ -1,4 +1,6 @@
 import { atom } from "nanostores";
+import { lastTransactionStore } from "../workspace/stores.ts";
+import { buildEnglishAnnouncement } from "./english-announcement.ts";
 
 export interface AnnouncementState {
   shortcut: { id: number; text: string };
@@ -28,3 +30,11 @@ export function announceShortcut(text: string): void {
   const current = announcementStore.get();
   announcementStore.set({ ...current, shortcut: { id: current.shortcut.id + 1, text } });
 }
+
+lastTransactionStore.listen((transaction) => {
+  if (!transaction) return;
+  const plan = buildEnglishAnnouncement(transaction);
+  const current = announcementStore.get();
+  announcementStore.set({ ...current, result: { id: current.result.id + 1, text: plan.spoken } });
+  visibleFeedbackStore.set(plan.visible);
+});
