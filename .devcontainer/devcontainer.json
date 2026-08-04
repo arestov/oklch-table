@@ -1,0 +1,22 @@
+{
+  "name": "oklch-table",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/pnpm:1": {
+      "version": "11.9.0"
+    }
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium",
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome", "ms-playwright.playwright", "svelte.svelte-vscode"]
+    }
+  }
+}
