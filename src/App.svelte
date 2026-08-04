@@ -28,11 +28,15 @@ let columnJumpPending = $state(false);
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
+const mountedWorkspace = (): HTMLElement => {
+  if (!workspace) throw new Error("Workspace focus effect ran before mount.");
+  return workspace;
+};
 const add = async () => {
   const result = addColorFromDraft();
   draftError = result.status === "invalid" ? result.message : "";
   if (result.status === "invalid") announceAlert(result.message);
-  if (result.status === "accepted") await executeUiEffects(workspace!, result.effects);
+  if (result.status === "accepted") await executeUiEffects(mountedWorkspace(), result.effects);
 };
 const onDraftKeydown = (event: KeyboardEvent) => {
   if (event.key === "Enter") {
@@ -41,7 +45,7 @@ const onDraftKeydown = (event: KeyboardEvent) => {
   }
 };
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
-  executeUiEffects(workspace!, effects);
+  executeUiEffects(mountedWorkspace(), effects);
 const onFinishEdit = (reason: "enter" | "blur") => {
   feedbackCoordinator.cancel();
   const result = finishEdit(reason);
