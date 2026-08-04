@@ -25,3 +25,24 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
 
   expect(accessibility.violations).toEqual([]);
 });
+
+test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const draft = page.getByPlaceholder("fill color");
+  await draft.fill("#ffffff");
+  await draft.press("Enter");
+
+  await page.getByRole("button", { name: "Duplicate color 1" }).click();
+  await expect(page.getByRole("spinbutton", { name: "Lightness for row 2" })).toBeFocused();
+
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("7");
+  await expect(page.getByRole("heading", { name: "Text contrast — color 2" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Text contrast for row 2" })).toBeFocused();
+
+  await page.getByRole("button", { name: "Delete color 1" }).click();
+  await expect(page.getByRole("button", { name: "Duplicate color 1" })).toBeFocused();
+});

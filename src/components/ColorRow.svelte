@@ -115,22 +115,29 @@ const remove = () => {
   </td>
   <td>
     <button
+      id={`text-contrast-trigger-${colorId}`}
       type="button"
       aria-label={`Text contrast for row ${row.row}`}
       popovertarget={`text-contrast-${colorId}`}
     >
       Text contrast
     </button>
-    <TextContrastPopover {candidate} {colorId} row={row.row} />
+    <TextContrastPopover
+      {candidate}
+      {colorId}
+      row={row.row}
+      triggerId={`text-contrast-trigger-${colorId}`}
+    />
   </td>
   <td>
     <button
+      id={`checks-trigger-${colorId}`}
       type="button"
       aria-label={`Checks for row ${row.row}`}
       popovertarget={`checks-${colorId}`}
     >
       Checks
     </button>
-    <ChecksPopover {candidate} {colorId} row={row.row} />
+    <ChecksPopover {candidate} {colorId} row={row.row} triggerId={`checks-trigger-${colorId}`} />
   </td>
 </tr>
