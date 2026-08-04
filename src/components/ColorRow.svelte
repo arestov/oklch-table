@@ -22,7 +22,12 @@ let {
   candidate: ValidCandidate<AnalysisTree>;
   colorId: ColorId;
   invalidField?: "css" | "l" | "c" | "h" | null;
-  onAction?: (action: { type: "duplicate" | "delete"; row: number; createdId?: ColorId }) => void;
+  onAction?: (action: {
+    type: "duplicate" | "delete";
+    row: number;
+    createdId?: ColorId;
+    focusColorId?: ColorId;
+  }) => void | Promise<void>;
 } = $props();
 const row = $derived.by(() => {
   const value = buildRows(candidate).find((item) => item.id === colorId);
@@ -38,14 +43,21 @@ const finishOnEnter = (event: KeyboardEvent) => {
   event.preventDefault();
   finishEdit("enter");
 };
-const duplicate = () => {
+const duplicate = async () => {
   const result = duplicateColor(colorId);
   if (result.status === "accepted" && result.transaction.cause.type === "duplicate-color")
-    onAction({ type: "duplicate", row: row.row, createdId: result.transaction.cause.createdId });
+    await onAction({
+      type: "duplicate",
+      row: row.row,
+      createdId: result.transaction.cause.createdId,
+    });
 };
-const remove = () => {
+const remove = async () => {
+  const order = candidate.document.colors.order;
+  const index = order.indexOf(colorId);
+  const focusColorId = order[index + 1] ?? order[index - 1];
   const result = deleteColor(colorId);
-  if (result.status === "accepted") onAction({ type: "delete", row: row.row });
+  if (result.status === "accepted") await onAction({ type: "delete", row: row.row, focusColorId });
 };
 </script>
 

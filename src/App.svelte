@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount, tick } from "svelte";
+import { onMount } from "svelte";
 import ColorRow from "./components/ColorRow.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import {
@@ -21,15 +21,22 @@ import type { ColorId } from "./domain/types.ts";
 let draftInput: HTMLInputElement;
 let draftError = $state("");
 let columnJumpPending = $state(false);
-const focus = async (selector: string) => {
-  await tick();
-  document.querySelector<HTMLElement>(selector)?.focus();
+let focusRequest = $state<string | null>(null);
+$effect(() => {
+  if (!focusRequest) return;
+  const target = document.querySelector<HTMLElement>(focusRequest);
+  if (!target) return;
+  target.focus();
+  focusRequest = null;
+});
+const requestFocus = (selector: string) => {
+  focusRequest = selector;
 };
 const add = async () => {
   const result = addColorFromDraft();
   draftError = result.status === "invalid" ? result.message : "";
   if (result.status === "invalid") announceAlert(result.message);
-  if (result.status === "accepted") await focus('[data-draft="true"] input');
+  if (result.status === "accepted") requestFocus('[data-draft="true"] input');
 };
 const onDraftKeydown = (event: KeyboardEvent) => {
   if (event.key === "Enter") {
@@ -41,14 +48,13 @@ const onAction = async (action: {
   type: "duplicate" | "delete";
   row: number;
   createdId?: ColorId;
+  focusColorId?: ColorId;
 }) => {
   if (action.type === "duplicate" && action.createdId)
-    await focus(`[data-row-id="${action.createdId}"] input[data-field="l"]`);
+    requestFocus(`[data-row-id="${action.createdId}"] input[data-field="l"]`);
   if (action.type === "delete") {
-    const rows = buildRows($previewStore);
-    const next = rows[Math.min(action.row - 1, rows.length - 1)];
-    if (next) await focus(`[data-row-id="${next.id}"] button`);
-    else await focus('[data-draft="true"] input');
+    if (action.focusColorId) requestFocus(`[data-row-id="${action.focusColorId}"] button`);
+    else requestFocus('[data-draft="true"] input');
   }
 };
 const columnTargets: Record<string, string> = {
