@@ -11,3 +11,11 @@ each respective implementation step.
 | Core | Drafts, accepted revisions and workspace transactions |
 | Browser | Keyboard, focus, popovers, live regions and clipboard |
 | Screen reader | Optional Guidepup acceptance flows |
+
+## Screen reader suite
+
+`pnpm test:screen-reader` is intentionally separate from the ordinary browser
+suite. It launches NVDA through Guidepup and therefore requires a Windows
+machine with NVDA installed and the Guidepup environment prepared. It is not
+part of `pnpm verify`; a missing OS-level screen-reader setup must not make the
+ordinary local hook unstable.
