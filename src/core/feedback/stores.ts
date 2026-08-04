@@ -1,0 +1,30 @@
+import { atom } from "nanostores";
+
+export interface AnnouncementState {
+  shortcut: { id: number; text: string };
+  result: { id: number; text: string };
+  alert: { id: number; text: string };
+}
+export const announcementStore = atom<AnnouncementState>({
+  shortcut: { id: 0, text: "" },
+  result: { id: 0, text: "" },
+  alert: { id: 0, text: "" },
+});
+export const visibleFeedbackStore = atom({
+  edited: "No committed changes yet.",
+  apca: "",
+  cvd: "",
+});
+export function announceResult(text: string): void {
+  const current = announcementStore.get();
+  announcementStore.set({ ...current, result: { id: current.result.id + 1, text } });
+  visibleFeedbackStore.set({ edited: text, apca: "", cvd: "" });
+}
+export function announceAlert(text: string): void {
+  const current = announcementStore.get();
+  announcementStore.set({ ...current, alert: { id: current.alert.id + 1, text } });
+}
+export function announceShortcut(text: string): void {
+  const current = announcementStore.get();
+  announcementStore.set({ ...current, shortcut: { id: current.shortcut.id + 1, text } });
+}
