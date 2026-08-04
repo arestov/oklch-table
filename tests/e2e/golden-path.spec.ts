@@ -24,7 +24,7 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   await derivedLightness.fill("0.6");
   await derivedLightness.press("Enter");
   await expect(page.getByRole("region", { name: "Last feedback checkpoint" })).toContainText(
-    "Value updated. Checks updated.",
+    "Lightness 0.6. Checks updated.",
   );
 
   // Detailed contrast remains reachable from the edit loop and restores its trigger focus.

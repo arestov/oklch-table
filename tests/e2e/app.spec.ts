@@ -49,8 +49,8 @@ test("preserves focus through duplicate, delete, shortcuts, and popover details"
 test("keeps invalid input focused and publishes only an alert", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
-  const status = page.getByRole("status");
-  const alert = page.getByRole("alert");
+  const status = page.locator('[role="status"]');
+  const alert = page.locator('[role="alert"]');
   await expect(status).toHaveAttribute("aria-atomic", "true");
   await expect(alert).toHaveAttribute("aria-atomic", "true");
 

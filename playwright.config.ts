@@ -6,6 +6,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",
+  globalSetup: "./tests/e2e/server.ts",
   use: {
     baseURL: "http://127.0.0.1:4173",
     trace: "on-first-retry",
@@ -16,12 +17,4 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "node ./tests/e2e/preview-server.mjs",
-    url: "http://127.0.0.1:4173",
-    // Each runner owns its preview server and Playwright terminates that child
-    // when the suite finishes. Reusing an arbitrary listener leaks state and
-    // makes sequential local runs non-deterministic.
-    reuseExistingServer: false,
-  },
 });
