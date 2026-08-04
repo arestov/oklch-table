@@ -1,4 +1,5 @@
 <script lang="ts">
+import { announceAlert } from "../core/feedback/index.ts";
 import type { ValidCandidate } from "../core/workspace/draft.ts";
 import {
   beginEdit,
@@ -41,7 +42,11 @@ const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
 const finishOnEnter = (event: KeyboardEvent) => {
   if (event.key !== "Enter") return;
   event.preventDefault();
-  finishEdit("enter");
+  finish("enter");
+};
+const finish = (reason: "enter" | "blur") => {
+  const result = finishEdit(reason);
+  if (result.status === "invalid") announceAlert(result.message);
 };
 const duplicate = async () => {
   const result = duplicateColor(colorId);
@@ -80,7 +85,7 @@ const remove = async () => {
       aria-invalid={invalidField === "css" ? "true" : undefined}
       oninput={(event) => edit("css", event.currentTarget.value)}
       onkeydown={finishOnEnter}
-      onblur={() => finishEdit("blur")}
+      onblur={() => finish("blur")}
     >
   </td>
   <td>
@@ -92,7 +97,7 @@ const remove = async () => {
       aria-invalid={invalidField === "l" ? "true" : undefined}
       oninput={(event) => edit("l", event.currentTarget.value)}
       onkeydown={finishOnEnter}
-      onblur={() => finishEdit("blur")}
+      onblur={() => finish("blur")}
     >
   </td>
   <td>
@@ -104,7 +109,7 @@ const remove = async () => {
       aria-invalid={invalidField === "c" ? "true" : undefined}
       oninput={(event) => edit("c", event.currentTarget.value)}
       onkeydown={finishOnEnter}
-      onblur={() => finishEdit("blur")}
+      onblur={() => finish("blur")}
     >
   </td>
   <td>
@@ -116,7 +121,7 @@ const remove = async () => {
       aria-invalid={invalidField === "h" ? "true" : undefined}
       oninput={(event) => edit("h", event.currentTarget.value)}
       onkeydown={finishOnEnter}
-      onblur={() => finishEdit("blur")}
+      onblur={() => finish("blur")}
     >
   </td>
   <td>
