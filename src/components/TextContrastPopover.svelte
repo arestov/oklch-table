@@ -8,7 +8,15 @@ let {
   candidate,
   colorId,
   row,
-}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number } = $props();
+  triggerId,
+}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number; triggerId: string } =
+  $props();
+let popover: HTMLElement;
+const restoreFocus = () => document.getElementById(triggerId)?.focus();
+const manageFocus = () => {
+  if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
+  else restoreFocus();
+};
 const asBackground = $derived(buildContrastRows(candidate, colorId, "background"));
 const asText = $derived(buildContrastRows(candidate, colorId, "text"));
 </script>
@@ -17,6 +25,8 @@ const asText = $derived(buildContrastRows(candidate, colorId, "text"));
   id={`text-contrast-${colorId}`}
   popover="auto"
   aria-labelledby={`text-contrast-${colorId}-title`}
+  bind:this={popover}
+  ontoggle={manageFocus}
 >
   <div class="popover-head">
     <h2 id={`text-contrast-${colorId}-title`} tabindex="-1">Text contrast — color {row}</h2>

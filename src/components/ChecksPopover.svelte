@@ -7,14 +7,27 @@ let {
   candidate,
   colorId,
   row,
-}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number } = $props();
+  triggerId,
+}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number; triggerId: string } =
+  $props();
 let hidePass = $state(true);
+let popover: HTMLElement;
+const manageFocus = () => {
+  if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
+  else document.getElementById(triggerId)?.focus();
+};
 const rows = $derived(
   buildCvdRows(candidate, colorId).filter((item) => !hidePass || item.hasWarning),
 );
 </script>
 
-<section id={`checks-${colorId}`} popover="auto" aria-labelledby={`checks-${colorId}-title`}>
+<section
+  id={`checks-${colorId}`}
+  popover="auto"
+  aria-labelledby={`checks-${colorId}-title`}
+  bind:this={popover}
+  ontoggle={manageFocus}
+>
   <div class="popover-head">
     <h2 id={`checks-${colorId}-title`} tabindex="-1">Checks — color {row}</h2>
     <button type="button" popovertarget={`checks-${colorId}`} popovertargetaction="hide">
