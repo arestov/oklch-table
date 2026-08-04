@@ -65,6 +65,16 @@ const columnTargets: Record<string, string> = {
   "7": 'button[aria-label^="Text contrast"]',
   "8": 'button[aria-label^="Checks"]',
 };
+const columnNames: Record<string, string> = {
+  "1": "Actions",
+  "2": "CSS color",
+  "3": "Lightness",
+  "4": "Chroma",
+  "5": "Hue",
+  "6": "Contrast background",
+  "7": "Text contrast",
+  "8": "Checks",
+};
 const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (
     !(event.target instanceof Node) ||
@@ -91,7 +101,7 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (!selector) return;
   if (row?.dataset.draft === "true") {
     event.preventDefault();
-    announceAlert("This column is unavailable until a valid color is entered.");
+    announceAlert(`${columnNames[event.key]} is unavailable until a valid color is entered.`);
     return;
   }
   const control = row?.querySelector<HTMLElement>(selector);
