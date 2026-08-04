@@ -75,4 +75,24 @@ describe("workspace commands", () => {
     expect(draftStore.get().active).toBeNull();
     expect(source.id).toBe(sourceId);
   });
+
+  it("includes a valid pending edit when an action accepts a transaction", () => {
+    const ids = createSequenceIds();
+    setNewColorDraft("#ffffff");
+    const added = addColorFromDraft(ids);
+    if (added.status !== "accepted") throw new Error("Expected color to be added");
+    const sourceId = acceptedRevisionStore.get().document.colors.order[0];
+
+    beginEdit(sourceId, "l");
+    updateDraft("0.8");
+    const duplicated = duplicateColor(sourceId, ids);
+    if (duplicated.status !== "accepted" || duplicated.transaction.cause.type !== "duplicate-color")
+      throw new Error("Expected duplicate");
+
+    expect(duplicated.transaction.after.document.colors.byId[sourceId].value.l).toBe(0.8);
+    expect(
+      duplicated.transaction.after.document.colors.byId[duplicated.transaction.cause.createdId]
+        .value.l,
+    ).toBe(0.8);
+  });
 });

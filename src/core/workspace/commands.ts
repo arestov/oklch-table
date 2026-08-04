@@ -7,6 +7,7 @@ import {
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
 import { type ColorId, type IdGenerator, nanoIdGenerator } from "../identity/ids.ts";
 import type { DraftEdit } from "./draft.ts";
+import type { DocumentTree } from "./model.ts";
 import {
   acceptedRevisionStore,
   candidateDependencies,
@@ -23,6 +24,13 @@ import {
 } from "./transactions.ts";
 
 type Result = FinishEditResult<AnalysisTree, SemanticSnapshot, SemanticChanges>;
+
+function actionDocument(): DocumentTree | Result {
+  const candidate = candidateStore.get();
+  return candidate.status === "valid"
+    ? candidate.document
+    : { status: "invalid", message: candidate.issue.message };
+}
 
 function applyTransaction(
   transaction: WorkspaceTransaction<AnalysisTree, SemanticSnapshot, SemanticChanges>,
@@ -101,7 +109,8 @@ export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
   if (!parsed)
     return { status: "invalid", message: "Invalid CSS color. Enter HEX, RGB, or OKLCH." };
   const id = ids.color();
-  const current = acceptedRevisionStore.get().document;
+  const current = actionDocument();
+  if ("status" in current) return current;
   return accept(
     { type: "add-color", createdId: id },
     {
@@ -120,7 +129,8 @@ export function setNewColorDraft(raw: string): void {
   draftStore.set({ ...draftStore.get(), newColor: { raw } });
 }
 export function duplicateColor(sourceId: ColorId, ids: IdGenerator = nanoIdGenerator): Result {
-  const current = acceptedRevisionStore.get().document;
+  const current = actionDocument();
+  if ("status" in current) return current;
   const source = current.colors.byId[sourceId];
   if (!source) return { status: "unchanged" };
   const id = ids.color();
@@ -146,7 +156,8 @@ export function duplicateColor(sourceId: ColorId, ids: IdGenerator = nanoIdGener
   );
 }
 export function deleteColor(deletedId: ColorId, ids: IdGenerator = nanoIdGenerator): Result {
-  const current = acceptedRevisionStore.get().document;
+  const current = actionDocument();
+  if ("status" in current) return current;
   if (!current.colors.byId[deletedId]) return { status: "unchanged" };
   const byId = { ...current.colors.byId };
   delete byId[deletedId];
@@ -161,7 +172,8 @@ export function setContrastBackground(
   enabled: boolean,
   ids: IdGenerator = nanoIdGenerator,
 ): Result {
-  const current = acceptedRevisionStore.get().document;
+  const current = actionDocument();
+  if ("status" in current) return current;
   const color = current.colors.byId[colorId];
   if (!color || color.roles.contrastBackground === enabled) return { status: "unchanged" };
   return accept(
