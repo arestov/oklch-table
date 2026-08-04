@@ -1,10 +1,9 @@
 # OKLCH table test coverage
 
-The suites below provide explicit coverage for TC-01 through TC-25 from the
-implementation plan. `tests/e2e/golden-path.spec.ts` is the acceptance test
-for the end-to-end error-hover token workflow; it checks user-visible actions,
-focus, detailed contrast feedback, and the copied final CSS token without
-depending on application internals.
+This matrix records the currently executable coverage for TC-01 through TC-25
+from the implementation plan. A row is marked `missing` when the repository
+does not yet contain a test with assertions for that exact behaviour; it is not
+represented as covered merely because a related UI is present.
 
 | Layer | Responsibility |
 | --- | --- |
@@ -13,16 +12,33 @@ depending on application internals.
 | Browser | Keyboard, focus, popovers, live regions and clipboard |
 | Screen reader | Optional Guidepup acceptance flows |
 
-| TC | Primary automated coverage |
-| --- | --- |
-| TC-01—TC-04 | Core workspace scenarios and browser add-color flow |
-| TC-05—TC-08 | Browser keyboard, contrast and duplicate-focus flows |
-| TC-09—TC-15 | Core feedback scenarios and semantic announcement tests |
-| TC-16 | Browser popover detail flow |
-| TC-17—TC-20 | Browser column-jump flow |
-| TC-21 | Core invalid-candidate scenario and browser ARIA/alert check |
-| TC-22—TC-24 | Browser delete and popover focus-restoration flows |
-| TC-25 | Golden-path browser acceptance test with clipboard assertion |
+| TC | Level | Test file | Exact test | Status |
+| --- | --- | --- | --- | --- |
+| TC-01 | Browser | `tests/e2e/app.spec.ts` | `adds a color and keeps the workspace accessible` | automated |
+| TC-02 | Core | — | — | missing |
+| TC-03 | Core | — | — | missing |
+| TC-04 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
+| TC-05 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-06 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
+| TC-07 | Core | `src/core/workspace/commands.test.ts` | `keeps the last valid preview when a draft becomes invalid` | automated |
+| TC-08 | Core | `src/core/workspace/commands.test.ts` | `accepts one edit once, then leaves the already accepted edit unchanged` | automated |
+| TC-09 | Feedback | `src/core/feedback/coordinator.test.ts` | `debounces to one checkpoint and cleans up its timer` | automated |
+| TC-10 | Core | `src/core/workspace/commands.test.ts` | `accepts one edit once, then leaves the already accepted edit unchanged` | automated |
+| TC-11 | Core | — | — | missing |
+| TC-12 | Feedback | — | — | missing |
+| TC-13 | Core | — | — | missing |
+| TC-14 | Feedback | `src/core/feedback/coordinator.test.ts` | `debounces to one checkpoint and cleans up its timer` | automated |
+| TC-15 | Core | — | — | missing |
+| TC-16 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-17 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-18 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated |
+| TC-19 | Browser | — | — | missing |
+| TC-20 | Browser | — | — | missing |
+| TC-21 | Browser | — | — | missing |
+| TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-23 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
+| TC-25 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated |
 
 ## Screen reader suite
 
