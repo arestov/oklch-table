@@ -21,5 +21,5 @@ export function resetCoreForTest(): void {
     result: { id: 0, text: "" },
     alert: { id: 0, text: "" },
   });
-  visibleFeedbackStore.set({ edited: "No committed changes yet.", apca: "", cvd: "" });
+  visibleFeedbackStore.set({ edited: "No committed changes yet.", apca: "", wcag: "", cvd: "" });
 }
