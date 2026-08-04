@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from "svelte";
+import { onMount, tick } from "svelte";
 import ColorRow from "./components/ColorRow.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import {
@@ -21,22 +21,15 @@ import type { ColorId } from "./domain/types.ts";
 let draftInput: HTMLInputElement;
 let draftError = $state("");
 let columnJumpPending = $state(false);
-let focusRequest = $state<string | null>(null);
-$effect(() => {
-  if (!focusRequest) return;
-  const target = document.querySelector<HTMLElement>(focusRequest);
-  if (!target) return;
-  target.focus();
-  focusRequest = null;
-});
-const requestFocus = (selector: string) => {
-  focusRequest = selector;
+const requestFocus = async (selector: string) => {
+  await tick();
+  document.querySelector<HTMLElement>(selector)?.focus();
 };
 const add = async () => {
   const result = addColorFromDraft();
   draftError = result.status === "invalid" ? result.message : "";
   if (result.status === "invalid") announceAlert(result.message);
-  if (result.status === "accepted") requestFocus('[data-draft="true"] input');
+  if (result.status === "accepted") await requestFocus('[data-draft="true"] input');
 };
 const onDraftKeydown = (event: KeyboardEvent) => {
   if (event.key === "Enter") {
@@ -51,10 +44,10 @@ const onAction = async (action: {
   focusColorId?: ColorId;
 }) => {
   if (action.type === "duplicate" && action.createdId)
-    requestFocus(`[data-row-id="${action.createdId}"] input[data-field="l"]`);
+    await requestFocus(`[data-row-id="${action.createdId}"] input[data-field="l"]`);
   if (action.type === "delete") {
-    if (action.focusColorId) requestFocus(`[data-row-id="${action.focusColorId}"] button`);
-    else requestFocus('[data-draft="true"] input');
+    if (action.focusColorId) await requestFocus(`[data-row-id="${action.focusColorId}"] button`);
+    else await requestFocus('[data-draft="true"] input');
   }
 };
 const columnTargets: Record<string, string> = {

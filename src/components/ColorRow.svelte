@@ -53,11 +53,13 @@ const duplicate = async () => {
     });
 };
 const remove = async () => {
+  const currentRow = row.row;
   const order = candidate.document.colors.order;
   const index = order.indexOf(colorId);
   const focusColorId = order[index + 1] ?? order[index - 1];
   const result = deleteColor(colorId);
-  if (result.status === "accepted") await onAction({ type: "delete", row: row.row, focusColorId });
+  if (result.status === "accepted")
+    await onAction({ type: "delete", row: currentRow, focusColorId });
 };
 </script>
 
