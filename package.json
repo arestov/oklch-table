@@ -23,6 +23,7 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:screen-reader": "playwright test --config playwright.screen-reader.config.ts",
     "test:size": "size-limit",
     "check": "pnpm check:biome && pnpm check:css && pnpm check:types && pnpm test:unit",
     "verify": "pnpm check && pnpm build && pnpm test:size && pnpm test:e2e",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.0.0",
     "@biomejs/biome": "^2.0.0",
+    "@guidepup/guidepup": "^0.31.0",
     "@guidepup/playwright": "^0.14.0",
     "@logux/stylelint-config": "1.0.1",
     "@playwright/test": "^1.0.0",
