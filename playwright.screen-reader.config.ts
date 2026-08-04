@@ -10,7 +10,12 @@ export default defineConfig({
   globalSetup: "./tests/screen-reader/server.ts",
   use: {
     baseURL: "http://127.0.0.1:4174",
-    ...devices["Desktop Chrome"],
     headless: false,
   },
+  projects: [
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"], headless: false },
+    },
+  ],
 });
