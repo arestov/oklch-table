@@ -81,6 +81,7 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
     return;
   }
   if (!columnJumpPending) return;
+  if (["Alt", "Control", "Meta", "Shift"].includes(event.key)) return;
   if (event.key === "Escape") {
     event.preventDefault();
     columnJumpPending = false;
