@@ -194,3 +194,41 @@ test("announces an invalid CSS color and preserves its focus", async ({ page, nv
   await expectLiveRegionReadable(page, nvda, "alert", "Invalid CSS color");
   expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
 });
+
+test("completes the error-hover golden path through the copied token", async ({ page, nvda }) => {
+  await page.goto("/");
+  await prepareGoldenWorkspace(page);
+  await activateBrowser(page);
+
+  expect(await reportFocus(nvda)).toContain("Lightness for row 5");
+  await enterFocusMode(nvda);
+  await nvda.clearSpokenPhraseLog();
+  await nvda.press("Control+A");
+  await nvda.type("0.6");
+  await nvda.perform(nvda.keyboardCommands.stopSpeech);
+  await nvda.clearSpokenPhraseLog();
+  await page.keyboard.press("Enter");
+  await expectLiveRegionReadable(page, nvda, "status", "Lightness 0.6. Checks updated.");
+
+  await page.getByRole("spinbutton", { name: "Lightness for row 5" }).focus();
+  await activateBrowser(page);
+  await nvda.press("Control+.");
+  await nvda.press("7");
+  await expect(page.getByRole("heading", { name: "Text contrast — color 5" })).toBeFocused();
+  expect(await reportFocus(nvda)).toContain("Text contrast");
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Text contrast for row 5" })).toBeFocused();
+  await nvda.press("Control+.");
+  await nvda.press("2");
+  const token = page.getByRole("textbox", { name: "CSS color for row 5" });
+  await expect(token).toBeFocused();
+  const expectedToken = await token.inputValue();
+
+  await nvda.press("Control+A");
+  await nvda.press("Control+C");
+  await nvda.clearSpokenPhraseLog();
+  await nvda.perform(nvda.keyboardCommands.reportClipboardText);
+  expect(await nvda.itemText()).toContain(expectedToken);
+  await expect(token).toHaveValue(expectedToken);
+});
