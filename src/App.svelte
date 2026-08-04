@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount, tick } from "svelte";
+import { onMount } from "svelte";
 import ColorRow from "./components/ColorRow.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import {
@@ -19,22 +19,20 @@ import {
 } from "./core/workspace/index.ts";
 import { buildRows } from "./domain/presentation.ts";
 import type { ColorId } from "./domain/types.ts";
+import { executeUiEffects } from "./ui/focus-effects.ts";
 
 let draftInput: HTMLInputElement;
+let workspace: HTMLElement;
 let draftError = $state("");
 let columnJumpPending = $state(false);
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
-const requestFocus = async (selector: string) => {
-  await tick();
-  document.querySelector<HTMLElement>(selector)?.focus();
-};
 const add = async () => {
   const result = addColorFromDraft();
   draftError = result.status === "invalid" ? result.message : "";
   if (result.status === "invalid") announceAlert(result.message);
-  if (result.status === "accepted") await requestFocus('[data-draft="true"] input');
+  if (result.status === "accepted") await executeUiEffects(workspace, result.effects);
 };
 const onDraftKeydown = (event: KeyboardEvent) => {
   if (event.key === "Enter") {
@@ -42,18 +40,12 @@ const onDraftKeydown = (event: KeyboardEvent) => {
     void add();
   }
 };
-const onAction = async (action: {
-  type: "duplicate" | "delete";
-  row: number;
-  createdId?: ColorId;
-  focusColorId?: ColorId;
-}) => {
-  if (action.type === "duplicate" && action.createdId)
-    await requestFocus(`[data-row-id="${action.createdId}"] input[data-field="l"]`);
-  if (action.type === "delete") {
-    if (action.focusColorId) await requestFocus(`[data-row-id="${action.focusColorId}"] button`);
-    else await requestFocus('[data-draft="true"] input');
-  }
+const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
+  executeUiEffects(workspace, effects);
+const onFinishEdit = (reason: "enter" | "blur") => {
+  feedbackCoordinator.cancel();
+  const result = finishEdit(reason);
+  if (result.status === "invalid") announceAlert(result.message);
 };
 const columnTargets: Record<string, string> = {
   "1": "button",
@@ -106,6 +98,12 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   }
   const control = row?.querySelector<HTMLElement>(selector);
   if (!control) return;
+  feedbackCoordinator.cancel();
+  const boundary = finishEdit("navigation");
+  if (boundary.status === "invalid") {
+    announceAlert(boundary.message);
+    return;
+  }
   event.preventDefault();
   control.focus();
   if (event.key === "7" || event.key === "8") control.click();
@@ -121,6 +119,7 @@ onMount(() => {
 </script>
 
 <main
+  bind:this={workspace}
   id="workspace"
   aria-labelledby="page-title"
   data-column-jump-active={columnJumpPending ? "true" : "false"}
@@ -158,6 +157,7 @@ onMount(() => {
               : null}
             {onAction}
             onDraftChanged={() => feedbackCoordinator.schedule()}
+            {onFinishEdit}
           />
         {/each}
         <tr data-draft="true">

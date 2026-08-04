@@ -9,6 +9,7 @@ import {
   setContrastBackground,
   updateDraft,
 } from "../core/workspace/index.ts";
+import type { UiEffect } from "../core/workspace/transactions.ts";
 import { buildRows } from "../domain/presentation.ts";
 import type { AnalysisTree, ColorId } from "../domain/types.ts";
 import ChecksPopover from "./ChecksPopover.svelte";
@@ -19,17 +20,14 @@ let {
   colorId,
   invalidField = null,
   onAction = () => {},
+  onFinishEdit = () => undefined,
   onDraftChanged = () => {},
 }: {
   candidate: ValidCandidate<AnalysisTree>;
   colorId: ColorId;
   invalidField?: "css" | "l" | "c" | "h" | null;
-  onAction?: (action: {
-    type: "duplicate" | "delete";
-    row: number;
-    createdId?: ColorId;
-    focusColorId?: ColorId;
-  }) => void | Promise<void>;
+  onAction?: (effects: readonly UiEffect[]) => void | Promise<void>;
+  onFinishEdit?: (reason: "enter" | "blur") => void;
   onDraftChanged?: () => void;
 } = $props();
 const row = $derived.by(() => {
@@ -47,35 +45,22 @@ const finishOnEnter = (event: KeyboardEvent) => {
   event.preventDefault();
   finish("enter");
 };
-const finish = (reason: "enter" | "blur") => {
-  const result = finishEdit(reason);
-  if (result.status === "invalid") announceAlert(result.message);
-};
+const finish = (reason: "enter" | "blur") => onFinishEdit(reason);
 const duplicate = async () => {
   const result = duplicateColor(colorId);
   if (result.status === "invalid") {
     announceAlert(result.message);
     return;
   }
-  if (result.status === "accepted" && result.transaction.cause.type === "duplicate-color")
-    await onAction({
-      type: "duplicate",
-      row: row.row,
-      createdId: result.transaction.cause.createdId,
-    });
+  if (result.status === "accepted") await onAction(result.effects);
 };
 const remove = async () => {
-  const currentRow = row.row;
-  const order = candidate.document.colors.order;
-  const index = order.indexOf(colorId);
-  const focusColorId = order[index + 1] ?? order[index - 1];
   const result = deleteColor(colorId);
   if (result.status === "invalid") {
     announceAlert(result.message);
     return;
   }
-  if (result.status === "accepted")
-    await onAction({ type: "delete", row: currentRow, focusColorId });
+  if (result.status === "accepted") await onAction(result.effects);
 };
 const setBackground = (enabled: boolean) => {
   const result = setContrastBackground(colorId, enabled);
