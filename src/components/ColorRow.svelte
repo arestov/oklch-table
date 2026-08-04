@@ -35,6 +35,8 @@ const row = $derived.by(() => {
   if (!value) throw new Error(`Unknown color ${colorId}`);
   return value;
 });
+let textContrastTrigger = $state<HTMLButtonElement>();
+let checksTrigger = $state<HTMLButtonElement>();
 const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
   beginEdit(colorId, field);
   updateDraft(raw);
@@ -135,28 +137,25 @@ const setBackground = (enabled: boolean) => {
   <td>
     <button
       id={`text-contrast-trigger-${colorId}`}
+      bind:this={textContrastTrigger}
       type="button"
       aria-label={`Text contrast for row ${row.row}`}
       popovertarget={`text-contrast-${colorId}`}
     >
       Text contrast
     </button>
-    <TextContrastPopover
-      {candidate}
-      {colorId}
-      row={row.row}
-      triggerId={`text-contrast-trigger-${colorId}`}
-    />
+    <TextContrastPopover {candidate} {colorId} row={row.row} trigger={textContrastTrigger} />
   </td>
   <td>
     <button
       id={`checks-trigger-${colorId}`}
+      bind:this={checksTrigger}
       type="button"
       aria-label={`Checks for row ${row.row}`}
       popovertarget={`checks-${colorId}`}
     >
       Checks
     </button>
-    <ChecksPopover {candidate} {colorId} row={row.row} triggerId={`checks-trigger-${colorId}`} />
+    <ChecksPopover {candidate} {colorId} row={row.row} trigger={checksTrigger} />
   </td>
 </tr>

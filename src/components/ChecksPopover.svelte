@@ -7,14 +7,18 @@ let {
   candidate,
   colorId,
   row,
-  triggerId,
-}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number; triggerId: string } =
-  $props();
+  trigger,
+}: {
+  candidate: ValidCandidate<AnalysisTree>;
+  colorId: ColorId;
+  row: number;
+  trigger: HTMLButtonElement | undefined;
+} = $props();
 let hidePass = $state(true);
 let popover: HTMLElement;
 const manageFocus = () => {
   if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
-  else document.getElementById(triggerId)?.focus();
+  else trigger?.focus();
 };
 const rows = $derived(
   buildCvdRows(candidate, colorId).filter((item) => !hidePass || item.hasWarning),

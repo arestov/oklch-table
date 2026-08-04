@@ -8,14 +8,17 @@ let {
   candidate,
   colorId,
   row,
-  triggerId,
-}: { candidate: ValidCandidate<AnalysisTree>; colorId: ColorId; row: number; triggerId: string } =
-  $props();
+  trigger,
+}: {
+  candidate: ValidCandidate<AnalysisTree>;
+  colorId: ColorId;
+  row: number;
+  trigger: HTMLButtonElement | undefined;
+} = $props();
 let popover: HTMLElement;
-const restoreFocus = () => document.getElementById(triggerId)?.focus();
 const manageFocus = () => {
   if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
-  else restoreFocus();
+  else trigger?.focus();
 };
 const asBackground = $derived(buildContrastRows(candidate, colorId, "background"));
 const asText = $derived(buildContrastRows(candidate, colorId, "text"));
