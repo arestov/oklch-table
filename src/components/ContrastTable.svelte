@@ -1,8 +1,7 @@
 <script lang="ts">
 import type { ContrastRowView } from "../domain/presentation";
 
-export let caption: string;
-export let rows: ContrastRowView[];
+let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
 </script>
 
 {#if rows.length}
