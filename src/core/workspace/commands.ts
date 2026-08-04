@@ -16,7 +16,8 @@ import {
   lastTransactionStore,
 } from "./stores.ts";
 import {
-  createTransaction,
+  createActionTransaction,
+  createEditTransaction,
   type FinishEditResult,
   type FinishReason,
   type TransactionCause,
@@ -52,16 +53,20 @@ function accept(
   const after = {
     document,
     analysis,
-    semantic: createSemanticSnapshot({ status: "valid", document, analysis }),
+    semantic: createSemanticSnapshot({ document, analysis }),
   };
-  const result = createTransaction({
+  const input = {
     ids,
     cause,
     before,
     after,
     changes: diffSemanticSnapshots(before.semantic, after.semantic),
     isEmpty: changesAreEmpty,
-  });
+  };
+  const result =
+    cause.type === "edit-field"
+      ? createEditTransaction({ ...input, cause })
+      : createActionTransaction({ ...input, cause });
   if (result.status === "accepted") applyTransaction(result.transaction);
   return result;
 }

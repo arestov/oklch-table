@@ -12,7 +12,7 @@ export function resetCoreForTest(): void {
   acceptedRevisionStore.set({
     document,
     analysis,
-    semantic: createSemanticSnapshot({ status: "valid", document, analysis }),
+    semantic: createSemanticSnapshot({ document, analysis }),
   });
   draftStore.set(createEmptyDraft());
   lastTransactionStore.set(null);

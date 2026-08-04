@@ -1,4 +1,3 @@
-import type { ValidCandidate as CandidateRevision } from "../core/workspace/draft.ts";
 import { round } from "./color.ts";
 import type {
   ColorId,
@@ -7,6 +6,7 @@ import type {
   ContrastKey,
   CvdChange,
   SemanticChanges,
+  SemanticInput,
   SemanticSnapshot,
   ValueChange,
 } from "./types.ts";
@@ -14,9 +14,7 @@ import type {
 const changed = <T>(before: T, after: T): ValueChange<T> | undefined =>
   Object.is(before, after) ? undefined : { before, after };
 
-export function createSemanticSnapshot(
-  candidate: CandidateRevision<import("./types.ts").AnalysisTree>,
-): SemanticSnapshot {
+export function createSemanticSnapshot(candidate: SemanticInput): SemanticSnapshot {
   const rows = {} as SemanticSnapshot["rows"];
   candidate.document.colors.order.forEach((id, index) => {
     const color = candidate.document.colors.byId[id];
