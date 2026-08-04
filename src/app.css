@@ -444,7 +444,10 @@ input[type="number"] {
 }
 
 .announcement-card:empty {
-  display: none;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .announcement-card::before {
@@ -456,6 +459,10 @@ input[type="number"] {
   font-weight: 760;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.announcement-card:empty::before {
+  display: none;
 }
 
 .announcement-card[data-kind="alert"] {

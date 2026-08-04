@@ -90,6 +90,13 @@ test("cancels and rejects unavailable column jumps without moving draft focus", 
   const draft = page.getByPlaceholder("fill color");
   await page.keyboard.press("Control+.");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
+  await draft.dispatchEvent("keydown", {
+    bubbles: true,
+    code: "ControlLeft",
+    ctrlKey: true,
+    key: "Control",
+  });
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
   await page.keyboard.press("Escape");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
 
