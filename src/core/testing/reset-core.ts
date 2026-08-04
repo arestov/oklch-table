@@ -17,7 +17,6 @@ export function resetCoreForTest(): void {
   draftStore.set(createEmptyDraft());
   lastTransactionStore.set(null);
   announcementStore.set({
-    shortcut: { id: 0, text: "" },
     result: { id: 0, text: "" },
     alert: { id: 0, text: "" },
   });
