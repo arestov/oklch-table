@@ -21,6 +21,10 @@ All commands are cross-platform and are intended to be reused unchanged by futur
 
 ## Screen readers
 
-Guidepup is installed but screen-reader suites must run natively: NVDA on Windows and
-VoiceOver on macOS. The Linux Dev Container is for Biome, type checks, Vitest, Vite,
-Playwright, and axe-core; it is not a replacement for native screen-reader automation.
+Guidepup screen-reader suites run natively. The automated Windows acceptance
+suite pairs NVDA with Playwright Firefox, uses eSpeak, and temporarily selects
+English (US) for the foreground browser thread. Run `pnpm test:screen-reader`
+from an interactive desktop and leave the foreground untouched until it exits.
+The Linux Dev Container remains suitable for Biome, type checks, Vitest, Vite,
+Playwright, and axe-core; it is not a replacement for native screen-reader
+automation.
