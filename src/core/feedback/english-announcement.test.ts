@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import { createEmptyDocument } from "../workspace/model.ts";
 import { createActionTransaction } from "../workspace/transactions.ts";
+import { buildAnnouncementPlan } from "./announcement-plan.ts";
 import { buildEnglishAnnouncement } from "./english-announcement.ts";
 
 describe("English announcements", () => {
@@ -86,5 +87,46 @@ describe("English announcements", () => {
     expect(rendered.spoken).toBe(
       "Lightness 0.68. Checks updated. APCA: Row 1 no longer supports the configured text on row 2. WCAG: Row 1 and row 2 changed from level 3 to 2. Color vision: New warning (protanopia) between rows 1 and 2.",
     );
+  });
+
+  it("orders lost support before restored support and omits unchanged sections", () => {
+    const comparison = (row: number) => ({
+      key: `color_test_${row}|color_test_9`,
+      leftId: `color_test_${row}`,
+      rightId: "color_test_9",
+      leftRow: row,
+      rightRow: 9,
+      apca: 60,
+      recommendationKey: 2,
+      regular: 24,
+      bold: 16,
+      configuredTextSupported: false,
+      wcagKey: 2,
+    });
+    const transaction = {
+      cause: { type: "add-color", createdId: "color_test_1" },
+      before: { document: createEmptyDocument() },
+      after: { document: { colors: { order: ["color_test_1"], byId: {} } } },
+      changes: {
+        rows: {},
+        comparisons: {
+          contrast: {
+            b: { after: comparison(2), support: { before: false, after: true } },
+            a: { after: comparison(1), support: { before: true, after: false } },
+          },
+          colorVision: {},
+        },
+      },
+    } as never;
+    const plan = buildAnnouncementPlan(transaction);
+    expect(plan.apca.map((item) => `${item.direction}:${item.comparison.leftRow}`)).toEqual([
+      "lost:1",
+      "restored:2",
+    ]);
+    const rendered = buildEnglishAnnouncement(transaction);
+    expect(rendered.spoken).toBe(
+      "Color added as row 1. APCA: Row 1 no longer supports the configured text on row 9. APCA: Row 2 now supports the configured text on row 9.",
+    );
+    expect(rendered.visible).toMatchObject({ wcag: "", cvd: "" });
   });
 });
