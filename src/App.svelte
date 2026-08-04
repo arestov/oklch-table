@@ -73,11 +73,7 @@ const columnNames: Record<string, string> = {
   "8": "Checks",
 };
 const onWorkspaceKeydown = (event: KeyboardEvent) => {
-  if (
-    !(event.target instanceof Node) ||
-    !document.getElementById("workspace")?.contains(event.target)
-  )
-    return;
+  if (!(event.target instanceof Node) || !workspace?.contains(event.target)) return;
   if (event.ctrlKey && event.key === ".") {
     event.preventDefault();
     columnJumpPending = true;
