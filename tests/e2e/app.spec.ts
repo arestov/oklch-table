@@ -27,6 +27,17 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   expect(accessibility.violations).toEqual([]);
 });
 
+test("adds consecutive colors and preserves OKLCH serialization", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "oklch(60% 0.15 260)");
+  await addColor(page, "#ffffff");
+  await expect(page.locator("tbody tr")).toHaveCount(3);
+  await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(
+    "oklch(60% 0.15 260)",
+  );
+  await expect(page.getByRole("textbox", { name: "CSS color for row 2" })).toHaveValue("#ffffff");
+});
+
 test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
   page,
 }) => {
@@ -77,6 +88,11 @@ test("cancels and rejects unavailable column jumps without moving draft focus", 
   await page.keyboard.press("7");
   await expect(draft).toBeFocused();
   await expect(page.getByRole("alert")).toContainText("unavailable until a valid color is entered");
+
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("9");
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
+  await expect(draft).toBeFocused();
 });
 
 test("keeps each opened popover accessible and restores its trigger focus", async ({ page }) => {
