@@ -22,7 +22,7 @@
     "check:types": "pnpm check:svelte && pnpm check:ts7",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "pnpm build && playwright test",
     "test:screen-reader": "playwright test --config playwright.screen-reader.config.ts",
     "test:size": "size-limit",
     "check": "pnpm check:biome && pnpm check:css && pnpm check:types && pnpm test:unit",
