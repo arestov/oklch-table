@@ -20,6 +20,29 @@ import {
 afterEach(resetCoreForTest);
 
 describe("workspace commands", () => {
+  it("adds a valid CSS draft with a generated stable ID and resets the next draft", () => {
+    const ids = createSequenceIds();
+    setNewColorDraft("oklch(0.6 0.15 260)");
+    const result = addColorFromDraft(ids);
+    expect(result).toMatchObject({
+      status: "accepted",
+      effects: [{ type: "focus-new-color" }],
+    });
+    expect(acceptedRevisionStore.get().document.colors.order).toEqual(["color_test_1"]);
+    expect(draftStore.get().newColor.raw).toBe("");
+  });
+
+  it("rejects an invalid new-color draft without allocating an ID or transaction", () => {
+    const ids = createSequenceIds();
+    const before = acceptedRevisionStore.get();
+    const transaction = lastTransactionStore.get();
+    setNewColorDraft("invalid");
+    expect(addColorFromDraft(ids)).toMatchObject({ status: "invalid" });
+    expect(acceptedRevisionStore.get()).toBe(before);
+    expect(lastTransactionStore.get()).toBe(transaction);
+    expect(ids.color()).toBe("color_test_1");
+  });
+
   it("accepts one edit once, then leaves the already accepted edit unchanged", () => {
     const ids = createSequenceIds();
     setNewColorDraft("#ffffff");
@@ -36,6 +59,22 @@ describe("workspace commands", () => {
       accepted.status === "accepted" ? accepted.transaction : null,
     );
   });
+
+  it.each(["idle", "enter", "blur", "navigation"] as const)(
+    "accepts the %s boundary as exactly one transaction",
+    (reason) => {
+      const ids = createSequenceIds();
+      setNewColorDraft("#ffffff");
+      const added = addColorFromDraft(ids);
+      if (added.status !== "accepted") throw new Error("Expected color to be added");
+      const colorId = acceptedRevisionStore.get().document.colors.order[0];
+      beginEdit(colorId, "l");
+      updateDraft("0.8");
+      const result = finishEdit(reason, ids);
+      expect(result).toMatchObject({ status: "accepted" });
+      expect(finishEdit(reason, ids)).toEqual({ status: "unchanged" });
+    },
+  );
 
   it("keeps the last valid preview when a draft becomes invalid", () => {
     const ids = createSequenceIds();
@@ -94,5 +133,22 @@ describe("workspace commands", () => {
       duplicated.transaction.after.document.colors.byId[duplicated.transaction.cause.createdId]
         .value.l,
     ).toBe(0.8);
+  });
+
+  it("publishes the accepted revision and its transaction without an intermediate pair", () => {
+    const pairs: Array<{ colors: number; transaction: string | null }> = [];
+    const capture = () =>
+      pairs.push({
+        colors: acceptedRevisionStore.get().document.colors.order.length,
+        transaction: lastTransactionStore.get()?.id ?? null,
+      });
+    const stopRevision = acceptedRevisionStore.listen(capture);
+    const stopTransaction = lastTransactionStore.listen(capture);
+    pairs.length = 0;
+    setNewColorDraft("#fff");
+    addColorFromDraft(createSequenceIds());
+    stopRevision();
+    stopTransaction();
+    expect(pairs).toEqual([{ colors: 1, transaction: "tx_test_1" }]);
   });
 });
