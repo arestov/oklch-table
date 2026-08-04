@@ -6,12 +6,14 @@ import {
   announceAlert,
   announcementStore,
   announceShortcut,
+  createFeedbackCoordinator,
   visibleFeedbackStore,
 } from "./core/feedback/index.ts";
 import {
   addColorFromDraft,
   candidateStore,
   draftStore,
+  finishEdit,
   previewStore,
   setNewColorDraft,
 } from "./core/workspace/index.ts";
@@ -21,6 +23,9 @@ import type { ColorId } from "./domain/types.ts";
 let draftInput: HTMLInputElement;
 let draftError = $state("");
 let columnJumpPending = $state(false);
+const feedbackCoordinator = createFeedbackCoordinator(() => {
+  finishEdit("idle");
+});
 const requestFocus = async (selector: string) => {
   await tick();
   document.querySelector<HTMLElement>(selector)?.focus();
@@ -97,7 +102,10 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
 };
 onMount(() => {
   window.addEventListener("keydown", onWorkspaceKeydown);
-  return () => window.removeEventListener("keydown", onWorkspaceKeydown);
+  return () => {
+    window.removeEventListener("keydown", onWorkspaceKeydown);
+    feedbackCoordinator.destroy();
+  };
 });
 </script>
 
@@ -138,6 +146,7 @@ onMount(() => {
               ? $candidateStore.issue.field
               : null}
             {onAction}
+            onDraftChanged={() => feedbackCoordinator.schedule()}
           />
         {/each}
         <tr data-draft="true">
