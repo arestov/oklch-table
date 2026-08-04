@@ -19,6 +19,7 @@ let {
   colorId,
   invalidField = null,
   onAction = () => {},
+  onDraftChanged = () => {},
 }: {
   candidate: ValidCandidate<AnalysisTree>;
   colorId: ColorId;
@@ -29,6 +30,7 @@ let {
     createdId?: ColorId;
     focusColorId?: ColorId;
   }) => void | Promise<void>;
+  onDraftChanged?: () => void;
 } = $props();
 const row = $derived.by(() => {
   const value = buildRows(candidate).find((item) => item.id === colorId);
@@ -38,6 +40,7 @@ const row = $derived.by(() => {
 const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
   beginEdit(colorId, field);
   updateDraft(raw);
+  onDraftChanged();
 };
 const finishOnEnter = (event: KeyboardEvent) => {
   if (event.key !== "Enter") return;
