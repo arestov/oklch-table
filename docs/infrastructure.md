@@ -13,7 +13,7 @@ Every `VITE_*` environment variable is public and must never contain a secret.
 - Biome formats and lints TypeScript, Svelte, CSS, and configuration files.
 - Svelte tooling uses TypeScript 6; TypeScript 7 checks framework-independent modules.
 - Vitest runs unit tests; Playwright and axe-core test the built application.
-- Size Limit currently budgets initial JavaScript; add a CSS budget when the first stylesheet exists.
+- Size Limit budgets initial JavaScript and application CSS.
 
 Run `pnpm check` for the fast quality gate and `pnpm verify` for the complete gate.
 All commands are cross-platform and are intended to be reused unchanged by future CI.
