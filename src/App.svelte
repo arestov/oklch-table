@@ -23,6 +23,7 @@ import { executeUiEffects } from "./ui/focus-effects.ts";
 
 let draftInput = $state<HTMLInputElement>();
 let workspace = $state<HTMLElement>();
+let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
 const feedbackCoordinator = createFeedbackCoordinator(() => {
@@ -130,8 +131,10 @@ onMount(() => {
 >
   <h1 id="page-title">Accessible OKLCH color workspace</h1>
   <p class="intro">Edit a color table with immediate, non-visual feedback.</p>
-  <button type="button" popovertarget="shortcut-help">Keyboard shortcuts</button>
-  <ShortcutHelpPopover />
+  <button bind:this={shortcutHelpTrigger} type="button" popovertarget="shortcut-help">
+    Keyboard shortcuts
+  </button>
+  <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
   <p class="jump-prompt">Column jump is active. Press 1 through 8, or Escape to cancel.</p>
   <WorkspaceTable
     candidate={$previewStore}

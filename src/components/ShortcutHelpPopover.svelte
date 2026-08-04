@@ -1,8 +1,21 @@
 <script lang="ts">
-let { id = "shortcut-help" }: { id?: string } = $props();
+let { id = "shortcut-help", trigger }: { id?: string; trigger: HTMLButtonElement | undefined } =
+  $props();
+let popover: HTMLElement;
+const manageFocus = () => {
+  if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
+  else trigger?.focus();
+};
 </script>
 
-<section {id} class="help-dialog" popover="auto" aria-labelledby={`${id}-title`}>
+<section
+  {id}
+  class="help-dialog"
+  popover="auto"
+  aria-labelledby={`${id}-title`}
+  bind:this={popover}
+  ontoggle={manageFocus}
+>
   <div class="popover-head">
     <h2 id={`${id}-title`} tabindex="-1">Column shortcuts</h2>
     <button type="button" popovertarget={id} popovertargetaction="hide">Close</button>
