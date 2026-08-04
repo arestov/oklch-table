@@ -1,24 +1,19 @@
 import { expect, test } from "@playwright/test";
-
-async function addColor(page: import("@playwright/test").Page, css: string): Promise<void> {
-  const draft = page.getByPlaceholder("fill color");
-  await draft.fill(css);
-  await draft.press("Enter");
-}
+import { addColor, goldenPathColors } from "./support/workspace.ts";
 
 test("supports the error-hover token golden path", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/");
 
   // Establish the two accent backgrounds and the white text color used to compare them.
-  await addColor(page, "oklch(0.5 0.15 260)");
+  await addColor(page, goldenPathColors.accentBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
-  await addColor(page, "oklch(0.6 0.15 260)");
+  await addColor(page, goldenPathColors.accentHover);
   await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
-  await addColor(page, "#ffffff");
+  await addColor(page, goldenPathColors.whiteText);
 
   // Add error-background, mark it as a background, then derive error-hover-background.
-  await addColor(page, "oklch(0.5 0.2 25)");
+  await addColor(page, goldenPathColors.errorBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 4" }).check();
   await page.getByRole("button", { name: "Duplicate color 4" }).click();
 

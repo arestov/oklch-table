@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "node ./tests/e2e/preview-server.mjs",
-    port: 4173,
+    url: "http://127.0.0.1:4173",
     // Each runner owns its preview server and Playwright terminates that child
     // when the suite finishes. Reusing an arbitrary listener leaks state and
     // makes sequential local runs non-deterministic.
