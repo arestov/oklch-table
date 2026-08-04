@@ -16,24 +16,24 @@ represented as covered merely because a related UI is present.
 | --- | --- | --- | --- | --- |
 | TC-01 | Browser | `tests/e2e/app.spec.ts` | `adds a color and keeps the workspace accessible` | automated |
 | TC-02 | Core | `src/core/workspace/commands.test.ts` | `adds a valid CSS draft with a generated stable ID and resets the next draft` | automated |
-| TC-03 | Browser | — | — | missing |
-| TC-04 | Browser | — | — | missing |
-| TC-05 | Browser | — | — | missing |
+| TC-03 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
+| TC-04 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
+| TC-05 | Browser | `tests/e2e/app.spec.ts` | `compares two accent colors through the text-contrast details` | automated |
 | TC-06 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated |
 | TC-07 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-08 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
 | TC-09 | Core | `src/core/workspace/commands.test.ts` | `accepts the idle boundary as exactly one transaction` | automated |
 | TC-10 | Core | `src/core/workspace/commands.test.ts` | `accepts one edit once, then leaves the already accepted edit unchanged` | automated |
 | TC-11 | Feedback | `src/core/feedback/english-announcement.test.ts` | `renders edit, APCA, WCAG, and color-vision sections in deterministic order` | automated |
-| TC-12 | Feedback | — | — | missing |
-| TC-13 | Feedback | — | — | missing |
+| TC-12 | Feedback | `src/core/feedback/english-announcement.test.ts` | `orders lost support before restored support and omits unchanged sections` | automated |
+| TC-13 | Feedback | `src/core/feedback/english-announcement.test.ts` | `orders lost support before restored support and omits unchanged sections` | automated |
 | TC-14 | Feedback | `src/core/feedback/english-announcement.test.ts` | `renders edit, APCA, WCAG, and color-vision sections in deterministic order` | automated |
-| TC-15 | Feedback | — | — | missing |
+| TC-15 | Feedback | `src/core/feedback/english-announcement.test.ts` | `orders lost support before restored support and omits unchanged sections` | automated |
 | TC-16 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-17 | Browser | `tests/e2e/app.spec.ts` | `cancels and rejects unavailable column jumps without moving draft focus` | automated |
 | TC-18 | Browser | `tests/e2e/app.spec.ts` | `cancels and rejects unavailable column jumps without moving draft focus` | automated |
 | TC-19 | Browser | `tests/e2e/app.spec.ts` | `cancels and rejects unavailable column jumps without moving draft focus` | automated |
-| TC-20 | Browser | — | — | missing |
+| TC-20 | Browser | `tests/e2e/app.spec.ts` | `cancels and rejects unavailable column jumps without moving draft focus` | automated |
 | TC-21 | Browser | `tests/e2e/app.spec.ts` | `keeps invalid input focused and publishes only an alert` | automated |
 | TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps each opened popover accessible and restores its trigger focus` | automated |
