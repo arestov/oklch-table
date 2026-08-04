@@ -1,4 +1,5 @@
 <script lang="ts">
+import ColorRow from "./components/ColorRow.svelte";
 import { announcementStore, visibleFeedbackStore } from "./core/feedback/index.ts";
 import {
   addColorFromDraft,
@@ -34,27 +35,23 @@ const onDraftKeydown = (event: KeyboardEvent) => {
       <thead>
         <tr>
           <th scope="col">#</th>
+          <th scope="col">Actions</th>
           <th scope="col">CSS color</th>
           <th scope="col">L</th>
           <th scope="col">C</th>
           <th scope="col">H</th>
           <th scope="col">Contrast background</th>
+          <th scope="col">Text contrast</th>
+          <th scope="col">Checks</th>
         </tr>
       </thead>
       <tbody>
         {#each buildRows($previewStore) as row (row.id)}
-          <tr data-row-id={row.id}>
-            <th scope="row">{row.row}</th>
-            <td>{row.css}</td>
-            <td>{row.l}</td>
-            <td>{row.c}</td>
-            <td>{row.h}</td>
-            <td>{row.background ? "Selected" : "Not selected"}</td>
-          </tr>
+          <ColorRow candidate={$previewStore} colorId={row.id} />
         {/each}
         <tr data-draft="true">
           <th scope="row">{$previewStore.document.colors.order.length + 1}</th>
-          <td>
+          <td colspan="2">
             <input
               bind:this={draftInput}
               class="css-color"
@@ -69,7 +66,7 @@ const onDraftKeydown = (event: KeyboardEvent) => {
               onkeydown={onDraftKeydown}
             >
           </td>
-          <td colspan="4">New color</td>
+          <td colspan="6">New color</td>
         </tr>
       </tbody>
     </table>
