@@ -123,3 +123,26 @@ test("keeps each opened popover accessible and restores its trigger focus", asyn
   await page.keyboard.press("Escape");
   await expect(help).toBeFocused();
 });
+
+test("publishes one atomic status mutation for an accepted edit", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const status = page.locator('[role="status"]');
+  await page.evaluate(() => {
+    const target = document.querySelector('[role="status"]');
+    if (!target) throw new Error("Missing status live region");
+    const mutations: string[] = [];
+    const observer = new MutationObserver(() => {
+      mutations.push(target.textContent ?? "");
+      window.sessionStorage.setItem("status-mutations", JSON.stringify(mutations));
+    });
+    observer.observe(target, { childList: true, characterData: true, subtree: true });
+  });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness for row 1" });
+  await lightness.fill("0.8");
+  await lightness.press("Enter");
+  await expect(status).toContainText("Lightness 0.8. Checks updated.");
+  expect(
+    await page.evaluate(() => JSON.parse(sessionStorage.getItem("status-mutations") ?? "[]")),
+  ).toEqual(["Lightness 0.8. Checks updated."]);
+});
