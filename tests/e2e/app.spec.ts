@@ -353,8 +353,24 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     };
   });
   expect(controlGeometry.inputType).toBe("text");
-  expect(controlGeometry.headingTextTop).toBe(controlGeometry.buttonTextTop);
+  expect(
+    Math.abs(controlGeometry.headingTextTop - controlGeometry.buttonTextTop),
+  ).toBeLessThanOrEqual(0.5);
   expect(controlGeometry.inputTextTop).toBe(controlGeometry.buttonTextTop);
+
+  const glyphTops = await firstRow.evaluate((row) => {
+    const rangeTop = (element: Element | null) => {
+      if (!element) throw new Error("Expected text element");
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getBoundingClientRect().top;
+    };
+    return {
+      heading: rangeTop(row.querySelector('th[scope="row"]')),
+      action: rangeTop(row.querySelector(".actions button")),
+    };
+  });
+  expect(glyphTops.heading).toBe(glyphTops.action);
 
   const numericHeadingAlignment = await page
     .locator("thead .numeric-heading")

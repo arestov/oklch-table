@@ -164,7 +164,7 @@ kbd {
 }
 
 table {
-  --control-text-inset: 7.5px;
+  --control-text-inset: 7px;
 
   width: 100%;
   min-width: 69rem;
@@ -239,10 +239,12 @@ tbody th[scope="row"] {
   padding-block-start: calc(10px + var(--control-text-inset));
   text-align: right;
   color: var(--muted);
+  line-height: 1.25rem;
 }
 
 .row-text-cell {
   padding-block-start: calc(10px + var(--control-text-inset));
+  line-height: 1.25rem;
 }
 
 .actions {
