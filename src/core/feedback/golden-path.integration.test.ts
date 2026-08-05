@@ -221,4 +221,32 @@ describe("golden-path feedback stores", () => {
     });
     expectSpokenSections();
   });
+
+  it("publishes WCAG and color-vision transitions together in deterministic order", () => {
+    const ids = createSequenceIds();
+    addColor(ids, "#ffffff");
+    addColor(ids, "#ffffff");
+    const backgroundId = acceptedRevisionStore.get().document.colors.order[1];
+    expect(setContrastBackground(backgroundId, true, ids)).toMatchObject({ status: "accepted" });
+
+    commitLightness(ids, backgroundId, "0");
+    expect(visibleFeedbackStore.get()).toEqual({
+      edited: "L 0. Checks updated.",
+      apca: "APCA: row 1 is now readable on background row 2.",
+      wcag: "WCAG: 1 failure resolved; 0 remain.",
+      cvd: "Color vision: conflict between row 1 and row 2 resolved; 0 remain.",
+    });
+    expectSpokenSections();
+
+    commitLightness(ids, backgroundId, "96");
+    expect(visibleFeedbackStore.get()).toEqual({
+      edited: "L 96. Checks updated.",
+      apca: "APCA: row 1 is no longer readable on background row 2.",
+      wcag: "WCAG: 1 failure added; 1 remain.",
+      cvd: "Color vision: conflict between row 1 and row 2 detected; 1 remain.",
+    });
+    expect(announcementStore.get().result.text).toBe(
+      "L 96. Checks updated. APCA: row 1 is no longer readable on background row 2. WCAG: 1 failure added; 1 remain. Color vision: conflict between row 1 and row 2 detected; 1 remain.",
+    );
+  });
 });
