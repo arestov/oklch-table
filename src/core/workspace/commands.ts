@@ -74,15 +74,13 @@ function accept(
   return result;
 }
 
-export function beginEdit(colorId: ColorId, field: DraftEdit["field"]): void {
-  activeEditStore.set({ colorId, field, raw: "", lastValidPatch: null });
-}
-export function updateDraft(raw: string): void {
+export function updateColorDraft(colorId: ColorId, field: DraftEdit["field"], raw: string): void {
   const active = activeEditStore.get();
-  if (!active) return;
-  const probe = { ...active, raw };
-  const candidate = buildCandidate(probe);
-  activeEditStore.set(candidate);
+  const edit =
+    active?.colorId === colorId && active.field === field
+      ? { ...active, raw }
+      : { colorId, field, raw, lastValidPatch: null };
+  activeEditStore.set(buildCandidate(edit));
 }
 function buildCandidate(edit: DraftEdit): DraftEdit {
   if (edit.field === "css") {

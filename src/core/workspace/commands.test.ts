@@ -3,12 +3,11 @@ import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
   addColorFromDraft,
-  beginEdit,
   deleteColor,
   duplicateColor,
   finishEdit,
   setNewColorDraft,
-  updateDraft,
+  updateColorDraft,
 } from "./commands.ts";
 import {
   acceptedRevisionStore,
@@ -51,8 +50,7 @@ describe("workspace commands", () => {
     if (added.status !== "accepted") throw new Error("Expected color to be added");
     const colorId = acceptedRevisionStore.get().document.colors.order[0];
 
-    beginEdit(colorId, "l");
-    updateDraft("80");
+    updateColorDraft(colorId, "l", "80");
     const accepted = finishEdit("idle", ids);
     expect(accepted.status).toBe("accepted");
     expect(finishEdit("enter", ids)).toEqual({ status: "unchanged" });
@@ -69,8 +67,7 @@ describe("workspace commands", () => {
       const added = addColorFromDraft(ids);
       if (added.status !== "accepted") throw new Error("Expected color to be added");
       const colorId = acceptedRevisionStore.get().document.colors.order[0];
-      beginEdit(colorId, "l");
-      updateDraft("80");
+      updateColorDraft(colorId, "l", "80");
       const result = finishEdit(reason, ids);
       expect(result).toMatchObject({ status: "accepted" });
       expect(finishEdit(reason, ids)).toEqual({ status: "unchanged" });
@@ -84,9 +81,8 @@ describe("workspace commands", () => {
     if (added.status !== "accepted") throw new Error("Expected color to be added");
     const colorId = acceptedRevisionStore.get().document.colors.order[0];
 
-    beginEdit(colorId, "l");
-    updateDraft("60");
-    updateDraft("0.");
+    updateColorDraft(colorId, "l", "60");
+    updateColorDraft(colorId, "l", "0.");
     const candidate = candidateStore.get();
     expect(candidate.status).toBe("invalid");
     if (candidate.status === "invalid")
@@ -123,8 +119,7 @@ describe("workspace commands", () => {
     if (added.status !== "accepted") throw new Error("Expected color to be added");
     const sourceId = acceptedRevisionStore.get().document.colors.order[0];
 
-    beginEdit(sourceId, "l");
-    updateDraft("80");
+    updateColorDraft(sourceId, "l", "80");
     const duplicated = duplicateColor(sourceId, ids);
     if (duplicated.status !== "accepted" || duplicated.transaction.cause.type !== "duplicate-color")
       throw new Error("Expected duplicate");
@@ -159,5 +154,22 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
 
     expect(candidateStore.get()).toBe(candidate);
+  });
+
+  it("updates an active edit with one store write per input", () => {
+    const ids = createSequenceIds();
+    setNewColorDraft("#ffffff");
+    const added = addColorFromDraft(ids);
+    if (added.status !== "accepted") throw new Error("Expected color to be added");
+    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const writes: string[] = [];
+    const stop = activeEditStore.listen((edit) => {
+      if (edit) writes.push(edit.raw);
+    });
+
+    updateColorDraft(colorId, "l", "80");
+
+    stop();
+    expect(writes).toEqual(["80"]);
   });
 });

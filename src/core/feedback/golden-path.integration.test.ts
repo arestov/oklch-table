@@ -4,12 +4,11 @@ import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
   addColorFromDraft,
-  beginEdit,
   duplicateColor,
   finishEdit,
   setContrastBackground,
   setNewColorDraft,
-  updateDraft,
+  updateColorDraft,
 } from "../workspace/commands.ts";
 import { acceptedRevisionStore, candidateStore } from "../workspace/stores.ts";
 import { announcementStore, visibleFeedbackStore } from "./stores.ts";
@@ -44,8 +43,7 @@ function commitLightness(
   colorId: ColorId,
   value: string,
 ): void {
-  beginEdit(colorId, "l");
-  updateDraft(value);
+  updateColorDraft(colorId, "l", value);
   expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
 }
 
@@ -92,8 +90,7 @@ describe("golden-path feedback stores", () => {
     const colorId = acceptedRevisionStore.get().document.colors.order[0];
     const before = announcementStore.get().result;
 
-    beginEdit(colorId, "l");
-    updateDraft("60");
+    updateColorDraft(colorId, "l", "60");
 
     const preview = candidateStore.get();
     expect(preview.status).toBe("valid");
@@ -170,8 +167,7 @@ describe("golden-path feedback stores", () => {
     addColor(ids, "#000000");
     const colorId = acceptedRevisionStore.get().document.colors.order[1];
 
-    beginEdit(colorId, "css");
-    updateDraft("#fefefe");
+    updateColorDraft(colorId, "css", "#fefefe");
     expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
     expect(visibleFeedbackStore.get()).toMatchObject({
       edited: "CSS color #fefefe. Checks updated.",
@@ -181,8 +177,7 @@ describe("golden-path feedback stores", () => {
     });
     expectSpokenSections();
 
-    beginEdit(colorId, "css");
-    updateDraft("#000000");
+    updateColorDraft(colorId, "css", "#000000");
     expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
     expect(visibleFeedbackStore.get()).toMatchObject({
       apca: "",
