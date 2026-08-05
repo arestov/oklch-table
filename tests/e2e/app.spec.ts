@@ -319,11 +319,17 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   expect(draftBox?.x).toBe(cssBox?.x);
 
   const firstRow = page.locator("tbody tr").first();
-  const [cssInputBox, resultButtonBox] = await Promise.all([
+  const [cssInputBox, resultButtonBox, checkboxBox] = await Promise.all([
     firstRow.getByRole("textbox").boundingBox(),
     firstRow.getByRole("button", { name: /^Text contrast/ }).boundingBox(),
+    firstRow.getByRole("checkbox").boundingBox(),
   ]);
   expect(cssInputBox?.y).toBe(resultButtonBox?.y);
+  expect(cssInputBox).not.toBeNull();
+  expect(checkboxBox).not.toBeNull();
+  const inputFirstLineCenter = (cssInputBox?.y ?? 0) + 17;
+  const checkboxCenter = (checkboxBox?.y ?? 0) + (checkboxBox?.height ?? 0) / 2;
+  expect(Math.abs(inputFirstLineCenter - checkboxCenter)).toBeLessThanOrEqual(1);
 
   const numericHeadingAlignment = await page
     .locator("thead .numeric-heading")

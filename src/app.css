@@ -101,9 +101,11 @@ button {
 }
 
 tbody button {
+  min-block-size: 2.125rem;
   border-color: transparent;
   background: transparent;
   padding: 6px 7px;
+  line-height: 1.25rem;
 }
 
 button:hover {
@@ -261,18 +263,21 @@ tbody button:hover {
 .checkbox-cell input {
   inline-size: 1.2rem;
   block-size: 1.2rem;
+  margin: calc(7px + (1.25rem - 1.2rem) / 2) 0 0;
 }
 
 input[type="text"],
 input[type="number"] {
   width: 100%;
   min-width: 5.25rem;
+  min-block-size: 2.125rem;
   border: 1px solid transparent;
   border-radius: 5px;
   background: transparent;
   color: var(--text);
   padding: 6px 7px;
   font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
 }
 
 input[type="number"] {
@@ -318,7 +323,7 @@ input[aria-invalid="true"] {
   width: 100%;
   min-width: 10rem;
   text-align: left;
-  line-height: 1.25;
+  line-height: 1.25rem;
   white-space: normal;
 }
 
