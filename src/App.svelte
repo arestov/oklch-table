@@ -24,6 +24,7 @@ let workspace = $state<HTMLElement>();
 let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
+let columnJumpNeedsRow = $state(false);
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
@@ -81,7 +82,16 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (!(event.target instanceof Node) || !workspace?.contains(event.target)) return;
   if (event.ctrlKey && event.key === ".") {
     event.preventDefault();
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    const row = target?.closest<HTMLTableRowElement>("tr[data-row-id]");
+    if (!row) {
+      columnJumpPending = false;
+      columnJumpNeedsRow = true;
+      announceShortcut("Select a color row before using column jump.");
+      return;
+    }
     columnJumpPending = true;
+    columnJumpNeedsRow = false;
     announceShortcut("Column jump. Press 1 through 8. Escape cancels.");
     return;
   }
@@ -90,6 +100,7 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.key === "Escape") {
     event.preventDefault();
     columnJumpPending = false;
+    columnJumpNeedsRow = false;
     announceShortcut("Column jump canceled.");
     return;
   }
@@ -130,6 +141,7 @@ onMount(() => {
   id="workspace"
   aria-labelledby="page-title"
   data-column-jump-active={columnJumpPending ? "true" : "false"}
+  data-column-jump-needs-row={columnJumpNeedsRow ? "true" : "false"}
 >
   <h1 id="page-title">Accessible OKLCH color workspace</h1>
   <p class="intro">Edit a color table with immediate, non-visual feedback.</p>
@@ -138,7 +150,11 @@ onMount(() => {
   </button>
   <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
   <LiveRegions status={$announcementStore.result.text} alert={$announcementStore.alert.text} />
-  <p class="jump-prompt">Column jump is active. Press 1 through 8, or Escape to cancel.</p>
+  <p class="jump-prompt">
+    {columnJumpNeedsRow
+      ? "Select a color row before using column jump."
+      : "Column jump is active. Press 1 through 8, or Escape to cancel."}
+  </p>
   <WorkspaceTable
     candidate={$previewStore}
     invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
