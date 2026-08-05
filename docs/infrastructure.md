@@ -25,6 +25,12 @@ Guidepup screen-reader suites run natively. The automated Windows acceptance
 suite pairs NVDA with Playwright Firefox, uses eSpeak, and temporarily selects
 English (US) for the foreground browser thread. Run `pnpm test:screen-reader`
 from an interactive desktop and leave the foreground untouched until it exits.
+The native stack is intentionally pinned to `@guidepup/guidepup` 0.31.0,
+`@guidepup/playwright` 0.18.0, and `@playwright/test` 1.62.1. Update these three
+packages as a tested compatibility set: older `@guidepup/playwright` 0.14.x
+was developed against Playwright 1.47.x and fails while creating the page
+fixture in this project's Playwright 1.62.x setup. Version 0.18.x targets the
+newer Playwright API line and is verified by the native suite below.
 The Linux Dev Container remains suitable for Biome, type checks, Vitest, Vite,
 Playwright, and axe-core; it is not a replacement for native screen-reader
 automation.
