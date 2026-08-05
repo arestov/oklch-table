@@ -1,5 +1,6 @@
 import { formatLightnessPercent } from "../../domain/color.ts";
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
+import { requireValue } from "../safety/required.ts";
 import type { WorkspaceTransaction } from "../workspace/transactions.ts";
 
 type Transaction = WorkspaceTransaction<AnalysisTree, SemanticSnapshot, SemanticChanges>;
@@ -41,7 +42,10 @@ function editFor(transaction: Transaction): AnnouncementPlan["edit"] {
       type: "duplicate",
       sourceRow: rowOf(before.document.colors.order, cause.sourceId),
       destinationRow: rowOf(after.document.colors.order, cause.createdId),
-      inheritsBackground: after.document.colors.byId[cause.createdId].roles.contrastBackground,
+      inheritsBackground: requireValue(
+        after.document.colors.byId[cause.createdId],
+        `Missing duplicated color ${cause.createdId}`,
+      ).roles.contrastBackground,
     };
   if (cause.type === "delete-color")
     return { type: "delete", row: rowOf(before.document.colors.order, cause.deletedId) };
@@ -51,7 +55,10 @@ function editFor(transaction: Transaction): AnnouncementPlan["edit"] {
       row: rowOf(after.document.colors.order, cause.colorId),
       enabled: cause.enabled,
     };
-  const row = after.semantic.rows[cause.edit.colorId];
+  const row = requireValue(
+    after.semantic.rows[cause.edit.colorId],
+    `Missing edited row ${cause.edit.colorId}`,
+  );
   const field =
     cause.edit.field === "css"
       ? "CSS color"

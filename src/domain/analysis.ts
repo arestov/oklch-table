@@ -1,3 +1,4 @@
+import { requireValue } from "../core/safety/required.ts";
 import {
   APCA_LEVELS,
   CVD_WARNING_THRESHOLD,
@@ -21,7 +22,13 @@ import type {
   WcagLevel,
 } from "./types.ts";
 
-const CVD_MATRICES: Record<CvdMode, readonly (readonly number[])[]> = {
+type CvdMatrix = readonly [
+  readonly [number, number, number],
+  readonly [number, number, number],
+  readonly [number, number, number],
+];
+
+const CVD_MATRICES: Record<CvdMode, CvdMatrix> = {
   protanopia: [
     [0.152286, 1.052583, -0.204868],
     [0.114503, 0.786281, 0.099216],
@@ -97,7 +104,7 @@ function apcaRecommendation(lc: number): ApcaRecommendation {
   return level;
 }
 
-function simulateCvdOklab(rgb: Rgb, matrix: readonly (readonly number[])[]) {
+function simulateCvdOklab(rgb: Rgb, matrix: CvdMatrix) {
   const inputR = rgb.r / 255;
   const inputG = rgb.g / 255;
   const inputB = rgb.b / 255;
@@ -126,7 +133,7 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
     }
   >;
   for (const id of document.colors.order) {
-    const color = document.colors.byId[id];
+    const color = requireValue(document.colors.byId[id], `Missing color ${id}`);
     const rgb = rgbForColor(color);
     const cvdOklab = {} as Record<CvdMode, ReturnType<typeof rgbToOklab>>;
     for (const mode of CVD_MODES) cvdOklab[mode] = simulateCvdOklab(rgb, CVD_MATRICES[mode]);
@@ -140,13 +147,15 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
 
   const contrast = {} as AnalysisTree["comparisons"]["contrast"];
   for (const rightId of document.colors.order) {
-    const background = document.colors.byId[rightId];
+    const background = requireValue(document.colors.byId[rightId], `Missing color ${rightId}`);
     if (!background.roles.contrastBackground) continue;
     for (const leftId of document.colors.order) {
       if (leftId === rightId) continue;
-      const apca = apcaContrast(metrics[leftId].apcaLuminance, metrics[rightId].apcaLuminance);
+      const leftMetrics = requireValue(metrics[leftId], `Missing analysis for ${leftId}`);
+      const rightMetrics = requireValue(metrics[rightId], `Missing analysis for ${rightId}`);
+      const apca = apcaContrast(leftMetrics.apcaLuminance, rightMetrics.apcaLuminance);
       const recommendation = apcaRecommendation(apca);
-      const ratio = wcagContrast(metrics[leftId].wcagLuminance, metrics[rightId].wcagLuminance);
+      const ratio = wcagContrast(leftMetrics.wcagLuminance, rightMetrics.wcagLuminance);
       const key = contrastKey(leftId, rightId);
       contrast[key] = {
         key,
@@ -164,14 +173,20 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
   const cvd = {} as AnalysisTree["comparisons"]["colorVision"];
   for (let leftIndex = 0; leftIndex < document.colors.order.length; leftIndex++) {
     for (let rightIndex = leftIndex + 1; rightIndex < document.colors.order.length; rightIndex++) {
-      const leftId = document.colors.order[leftIndex];
-      const rightId = document.colors.order[rightIndex];
+      const leftId = requireValue(
+        document.colors.order[leftIndex],
+        "Missing left comparison color",
+      );
+      const rightId = requireValue(
+        document.colors.order[rightIndex],
+        "Missing right comparison color",
+      );
       const key = colorVisionKey(leftId, rightId);
       const modes = {} as AnalysisTree["comparisons"]["colorVision"][ColorVisionKey]["modes"];
       for (const mode of CVD_MODES) {
         const distance = oklabDistance(
-          metrics[leftId].cvdOklab[mode],
-          metrics[rightId].cvdOklab[mode],
+          requireValue(metrics[leftId], `Missing analysis for ${leftId}`).cvdOklab[mode],
+          requireValue(metrics[rightId], `Missing analysis for ${rightId}`).cvdOklab[mode],
         );
         modes[mode] = { distance, warning: distance < CVD_WARNING_THRESHOLD };
       }
