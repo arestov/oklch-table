@@ -12,9 +12,7 @@ async function expectNoAxeViolations(page: import("@playwright/test").Page): Pro
 test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await page.goto("/");
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Accessible OKLCH color workspace" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "OKLCH color checks" })).toBeVisible();
 
   const draft = page.getByPlaceholder("fill color");
   await expect(draft).toBeFocused();
