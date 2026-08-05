@@ -304,6 +304,59 @@ test("announces APCA loss and restoration", async ({ page, nvda }) => {
   expect(restoredSpeech).toContain("L 60. Checks updated.");
 });
 
+test("announces stricter APCA guidance", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await prepareGoldenWorkspace(page);
+  const css = page.getByRole("textbox", { name: "CSS color for row 5" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await lightness.fill("60");
+  await lightness.press("Enter");
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 5");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeNumericFast(nvda, "75");
+      await nvda.press("Enter");
+    },
+    "APCA: row 3 now requires larger text on background row 5.",
+  );
+  await expect(lightness).toHaveValue("75");
+});
+
+test("announces easier APCA guidance", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await prepareGoldenWorkspace(page);
+  const css = page.getByRole("textbox", { name: "CSS color for row 5" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await lightness.fill("75");
+  await lightness.press("Enter");
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 5");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const easierSpeech = await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeNumericFast(nvda, "60");
+      await nvda.press("Enter");
+    },
+    "APCA: row 3 now allows smaller text on background row 5.",
+  );
+  await expect(lightness).toHaveValue("60");
+  expect(easierSpeech).toContain("L 60. Checks updated.");
+});
+
 test("announces a no-category edit without metric sections", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
