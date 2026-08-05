@@ -43,9 +43,9 @@ represented as covered merely because a related UI is present.
 ## Screen reader suite
 
 The browser golden path is executable from an empty workspace and reaches the
-native clipboard. `completes the error-hover golden path through the copied
-token` now starts empty and performs the workflow with NVDA/keyboard input;
-Playwright is restricted to assertions and infrastructure setup.
+native clipboard. `tests/screen-reader/golden-path.nvda.spec.ts` starts empty
+and performs the acceptance workflow with NVDA/keyboard input; Playwright is
+restricted to assertions and infrastructure setup.
 
 | Related TCs | Native test in `tests/screen-reader/nvda.spec.ts` | Status |
 | --- | --- | --- |
