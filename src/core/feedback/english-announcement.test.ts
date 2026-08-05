@@ -28,11 +28,6 @@ const emptySemantic = (): SemanticSnapshot => ({
   comparisons: { contrast: {}, colorVision: {} },
 });
 
-const emptyChanges = (): SemanticChanges => ({
-  rows: {},
-  comparisons: { contrast: {}, colorVision: {} },
-});
-
 const documentWithColor = (id: ColorId): DocumentTree => ({
   colors: {
     order: [id],
