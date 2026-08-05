@@ -26,6 +26,14 @@ async function typeCssColor(
   }
 }
 
+/** Sends real native key events without Guidepup waiting for speech between each character. */
+async function typeContinuous(
+  nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"],
+  text: string,
+) {
+  await nvda.type(text, { capture: false });
+}
+
 async function enterBrowseMode(nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"]) {
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 }
@@ -149,27 +157,24 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
 
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
   await expect(lightness).toBeFocused();
-  await expectSpokenAfterAction(
-    nvda,
-    async () => {
-      await nvda.press("Control+A");
-      await nvda.type(goldenPath.derivedLightness);
-      await nvda.press("Enter");
-    },
-    /Lightness 60 percent\. Checks updated\./,
-  );
+  await nvda.press("Control+A");
+  await typeContinuous(nvda, goldenPath.derivedLightness);
+  await page.waitForTimeout(800);
+  await expect(lightness).toHaveValue(goldenPath.derivedLightness);
+  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
 
-  const commitLightness = async (value: string, announcement: string | RegExp) =>
-    expectSpokenAfterAction(
-      nvda,
-      async () => {
-        await nvda.press("Control+A");
-        await nvda.type(value);
-        await nvda.press("Enter");
-        await expect(lightness).toHaveValue(value);
-      },
-      announcement,
-    );
+  const commitLightness = async (value: string, announcement: string | RegExp) => {
+    await nvda.press("Control+A");
+    await typeContinuous(nvda, value);
+    await page.waitForTimeout(800);
+    await expect(lightness).toHaveValue(value);
+    const status = page.getByRole("status");
+    await expect(status).toContainText(announcement);
+    const acceptedStatus = await status.textContent();
+    await nvda.press("Enter");
+    await expect(status).toHaveText(acceptedStatus ?? "");
+    return acceptedStatus ?? "";
+  };
   await commitLightness("90", "APCA: Text row 3 is no longer readable on background row 5.");
   await commitLightness("60", "APCA: Text row 3 is now readable on background row 5.");
   const sameCategorySpeech = await commitLightness(
