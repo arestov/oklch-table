@@ -45,7 +45,7 @@ describe("workspace transactions", () => {
       document: {
         colors: {
           order: [first, second],
-          byId: {} as never,
+          byId: {},
         },
       },
       analysis: null,
@@ -68,7 +68,7 @@ describe("workspace transactions", () => {
       ids,
       cause: { type: "delete-color", deletedId: first },
       before: revision,
-      after: { ...revision, document: { colors: { order: [second], byId: {} as never } } },
+      after: { ...revision, document: { colors: { order: [second], byId: {} } } },
       changes: ["changed"],
       isEmpty: (changes) => changes.length === 0,
     });

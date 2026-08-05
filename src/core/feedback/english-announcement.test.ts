@@ -1,50 +1,132 @@
 import { describe, expect, it } from "vitest";
+import { colorVisionKey, contrastKey } from "../../domain/analysis.ts";
+import type {
+  AnalysisTree,
+  ColorId,
+  CvdMode,
+  DocumentTree,
+  SemanticChanges,
+  SemanticContrast,
+  SemanticCvd,
+  SemanticSnapshot,
+} from "../../domain/types.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import { createEmptyDocument } from "../workspace/model.ts";
-import { createActionTransaction } from "../workspace/transactions.ts";
+import { createActionTransaction, type WorkspaceTransaction } from "../workspace/transactions.ts";
 import { buildAnnouncementPlan } from "./announcement-plan.ts";
 import { buildEnglishAnnouncement } from "./english-announcement.ts";
 
-const contrast = (row: number, backgroundRow = 9, wcagKey = 2) => ({
-  key: `color_test_${row}|color_test_${backgroundRow}`,
-  leftId: `color_test_${row}`,
-  rightId: `color_test_${backgroundRow}`,
-  leftRow: row,
-  rightRow: backgroundRow,
-  apca: 60,
-  recommendationKey: 2,
-  regular: 24,
-  bold: 16,
-  readableTextSupported: false,
-  wcagKey,
+const colorId = (row: number): ColorId => `color_test_${row}`;
+
+const emptyAnalysis = (): AnalysisTree => ({
+  colors: {},
+  comparisons: { contrast: {}, colorVision: {} },
 });
 
-const colorVision = (leftRow: number, rightRow: number, warnings: readonly string[] = []) => ({
-  key: `color_test_${leftRow}|color_test_${rightRow}`,
-  leftId: `color_test_${leftRow}`,
-  rightId: `color_test_${rightRow}`,
-  leftRow,
-  rightRow,
-  warnings,
+const emptySemantic = (): SemanticSnapshot => ({
+  rows: {},
+  comparisons: { contrast: {}, colorVision: {} },
 });
 
-const editTransaction = (changes: object, afterComparisons: object = {}) =>
-  ({
+const emptyChanges = (): SemanticChanges => ({
+  rows: {},
+  comparisons: { contrast: {}, colorVision: {} },
+});
+
+const documentWithColor = (id: ColorId): DocumentTree => ({
+  colors: {
+    order: [id],
+    byId: {
+      [id]: {
+        id,
+        value: { l: 0.5, c: 0, h: 0, alpha: 1 },
+        serialization: { format: "oklch", lightnessUnit: "number" },
+        roles: { contrastBackground: false },
+      },
+    },
+  },
+});
+
+const semanticRow = (row: number, l: number) => ({
+  id: colorId(row),
+  row,
+  css: `oklch(${l} 0 0)`,
+  l,
+  c: 0,
+  h: 0,
+  background: false,
+});
+
+const contrast = (row: number, backgroundRow = 9, wcagKey = 2): SemanticContrast => {
+  const leftId = colorId(row);
+  const rightId = colorId(backgroundRow);
+  return {
+    key: contrastKey(leftId, rightId),
+    leftId,
+    rightId,
+    leftRow: row,
+    rightRow: backgroundRow,
+    apca: 60,
+    recommendationKey: 2,
+    regular: 24,
+    bold: 16,
+    readableTextSupported: false,
+    wcagKey,
+  };
+};
+
+const colorVision = (
+  leftRow: number,
+  rightRow: number,
+  warnings: readonly CvdMode[] = [],
+): SemanticCvd => {
+  const leftId = colorId(leftRow);
+  const rightId = colorId(rightRow);
+  return {
+    key: colorVisionKey(leftId, rightId),
+    leftId,
+    rightId,
+    leftRow,
+    rightRow,
+    warnings: [...warnings],
+  };
+};
+
+type AnnouncementTransaction = WorkspaceTransaction<
+  AnalysisTree,
+  SemanticSnapshot,
+  SemanticChanges
+>;
+
+const editTransaction = (
+  changes: SemanticChanges,
+  options: { afterComparisons?: SemanticSnapshot["comparisons"]; lightness?: number } = {},
+): AnnouncementTransaction => {
+  const lightness = options.lightness ?? 0.5;
+  const afterComparisons = options.afterComparisons ?? emptySemantic().comparisons;
+  return {
+    id: "tx_test_1",
     cause: {
       type: "edit-field",
-      edit: { colorId: "color_test_1", field: "l", raw: "0.5", lastValidPatch: null },
+      edit: { colorId: "color_test_1", field: "l", raw: String(lightness), lastValidPatch: null },
       reason: "enter",
     },
-    before: { document: createEmptyDocument() },
+    before: {
+      document: createEmptyDocument(),
+      analysis: emptyAnalysis(),
+      semantic: emptySemantic(),
+    },
     after: {
-      document: { colors: { order: ["color_test_1"], byId: {} } },
+      document: createEmptyDocument(),
+      analysis: emptyAnalysis(),
       semantic: {
-        rows: { color_test_1: { l: 0.5 } },
+        rows: { color_test_1: semanticRow(1, lightness) },
         comparisons: afterComparisons,
       },
     },
     changes,
-  }) as never;
+  };
+};
 
 describe("English announcements", () => {
   it("renders an action only from its transaction", () => {
@@ -54,12 +136,12 @@ describe("English announcements", () => {
       cause: { type: "add-color", createdId: "color_test_1" },
       before: {
         document,
-        analysis: {} as never,
+        analysis: emptyAnalysis(),
         semantic: { rows: {}, comparisons: { contrast: {}, colorVision: {} } },
       },
       after: {
-        document: { colors: { order: ["color_test_1"], byId: {} } },
-        analysis: {} as never,
+        document: documentWithColor("color_test_1"),
+        analysis: emptyAnalysis(),
         semantic: { rows: {}, comparisons: { contrast: {}, colorVision: {} } },
       },
       changes: { rows: {}, comparisons: { contrast: {}, colorVision: {} } },
@@ -70,105 +152,56 @@ describe("English announcements", () => {
   });
 
   it("renders edit, APCA, WCAG, and color-vision sections in deterministic order", () => {
-    const contrast = {
-      key: "color_test_1|color_test_2",
-      leftId: "color_test_1",
-      rightId: "color_test_2",
-      leftRow: 1,
-      rightRow: 2,
-      apca: 60,
-      recommendationKey: 60,
-      regular: 60,
-      bold: 45,
-      readableTextSupported: false,
-      wcagKey: 2,
-    };
-    const cvd = {
-      key: "color_test_1|color_test_2",
-      leftId: "color_test_1",
-      rightId: "color_test_2",
-      leftRow: 1,
-      rightRow: 2,
-      warnings: ["protanopia"],
-    };
-    const rendered = buildEnglishAnnouncement({
-      cause: {
-        type: "edit-field",
-        edit: { colorId: "color_test_1", field: "l", raw: "0.68", lastValidPatch: null },
-        reason: "enter",
-      },
-      before: { document: createEmptyDocument(), analysis: {} as never, semantic: {} as never },
-      after: {
-        document: { colors: { order: ["color_test_1"], byId: {} as never } },
-        analysis: {} as never,
-        semantic: { rows: { color_test_1: { l: 0.68 } } } as never,
-      },
-      changes: {
-        rows: {},
-        comparisons: {
-          contrast: {
-            "color_test_1|color_test_2": {
-              key: "color_test_1|color_test_2",
-              after: contrast,
-              support: { before: true, after: false },
-              wcagKey: { before: 1, after: 0 },
+    const comparison = { ...contrast(1, 2), recommendationKey: 60, regular: 60, bold: 45 };
+    const cvd = colorVision(1, 2, ["protanopia"]);
+    const rendered = buildEnglishAnnouncement(
+      editTransaction(
+        {
+          rows: {},
+          comparisons: {
+            contrast: {
+              [comparison.key]: {
+                key: comparison.key,
+                after: comparison,
+                support: { before: true, after: false },
+                wcagKey: { before: 1, after: 0 },
+              },
             },
-          },
-          colorVision: {
-            "color_test_1|color_test_2": {
-              key: "color_test_1|color_test_2",
-              after: cvd,
-              warningsAdded: ["protanopia"],
-              warningsResolved: [],
+            colorVision: {
+              [cvd.key]: {
+                key: cvd.key,
+                after: cvd,
+                warningsAdded: ["protanopia"],
+                warningsResolved: [],
+              },
             },
           },
         },
-      },
-    } as never);
+        { lightness: 0.68 },
+      ),
+    );
     expect(rendered.spoken).toBe(
       "L 68. Checks updated. APCA: row 1 is no longer readable on background row 2. WCAG: 1 failure added; 0 remain. Color vision: conflict between row 1 and row 2 detected; 0 remain.",
     );
   });
 
   it("orders lost support before restored support and omits unchanged sections", () => {
-    const comparison = (row: number) => ({
-      key: `color_test_${row}|color_test_9`,
-      leftId: `color_test_${row}`,
-      rightId: "color_test_9",
-      leftRow: row,
-      rightRow: 9,
-      apca: 60,
-      recommendationKey: 2,
-      regular: 24,
-      bold: 16,
-      readableTextSupported: false,
-      wcagKey: 2,
-    });
-    const transaction = {
-      cause: {
-        type: "edit-field",
-        edit: { colorId: "color_test_1", field: "l", raw: "0.5", lastValidPatch: null },
-        reason: "enter",
-      },
-      before: { document: createEmptyDocument() },
-      after: {
-        document: { colors: { order: ["color_test_1"], byId: {} } },
-        semantic: {
-          rows: { color_test_1: { l: 0.5 } },
-          comparisons: { contrast: {}, colorVision: {} },
-        },
-      },
-      changes: {
-        rows: {},
-        comparisons: {
-          contrast: {
-            b: { after: comparison(2), support: { before: false, after: true } },
-            a: { after: comparison(1), support: { before: true, after: false } },
+    const lost = contrast(1);
+    const restored = contrast(2);
+    const transaction = editTransaction({
+      rows: {},
+      comparisons: {
+        contrast: {
+          [restored.key]: {
+            key: restored.key,
+            after: restored,
+            support: { before: false, after: true },
           },
-          colorVision: {},
+          [lost.key]: { key: lost.key, after: lost, support: { before: true, after: false } },
         },
+        colorVision: {},
       },
-    } as never;
+    });
     const plan = buildAnnouncementPlan(transaction);
     expect(plan.apca.map((item) => `${item.direction}:${item.textRows[0]}`)).toEqual([
       "lost:1",
@@ -182,24 +215,64 @@ describe("English announcements", () => {
   });
 
   it("bounds APCA row groups at four named rows and summarizes five or more", () => {
+    const largerOne = contrast(1);
+    const largerThree = contrast(3);
+    const largerFour = contrast(4);
+    const lostSix = contrast(6);
+    const lostSeven = contrast(7);
+    const lostEight = contrast(8);
+    const lostNine = contrast(9);
+    const lostTen = contrast(10);
     const transaction = editTransaction(
       {
         rows: {},
         comparisons: {
           contrast: {
-            one: { after: contrast(1), recommendationKey: { before: 2, after: 1 } },
-            three: { after: contrast(3), recommendationKey: { before: 2, after: 1 } },
-            four: { after: contrast(4), recommendationKey: { before: 2, after: 1 } },
-            six: { after: contrast(6), support: { before: true, after: false } },
-            seven: { after: contrast(7), support: { before: true, after: false } },
-            eight: { after: contrast(8), support: { before: true, after: false } },
-            nine: { after: contrast(9), support: { before: true, after: false } },
-            ten: { after: contrast(10), support: { before: true, after: false } },
+            [largerOne.key]: {
+              key: largerOne.key,
+              after: largerOne,
+              recommendationKey: { before: 2, after: 1 },
+            },
+            [largerThree.key]: {
+              key: largerThree.key,
+              after: largerThree,
+              recommendationKey: { before: 2, after: 1 },
+            },
+            [largerFour.key]: {
+              key: largerFour.key,
+              after: largerFour,
+              recommendationKey: { before: 2, after: 1 },
+            },
+            [lostSix.key]: {
+              key: lostSix.key,
+              after: lostSix,
+              support: { before: true, after: false },
+            },
+            [lostSeven.key]: {
+              key: lostSeven.key,
+              after: lostSeven,
+              support: { before: true, after: false },
+            },
+            [lostEight.key]: {
+              key: lostEight.key,
+              after: lostEight,
+              support: { before: true, after: false },
+            },
+            [lostNine.key]: {
+              key: lostNine.key,
+              after: lostNine,
+              support: { before: true, after: false },
+            },
+            [lostTen.key]: {
+              key: lostTen.key,
+              after: lostTen,
+              support: { before: true, after: false },
+            },
           },
           colorVision: {},
         },
       },
-      { contrast: {}, colorVision: {} },
+      { afterComparisons: { contrast: {}, colorVision: {} } },
     );
 
     expect(buildEnglishAnnouncement(transaction).visible.apca).toBe(
@@ -208,23 +281,39 @@ describe("English announcements", () => {
   });
 
   it("renders WCAG tier changes and aggregates sorted CVD pairs with the remaining count", () => {
+    const largeOne = contrast(1, 9, 1);
+    const largeTwo = contrast(2, 9, 1);
+    const normal = contrast(3, 9, 2);
+    const failed = contrast(8, 9, 0);
+    const later = colorVision(4, 5, ["protanopia"]);
+    const first = colorVision(1, 2, ["deuteranopia"]);
     const transaction = editTransaction(
       {
         rows: {},
         comparisons: {
           contrast: {
-            largeOne: { after: contrast(1, 9, 1), wcagKey: { before: 2, after: 1 } },
-            largeTwo: { after: contrast(2, 9, 1), wcagKey: { before: 2, after: 1 } },
-            normal: { after: contrast(3, 9, 2), wcagKey: { before: 1, after: 2 } },
+            [largeOne.key]: {
+              key: largeOne.key,
+              after: largeOne,
+              wcagKey: { before: 2, after: 1 },
+            },
+            [largeTwo.key]: {
+              key: largeTwo.key,
+              after: largeTwo,
+              wcagKey: { before: 2, after: 1 },
+            },
+            [normal.key]: { key: normal.key, after: normal, wcagKey: { before: 1, after: 2 } },
           },
           colorVision: {
-            later: {
-              after: colorVision(4, 5, ["protanopia"]),
+            [later.key]: {
+              key: later.key,
+              after: later,
               warningsAdded: ["protanopia"],
               warningsResolved: [],
             },
-            first: {
-              after: colorVision(1, 2, ["deuteranopia"]),
+            [first.key]: {
+              key: first.key,
+              after: first,
               warningsAdded: ["deuteranopia"],
               warningsResolved: [],
             },
@@ -232,15 +321,17 @@ describe("English announcements", () => {
         },
       },
       {
-        contrast: {
-          failed: contrast(8, 9, 0),
-          largeOne: contrast(1, 9, 1),
-          largeTwo: contrast(2, 9, 1),
-          normal: contrast(3, 9, 2),
-        },
-        colorVision: {
-          later: colorVision(4, 5, ["protanopia"]),
-          first: colorVision(1, 2, ["deuteranopia"]),
+        afterComparisons: {
+          contrast: {
+            [failed.key]: failed,
+            [largeOne.key]: largeOne,
+            [largeTwo.key]: largeTwo,
+            [normal.key]: normal,
+          },
+          colorVision: {
+            [later.key]: later,
+            [first.key]: first,
+          },
         },
       },
     );

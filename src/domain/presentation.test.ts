@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { colorVisionKey, contrastKey } from "./analysis.ts";
 import {
   buildContrastRows,
   createPresentationIndex,
   summarizeChecks,
   summarizeTextContrast,
 } from "./presentation.ts";
+import type { AnalysisTree, ColorId, DocumentTree } from "./types.ts";
 
 const recommendation = (key: number) =>
   key === 0
     ? { min: 0, key, label: "not suitable for readable text", regular: null, bold: null }
     : { min: 60, key, label: "UI and non-body text", regular: 24, bold: 16 };
+
+const colorId = (index: number): ColorId => `color_${index}`;
 
 function candidate(
   readable: readonly boolean[],
@@ -18,72 +22,55 @@ function candidate(
   wcagKeys: readonly number[] = readable.map((value) => (value ? 2 : 0)),
   apcaValues: readonly number[] = readable.map((value) => (value ? 60 : 20)),
 ) {
-  const order = ["color_target", ...readable.map((_, index) => `color_${index + 1}`)];
+  const targetId: ColorId = "color_target";
+  const order: ColorId[] = [targetId, ...readable.map((_, index) => colorId(index + 1))];
+  const byId: DocumentTree["colors"]["byId"] = {};
+  const contrast: AnalysisTree["comparisons"]["contrast"] = {};
+  const colorVision: AnalysisTree["comparisons"]["colorVision"] = {};
+
+  for (const id of order) {
+    byId[id] = {
+      id,
+      value: { l: 0.5, c: 0, h: 0, alpha: 1 },
+      serialization: { format: "oklch", lightnessUnit: "number" },
+      roles: { contrastBackground: id === targetId && background },
+    };
+  }
+
+  for (const [index, isReadable] of readable.entries()) {
+    const leftId = colorId(index + 1);
+    const key = contrastKey(leftId, targetId);
+    contrast[key] = {
+      key,
+      leftId,
+      rightId: targetId,
+      apca: apcaValues[index] ?? 0,
+      recommendation: recommendation(isReadable ? 2 : 0),
+      readableTextSupported: isReadable,
+      ratio: isReadable ? 4.5 : 1,
+      wcag: { key: wcagKeys[index] ?? 0, label: (wcagKeys[index] ?? 0) === 0 ? "fail" : "AA pass" },
+    };
+  }
+
+  for (const [index, warning] of cvdWarnings.entries()) {
+    const otherId = colorId(index + 1);
+    const key = colorVisionKey(targetId, otherId);
+    colorVision[key] = {
+      key,
+      leftId: targetId,
+      rightId: otherId,
+      modes: {
+        protanopia: { distance: 0, warning },
+        deuteranopia: { distance: 0, warning },
+        tritanopia: { distance: 0, warning: false },
+      },
+    };
+  }
+
   return {
-    status: "valid",
-    document: {
-      colors: {
-        order,
-        byId: Object.fromEntries(
-          order.map((id) => [
-            id,
-            {
-              id,
-              value: { l: 0.5, c: 0, h: 0, alpha: 1 },
-              serialization: { format: "oklch", lightnessUnit: "number" },
-              roles: { contrastBackground: id === "color_target" && background },
-            },
-          ]),
-        ),
-      },
-    },
-    analysis: {
-      colors: {},
-      comparisons: {
-        contrast: Object.fromEntries(
-          readable.map((isReadable, index) => {
-            const leftId = `color_${index + 1}`;
-            const key = `${leftId}|color_target`;
-            return [
-              key,
-              {
-                key,
-                leftId,
-                rightId: "color_target",
-                apca: apcaValues[index],
-                recommendation: recommendation(isReadable ? 2 : 0),
-                readableTextSupported: isReadable,
-                ratio: isReadable ? 4.5 : 1,
-                wcag: {
-                  key: wcagKeys[index],
-                  label: wcagKeys[index] === 0 ? "fail" : "AA pass",
-                },
-              },
-            ];
-          }),
-        ),
-        colorVision: Object.fromEntries(
-          cvdWarnings.map((warning, index) => {
-            const otherId = `color_${index + 1}`;
-            const key = ["color_target", otherId].sort().join("|");
-            return [
-              key,
-              {
-                key,
-                leftId: "color_target",
-                rightId: otherId,
-                modes: {
-                  protanopia: { distance: 0, warning },
-                  deuteranopia: { distance: 0, warning },
-                  tritanopia: { distance: 0, warning: false },
-                },
-              },
-            ];
-          }),
-        ),
-      },
-    },
-  } as never;
+    document: { colors: { order, byId } },
+    analysis: { colors: {}, comparisons: { contrast, colorVision } },
+  };
 }
 
 const textSummary = (value: ReturnType<typeof candidate>) =>
