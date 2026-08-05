@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.app.json",
+  "include": [
+    "src/**/*.svelte",
+    "src/**/*.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "playwright.screen-reader.config.ts",
+    "tests/**/*.ts"
+  ]
+}
