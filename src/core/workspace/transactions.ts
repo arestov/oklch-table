@@ -2,7 +2,7 @@ import type { ColorId, IdGenerator, TransactionId } from "../identity/ids.ts";
 import type { DraftEdit } from "./draft.ts";
 import type { DocumentTree } from "./model.ts";
 
-export type FinishReason = "idle" | "enter" | "blur" | "navigation";
+export type FinishReason = "enter" | "blur" | "navigation";
 export type TransactionCause =
   | { type: "edit-field"; edit: DraftEdit; reason: FinishReason }
   | { type: "add-color"; createdId: ColorId }
