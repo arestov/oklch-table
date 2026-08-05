@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCandidateRevision } from "./candidate.ts";
-import type { DraftState } from "./draft.ts";
+import type { DraftEdit } from "./draft.ts";
 import type { DocumentTree } from "./model.ts";
 
 const id = "color_test" as const;
@@ -24,11 +24,13 @@ const dependencies = {
 
 describe("candidate revisions", () => {
   it("keeps the last valid patch visible while raw input becomes invalid", () => {
-    const draft: DraftState = {
-      active: { colorId: id, field: "l", raw: "0.", lastValidPatch: { field: "l", value: 0.6 } },
-      newColor: { raw: "" },
+    const edit: DraftEdit = {
+      colorId: id,
+      field: "l",
+      raw: "0.",
+      lastValidPatch: { field: "l", value: 0.6 },
     };
-    const candidate = buildCandidateRevision(document, draft, dependencies);
+    const candidate = buildCandidateRevision(document, edit, dependencies);
     expect(candidate.status).toBe("invalid");
     if (candidate.status === "invalid")
       expect(candidate.lastValid.document.colors.byId[id].value.l).toBe(0.6);

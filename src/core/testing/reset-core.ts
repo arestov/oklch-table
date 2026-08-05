@@ -1,9 +1,13 @@
 import { deriveAnalysis } from "../../domain/analysis.ts";
 import { createSemanticSnapshot } from "../../domain/semantic.ts";
 import { announcementStore, visibleFeedbackStore } from "../feedback/stores.ts";
-import { createEmptyDraft } from "../workspace/draft.ts";
 import { createEmptyDocument } from "../workspace/model.ts";
-import { acceptedRevisionStore, draftStore, lastTransactionStore } from "../workspace/stores.ts";
+import {
+  acceptedRevisionStore,
+  activeEditStore,
+  lastTransactionStore,
+  newColorDraftStore,
+} from "../workspace/stores.ts";
 
 /** Restores the module-level workspace to its empty in-memory session for node scenarios. */
 export function resetCoreForTest(): void {
@@ -14,7 +18,8 @@ export function resetCoreForTest(): void {
     analysis,
     semantic: createSemanticSnapshot({ document, analysis }),
   });
-  draftStore.set(createEmptyDraft());
+  activeEditStore.set(null);
+  newColorDraftStore.set("");
   lastTransactionStore.set(null);
   announcementStore.set({
     result: { id: 0, text: "" },

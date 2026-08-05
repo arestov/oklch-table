@@ -1,9 +1,7 @@
-import type { ColorId } from "../identity/ids.ts";
 import type {
   CandidateRevision,
   ColorPatch,
   DraftEdit,
-  DraftState,
   InvalidCandidate,
   ValidCandidate,
 } from "./draft.ts";
@@ -50,7 +48,7 @@ function parsePatch<TAnalysis>(
 
 export function buildCandidateRevision<TAnalysis>(
   document: DocumentTree,
-  draft: DraftState,
+  edit: DraftEdit | null,
   dependencies: CandidateDependencies<TAnalysis>,
 ): CandidateRevision<TAnalysis> {
   const valid = (value: DocumentTree): ValidCandidate<TAnalysis> => ({
@@ -58,7 +56,6 @@ export function buildCandidateRevision<TAnalysis>(
     document: value,
     analysis: dependencies.analyze(value),
   });
-  const edit = draft.active;
   if (!edit) return valid(document);
   const parsed = parsePatch(edit, dependencies.parseCss);
   if ("message" in parsed) {
@@ -68,17 +65,4 @@ export function buildCandidateRevision<TAnalysis>(
     return { status: "invalid", issue: parsed, lastValid: valid(lastValid) };
   }
   return valid(applyPatch(document, edit, parsed));
-}
-
-export function updateDraft(
-  state: DraftState,
-  colorId: ColorId,
-  field: DraftEdit["field"],
-  raw: string,
-  parseCss: CandidateDependencies<unknown>["parseCss"],
-): DraftState {
-  const edit: DraftEdit = { colorId, field, raw, lastValidPatch: null };
-  const parsed = parsePatch(edit, parseCss);
-  if (!("message" in parsed)) edit.lastValidPatch = parsed;
-  return { ...state, active: edit };
 }

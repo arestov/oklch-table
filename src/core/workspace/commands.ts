@@ -11,10 +11,11 @@ import type { DocumentTree } from "./model.ts";
 import { parseNumericField } from "./numeric-fields.ts";
 import {
   acceptedRevisionStore,
+  activeEditStore,
   candidateDependencies,
   candidateStore,
-  draftStore,
   lastTransactionStore,
+  newColorDraftStore,
 } from "./stores.ts";
 import {
   createActionTransaction,
@@ -39,7 +40,8 @@ function applyTransaction(
 ): void {
   batch(() => {
     acceptedRevisionStore.set(transaction.after);
-    draftStore.set({ active: null, newColor: { raw: "" } });
+    activeEditStore.set(null);
+    newColorDraftStore.set("");
     lastTransactionStore.set(transaction);
   });
 }
@@ -73,17 +75,14 @@ function accept(
 }
 
 export function beginEdit(colorId: ColorId, field: DraftEdit["field"]): void {
-  draftStore.set({
-    ...draftStore.get(),
-    active: { colorId, field, raw: "", lastValidPatch: null },
-  });
+  activeEditStore.set({ colorId, field, raw: "", lastValidPatch: null });
 }
 export function updateDraft(raw: string): void {
-  const active = draftStore.get().active;
+  const active = activeEditStore.get();
   if (!active) return;
   const probe = { ...active, raw };
   const candidate = buildCandidate(probe);
-  draftStore.set({ ...draftStore.get(), active: candidate });
+  activeEditStore.set(candidate);
 }
 function buildCandidate(edit: DraftEdit): DraftEdit {
   if (edit.field === "css") {
@@ -105,12 +104,12 @@ export function finishEdit(reason: FinishReason, ids: IdGenerator = nanoIdGenera
   const candidate = candidateStore.get();
   if (candidate.status === "invalid")
     return { status: "invalid", message: candidate.issue.message };
-  const active = draftStore.get().active;
+  const active = activeEditStore.get();
   if (!active) return { status: "unchanged" };
   return accept({ type: "edit-field", edit: active, reason }, candidate.document, ids);
 }
 export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
-  const raw = draftStore.get().newColor.raw;
+  const raw = newColorDraftStore.get();
   const parsed = candidateDependencies.parseCss(raw);
   if (!parsed)
     return { status: "invalid", message: "Invalid CSS color. Enter HEX, RGB, or OKLCH." };
@@ -132,7 +131,7 @@ export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
   );
 }
 export function setNewColorDraft(raw: string): void {
-  draftStore.set({ ...draftStore.get(), newColor: { raw } });
+  newColorDraftStore.set(raw);
 }
 export function duplicateColor(sourceId: ColorId, ids: IdGenerator = nanoIdGenerator): Result {
   const current = actionDocument();

@@ -10,10 +10,11 @@ import {
   createFeedbackCoordinator,
 } from "./core/feedback/index.ts";
 import {
+  activeEditStore,
   addColorFromDraft,
   candidateStore,
-  draftStore,
   finishEdit,
+  newColorDraftStore,
   previewStore,
   setNewColorDraft,
 } from "./core/workspace/index.ts";
@@ -62,7 +63,7 @@ const onFinishEdit = (reason: "enter" | "blur") => {
   const result = finishEdit(reason);
   if (result.status === "invalid") {
     announceAlert(result.message);
-    const active = $draftStore.active;
+    const active = $activeEditStore;
     const field = $candidateStore.status === "invalid" ? $candidateStore.issue.field : null;
     if (active && field && field !== "new-color") focusInvalidField(active.colorId, field);
   }
@@ -167,7 +168,7 @@ onMount(() => {
   <WorkspaceTable
     candidate={$previewStore}
     invalidColorId={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
-      ? $draftStore.active?.colorId ?? null
+      ? $activeEditStore?.colorId ?? null
       : null}
     invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
       ? $candidateStore.issue.field
@@ -175,7 +176,7 @@ onMount(() => {
     fieldError={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
       ? $candidateStore.issue.message
       : ""}
-    draftRaw={$draftStore.newColor.raw}
+    draftRaw={$newColorDraftStore}
     {draftError}
     bind:draftInput
     {onAction}
