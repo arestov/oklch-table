@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { requireValue } from "../core/safety/required.ts";
 import { createCandidate } from "./analysis.ts";
 import { colorFromCss } from "./color.ts";
 
@@ -28,7 +29,10 @@ describe("semantic color analysis", () => {
         byId: { [text.id]: text, [background.id]: background },
       },
     });
-    const comparison = candidate.analysis.comparisons.contrast["color_text|color_background"];
+    const comparison = requireValue(
+      candidate.analysis.comparisons.contrast["color_text|color_background"],
+      "Expected contrast comparison",
+    );
     expect(comparison.readableTextSupported).toBe(true);
     expect(comparison.recommendation.key).toBeGreaterThan(0);
   });

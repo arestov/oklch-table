@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { requireValue } from "../core/safety/required.ts";
 import { diffSemanticSnapshots } from "./semantic-diff.ts";
 import type { SemanticSnapshot } from "./types.ts";
 
@@ -32,13 +33,19 @@ describe("semantic contrast diff", () => {
   it("keeps numeric APCA changes silent inside the same recommendation category", () => {
     const before = snapshot(2, 24, 2);
     const after = structuredClone(before);
-    after.comparisons.contrast["color_text|color_background"].apca = 61;
+    requireValue(
+      after.comparisons.contrast["color_text|color_background"],
+      "Expected contrast comparison",
+    ).apca = 61;
     expect(diffSemanticSnapshots(before, after).comparisons.contrast).toEqual({});
   });
 
   it("captures stricter recommendation and WCAG issue facts", () => {
     const changes = diffSemanticSnapshots(snapshot(2, 24, 2), snapshot(1, 32, 0));
-    const comparison = changes.comparisons.contrast["color_text|color_background"];
+    const comparison = requireValue(
+      changes.comparisons.contrast["color_text|color_background"],
+      "Expected contrast change",
+    );
     expect(comparison.recommendationKey).toEqual({ before: 2, after: 1 });
     expect(comparison.regular).toEqual({ before: 24, after: 32 });
     expect(comparison.wcagKey).toEqual({ before: 2, after: 0 });
