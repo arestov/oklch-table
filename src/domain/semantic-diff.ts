@@ -4,6 +4,7 @@ import type {
   ContrastChange,
   ContrastKey,
   CvdChange,
+  RowChange,
   SemanticChanges,
   SemanticSnapshot,
   ValueChange,
@@ -35,9 +36,12 @@ export function diffSemanticSnapshots(
       h: changed(previous.h, next.h),
       background: changed(previous.background, next.background),
     };
-    const compact = Object.fromEntries(
-      Object.entries(fields).filter(([, value]) => value !== undefined),
-    ) as typeof fields;
+    const compact: RowChange["fields"] = {};
+    if (fields.css) compact.css = fields.css;
+    if (fields.l) compact.l = fields.l;
+    if (fields.c) compact.c = fields.c;
+    if (fields.h) compact.h = fields.h;
+    if (fields.background) compact.background = fields.background;
     if (Object.keys(compact).length)
       rows[id] = { id, before: previous, after: next, fields: compact };
   }
@@ -52,15 +56,20 @@ export function diffSemanticSnapshots(
       contrast[key] = { key, before: previous, after: next };
       continue;
     }
+    const support = changed(previous.readableTextSupported, next.readableTextSupported);
+    const recommendationKey = changed(previous.recommendationKey, next.recommendationKey);
+    const regular = changed(previous.regular, next.regular);
+    const bold = changed(previous.bold, next.bold);
+    const wcagKey = changed(previous.wcagKey, next.wcagKey);
     const item: ContrastChange = {
       key,
       before: previous,
       after: next,
-      support: changed(previous.readableTextSupported, next.readableTextSupported),
-      recommendationKey: changed(previous.recommendationKey, next.recommendationKey),
-      regular: changed(previous.regular, next.regular),
-      bold: changed(previous.bold, next.bold),
-      wcagKey: changed(previous.wcagKey, next.wcagKey),
+      ...(support ? { support } : {}),
+      ...(recommendationKey ? { recommendationKey } : {}),
+      ...(regular ? { regular } : {}),
+      ...(bold ? { bold } : {}),
+      ...(wcagKey ? { wcagKey } : {}),
     };
     if (item.support || item.recommendationKey || item.regular || item.bold || item.wcagKey)
       contrast[key] = item;
