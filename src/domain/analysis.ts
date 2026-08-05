@@ -80,8 +80,9 @@ function softClampBlack(y: number): number {
   return y < threshold ? y + (threshold - y) ** 1.414 : y;
 }
 
-// APCA-W3-style calculation pinned to the constants below. Its recommendation
-// categories, rather than an unavailable user font profile, are the product fact.
+// APCA-W3 base algorithm 0.0.98G-4g (the base of apca-w3 library 0.1.9).
+// Source: https://github.com/Myndex/apca-w3#current-apca-constants
+// Recommendation categories, rather than an unavailable user font profile, are the product fact.
 function apcaContrast(textRgb: Rgb, backgroundRgb: Rgb): number {
   const txtY = softClampBlack(apcaLuminance(textRgb));
   const bgY = softClampBlack(apcaLuminance(backgroundRgb));
