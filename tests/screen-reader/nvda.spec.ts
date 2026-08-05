@@ -3,6 +3,7 @@ import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect, type Page } from "@playwright/test";
 import { addColor, goldenPathColors } from "../e2e/support/workspace.ts";
 import { setForegroundKeyboardLayout } from "./support/keyboard-layout.ts";
+import { expectSpokenAfterAction } from "./support/speech.ts";
 
 const englishUsLayout = "00000409";
 const originalLayouts = new WeakMap<Page, string>();
@@ -100,10 +101,9 @@ test("adds the first and second colors without leaving the draft loop", async ({
   await page.getByPlaceholder("fill color").fill(goldenPathColors.accentBackground);
   await activateBrowser(page);
   await enterFocusMode(nvda);
-  await nvda.clearSpokenPhraseLog();
-  await nvda.press("Enter");
+  await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Color added as row 1");
   await expect(page.locator("tbody tr")).toHaveCount(2);
-  await expectLiveRegionReadable(page, nvda, "status", "Color added as row 1");
+  await expect(page.getByRole("status")).toContainText("Color added as row 1");
   expect(await reportFocus(nvda)).toContain("CSS color for new row 2");
 
   const secondDraft = page.getByPlaceholder("fill color");
