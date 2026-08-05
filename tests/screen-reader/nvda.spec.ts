@@ -121,6 +121,51 @@ test("announces background selection and inherited duplication", async ({ page, 
   expect(duplicateSpeech).toContain("It inherits the contrast-background role.");
 });
 
+test("reads WCAG and color-vision issues from Checks and returns to its trigger", async ({
+  page,
+  nvda,
+}) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  await addColor(page, "#ffffff");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  const checks = page.getByRole("button", { name: /^Checks for row 1:/ });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 1");
+  await enterFocusMode(nvda);
+
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("8", { capture: false });
+  await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
+  expect(await reportFocus(nvda)).toContain("Checks");
+
+  await nvda.clearSpokenPhraseLog();
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
+  for (
+    let index = 0;
+    index < 40 && !(await spokenText(nvda)).includes("Possible conflict");
+    index += 1
+  ) {
+    await nvda.next();
+  }
+  const checksSpeech = await spokenText(nvda);
+  expect(checksSpeech).toContain("WCAG issues");
+  expect(checksSpeech).toContain("Text row 1 on background row 2");
+  expect(checksSpeech).toContain("Color vision");
+  expect(checksSpeech).toContain("Color 2");
+  expect(checksSpeech).toContain("protanopia Possible conflict");
+
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
+  await nvda.press("Escape");
+  await expect(checks).toBeFocused();
+  expect(await reportFocus(nvda)).toContain("Checks for row 1");
+});
+
 test("jumps to Lightness and reaches one grouped idle result", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
