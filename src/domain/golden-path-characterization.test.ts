@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { requireValue } from "../core/safety/required.ts";
 import { createCandidate } from "./analysis.ts";
 import { colorFromCss } from "./color.ts";
 
@@ -18,7 +19,10 @@ function contrastFacts(lightness: string) {
       byId: Object.fromEntries(colors.map((color) => [color.id, color])),
     },
   });
-  const comparison = candidate.analysis.comparisons.contrast["color_3|color_5"];
+  const comparison = requireValue(
+    candidate.analysis.comparisons.contrast["color_3|color_5"],
+    "Expected golden-path comparison",
+  );
   return {
     apca: comparison.apca,
     recommendation: comparison.recommendation,

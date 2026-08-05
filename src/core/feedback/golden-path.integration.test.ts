@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { ColorId } from "../identity/ids.ts";
+import { requireValue } from "../safety/required.ts";
 import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
@@ -32,10 +33,16 @@ function prepareGoldenPath(ids: ReturnType<typeof createSequenceIds>): ColorId {
   addColor(ids, "oklch(0.6 0.15 260)");
   addColor(ids, "#ffffff");
   addColor(ids, "oklch(0.5 0.2 25)");
-  const backgroundId = acceptedRevisionStore.get().document.colors.order[3];
+  const backgroundId = requireValue(
+    acceptedRevisionStore.get().document.colors.order[3],
+    "Golden path must create a fourth color",
+  );
   expect(setContrastBackground(backgroundId, true, ids)).toMatchObject({ status: "accepted" });
   expect(duplicateColor(backgroundId, ids)).toMatchObject({ status: "accepted" });
-  return acceptedRevisionStore.get().document.colors.order[4];
+  return requireValue(
+    acceptedRevisionStore.get().document.colors.order[4],
+    "Golden path must duplicate the background",
+  );
 }
 
 function commitLightness(
@@ -63,7 +70,9 @@ describe("golden-path feedback stores", () => {
     setNewColorDraft("#000000");
     expectOnePublication(() => addColorFromDraft(ids), "Color added as row 2.");
 
-    const [firstId, backgroundId] = acceptedRevisionStore.get().document.colors.order;
+    const order = acceptedRevisionStore.get().document.colors.order;
+    const firstId = requireValue(order[0], "Expected first color");
+    const backgroundId = requireValue(order[1], "Expected second color");
     expectOnePublication(
       () => setContrastBackground(backgroundId, true, ids),
       "Row 2 selected as a contrast background.",
@@ -74,7 +83,7 @@ describe("golden-path feedback stores", () => {
     );
 
     const document = acceptedRevisionStore.get().document;
-    const duplicateId = document.colors.order[2];
+    const duplicateId = requireValue(document.colors.order[2], "Expected duplicated color");
     expect(document.colors.order).toEqual([firstId, backgroundId, duplicateId]);
     expect(document.colors.byId[backgroundId].roles.contrastBackground).toBe(true);
     expect(document.colors.byId[duplicateId]).toMatchObject({
@@ -87,7 +96,10 @@ describe("golden-path feedback stores", () => {
     const ids = createSequenceIds();
     setNewColorDraft("#ffffff");
     addColorFromDraft(ids);
-    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const colorId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected color",
+    );
     const before = announcementStore.get().result;
 
     updateColorDraft(colorId, "l", "60");
@@ -185,7 +197,10 @@ describe("golden-path feedback stores", () => {
     const ids = createSequenceIds();
     addColor(ids, "#ffffff");
     addColor(ids, "#000000");
-    const colorId = acceptedRevisionStore.get().document.colors.order[1];
+    const colorId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[1],
+      "Expected second color",
+    );
 
     updateColorDraft(colorId, "css", "#fefefe");
     expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });

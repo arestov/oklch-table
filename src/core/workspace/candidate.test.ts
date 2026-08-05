@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { requireValue } from "../safety/required.ts";
 import { buildCandidateRevision } from "./candidate.ts";
 import type { DraftEdit } from "./draft.ts";
 import type { DocumentTree } from "./model.ts";
@@ -33,7 +34,10 @@ describe("candidate revisions", () => {
     const candidate = buildCandidateRevision(document, edit, 1, dependencies);
     expect(candidate.status).toBe("invalid");
     if (candidate.status === "invalid")
-      expect(candidate.lastValid.document.colors.byId[id].value.l).toBe(0.6);
+      expect(
+        requireValue(candidate.lastValid.document.colors.byId[id], "Expected fixture color").value
+          .l,
+      ).toBe(0.6);
   });
 
   it("reuses the accepted analysis when no edit changes the document", () => {

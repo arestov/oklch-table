@@ -172,9 +172,11 @@ test("traverses compact Checks summaries vertically", async ({ page, nvda }) => 
   await addColor(page, "#000000");
   await addColor(page, "#fefefe");
 
-  const checks = [1, 2, 3].map((row) =>
-    page.getByRole("button", { name: new RegExp(`^Checks for row ${row}:`) }),
-  );
+  const checks = [
+    page.getByRole("button", { name: /^Checks for row 1:/ }),
+    page.getByRole("button", { name: /^Checks for row 2:/ }),
+    page.getByRole("button", { name: /^Checks for row 3:/ }),
+  ] as const;
   await expect(checks[0]).toHaveAccessibleName(/1 CVD warning/);
   await expect(checks[1]).toHaveAccessibleName(/No issues/);
   await expect(checks[2]).toHaveAccessibleName(/1 CVD warning/);

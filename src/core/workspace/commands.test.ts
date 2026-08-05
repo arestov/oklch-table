@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { requireValue } from "../safety/required.ts";
 import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
@@ -48,7 +49,10 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
     const added = addColorFromDraft(ids);
     if (added.status !== "accepted") throw new Error("Expected color to be added");
-    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const colorId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected color",
+    );
 
     updateColorDraft(colorId, "l", "80");
     const accepted = finishEdit("idle", ids);
@@ -66,7 +70,10 @@ describe("workspace commands", () => {
       setNewColorDraft("#ffffff");
       const added = addColorFromDraft(ids);
       if (added.status !== "accepted") throw new Error("Expected color to be added");
-      const colorId = acceptedRevisionStore.get().document.colors.order[0];
+      const colorId = requireValue(
+        acceptedRevisionStore.get().document.colors.order[0],
+        "Expected color",
+      );
       updateColorDraft(colorId, "l", "80");
       const result = finishEdit(reason, ids);
       expect(result).toMatchObject({ status: "accepted" });
@@ -79,7 +86,10 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
     const added = addColorFromDraft(ids);
     if (added.status !== "accepted") throw new Error("Expected color to be added");
-    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const colorId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected color",
+    );
 
     updateColorDraft(colorId, "l", "60");
     updateColorDraft(colorId, "l", "0.");
@@ -96,14 +106,25 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
     const added = addColorFromDraft(ids);
     if (added.status !== "accepted") throw new Error("Expected color to be added");
-    const sourceId = acceptedRevisionStore.get().document.colors.order[0];
-    const source = acceptedRevisionStore.get().document.colors.byId[sourceId];
+    const sourceId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected source color",
+    );
+    const source = requireValue(
+      acceptedRevisionStore.get().document.colors.byId[sourceId],
+      "Expected source color node",
+    );
     const duplicated = duplicateColor(sourceId, ids);
     if (duplicated.status !== "accepted" || duplicated.transaction.cause.type !== "duplicate-color")
       throw new Error("Expected duplicate");
     const duplicateId = duplicated.transaction.cause.createdId;
 
-    expect(acceptedRevisionStore.get().document.colors.byId[duplicateId].provenance).toEqual({
+    expect(
+      requireValue(
+        acceptedRevisionStore.get().document.colors.byId[duplicateId],
+        "Expected duplicate",
+      ).provenance,
+    ).toEqual({
       duplicatedFrom: sourceId,
     });
     expect(deleteColor(sourceId, ids).status).toBe("accepted");
@@ -117,17 +138,27 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
     const added = addColorFromDraft(ids);
     if (added.status !== "accepted") throw new Error("Expected color to be added");
-    const sourceId = acceptedRevisionStore.get().document.colors.order[0];
+    const sourceId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected source color",
+    );
 
     updateColorDraft(sourceId, "l", "80");
     const duplicated = duplicateColor(sourceId, ids);
     if (duplicated.status !== "accepted" || duplicated.transaction.cause.type !== "duplicate-color")
       throw new Error("Expected duplicate");
 
-    expect(duplicated.transaction.after.document.colors.byId[sourceId].value.l).toBe(0.8);
     expect(
-      duplicated.transaction.after.document.colors.byId[duplicated.transaction.cause.createdId]
-        .value.l,
+      requireValue(
+        duplicated.transaction.after.document.colors.byId[sourceId],
+        "Expected source color",
+      ).value.l,
+    ).toBe(0.8);
+    expect(
+      requireValue(
+        duplicated.transaction.after.document.colors.byId[duplicated.transaction.cause.createdId],
+        "Expected duplicated color",
+      ).value.l,
     ).toBe(0.8);
   });
 
@@ -161,7 +192,10 @@ describe("workspace commands", () => {
     setNewColorDraft("#ffffff");
     const added = addColorFromDraft(ids);
     if (added.status !== "accepted") throw new Error("Expected color to be added");
-    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const colorId = requireValue(
+      acceptedRevisionStore.get().document.colors.order[0],
+      "Expected color",
+    );
     const writes: string[] = [];
     const stop = activeEditStore.listen((edit) => {
       if (edit) writes.push(edit.raw);
