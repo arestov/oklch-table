@@ -9,6 +9,16 @@ async function expectNoAxeViolations(page: import("@playwright/test").Page): Pro
   expect(accessibility.violations).toEqual([]);
 }
 
+async function pasteText(input: import("@playwright/test").Locator, text: string): Promise<void> {
+  await input.evaluate((element, value) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", value);
+    element.dispatchEvent(
+      new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData }),
+    );
+  }, text);
+}
+
 test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await page.goto("/");
 
@@ -28,16 +38,55 @@ test("adds a pasted CSS color immediately", async ({ page }) => {
   await page.goto("/");
 
   const draft = page.getByPlaceholder("fill color");
-  await draft.evaluate((input) => {
-    const clipboardData = new DataTransfer();
-    clipboardData.setData("text/plain", "oklch(0.7 0.1 60)");
-    input.dispatchEvent(
-      new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData }),
-    );
+  await page.evaluate(() => {
+    const target = document.querySelector('[role="status"]');
+    if (!target) throw new Error("Missing status live region");
+    const mutations: string[] = [];
+    new MutationObserver(() => {
+      mutations.push(target.textContent ?? "");
+      window.sessionStorage.setItem("paste-status-mutations", JSON.stringify(mutations));
+    }).observe(target, { childList: true, characterData: true, subtree: true });
+    window.sessionStorage.setItem("paste-status-mutations", JSON.stringify(mutations));
   });
+  await pasteText(draft, "oklch(0.7 0.1 60)");
 
   await expect(page.locator("tbody tr")).toHaveCount(2);
-  await expect(page.getByRole("status")).toContainText("Color added as row 1.");
+  await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(
+    "oklch(0.7 0.1 60)",
+  );
+  await expect(page.getByRole("textbox", { name: "CSS color for new row 2" })).toBeFocused();
+  await expect(page.getByRole("status")).toHaveText("Color added as row 1.");
+  expect(
+    await page.evaluate(() => JSON.parse(sessionStorage.getItem("paste-status-mutations") ?? "[]")),
+  ).toEqual(["Color added as row 1."]);
+});
+
+test("rejects an invalid pasted CSS color without leaving the draft", async ({ page }) => {
+  await page.goto("/");
+
+  const draft = page.getByPlaceholder("fill color");
+  await pasteText(draft, "not-a-color");
+
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await expect(draft).toBeFocused();
+  await expect(draft).toHaveValue("not-a-color");
+  await expect(draft).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("alert")).toHaveText("Invalid CSS color. Enter HEX, RGB, or OKLCH.");
+  await expect(page.getByRole("status")).toHaveText("");
+});
+
+test("accepts one manually typed CSS color on Enter", async ({ page }) => {
+  await page.goto("/");
+
+  const draft = page.getByPlaceholder("fill color");
+  await draft.pressSequentially("oklch(0.7 0.1 60)");
+  await expect(draft).toHaveValue("oklch(0.7 0.1 60)");
+  await draft.press("Enter");
+
+  await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(
+    "oklch(0.7 0.1 60)",
+  );
+  await expect(page.getByRole("textbox", { name: "CSS color for new row 2" })).toBeFocused();
 });
 
 test("keeps empty, invalid, and dark workspaces accessible", async ({ page }) => {
@@ -59,7 +108,9 @@ test("keeps empty, invalid, and dark workspaces accessible", async ({ page }) =>
 test("adds consecutive colors and preserves OKLCH serialization", async ({ page }) => {
   await page.goto("/");
   await addColor(page, "oklch(60% 0.15 260)");
+  await expect(page.getByRole("textbox", { name: "CSS color for new row 2" })).toBeFocused();
   await addColor(page, "#ffffff");
+  await expect(page.getByRole("textbox", { name: "CSS color for new row 3" })).toBeFocused();
   await expect(page.locator("tbody tr")).toHaveCount(3);
   await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(
     "oklch(60% 0.15 260)",
