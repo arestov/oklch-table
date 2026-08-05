@@ -103,8 +103,8 @@ export function summarizeTextContrast(candidate: Candidate, id: ColorId): Result
       unreadable === 0
         ? `All ${readable} usable`
         : readable === 0
-          ? plural(unreadable, "not readable")
-          : `${plural(unreadable, "not readable")} · ${plural(readable, "usable")}`,
+          ? plural(unreadable, "not readable", "not readable")
+          : `${plural(unreadable, "not readable", "not readable")} · ${plural(readable, "usable")}`,
     detail: `${plural(list.length, "comparison")} · ${worstMinimum}`,
     className: contrastClass(worst),
   };
