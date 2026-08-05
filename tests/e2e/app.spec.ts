@@ -14,11 +14,7 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await addColor(page, "#ffffff");
 
   await expect(page.locator("tbody tr")).toHaveCount(2);
-  await expect(
-    page
-      .getByRole("region", { name: "Last feedback checkpoint" })
-      .getByText("Color added as row 1.", { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Color added as row 1.");
 
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag22aa"])
@@ -220,4 +216,22 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   expect(cssBox).not.toBeNull();
   expect(draftBox).not.toBeNull();
   expect(draftBox?.x).toBe(cssBox?.x);
+});
+
+test("keeps visible screen-reader feedback in stable page flow", async ({ page }) => {
+  await page.goto("/");
+  const monitor = page.getByRole("region", { name: "Screen reader feedback" });
+  const table = page.getByRole("table", { name: "Colors in the current workspace" });
+  const before = await Promise.all([monitor.boundingBox(), table.boundingBox()]);
+  await addColor(page, "#ffffff");
+  await expect(page.getByRole("status")).toContainText("Color added as row 1.");
+  const after = await Promise.all([monitor.boundingBox(), table.boundingBox()]);
+
+  expect(before[0]?.height).toBe(after[0]?.height);
+  expect(before[1]?.y).toBe(after[1]?.y);
+  expect(
+    await page
+      .locator(".announcement-viewport")
+      .evaluate((element) => getComputedStyle(element).overflowY),
+  ).toBe("auto");
 });
