@@ -1,7 +1,11 @@
 import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect, type Page } from "@playwright/test";
 import { addColor, goldenPathColors } from "../e2e/support/workspace.ts";
-import { activateBrowser, restoreBrowserSession } from "./support/browser-session.ts";
+import {
+  activateBrowser,
+  openNativeWorkspace,
+  restoreBrowserSession,
+} from "./support/browser-session.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
 test.use({
@@ -27,31 +31,6 @@ async function reportFocus(nvda: NVDAPlaywright): Promise<string> {
   return nvda.itemText();
 }
 
-async function expectLiveRegionReadable(
-  page: Page,
-  nvda: NVDAPlaywright,
-  role: "alert" | "status",
-  text: string,
-): Promise<void> {
-  await expect(page.getByRole(role)).toContainText(text);
-  await nvda.clearSpokenPhraseLog();
-  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
-
-  for (let landmark = 0; landmark < 4; landmark += 1) {
-    await nvda.perform(nvda.keyboardCommands.moveToNextLandmark);
-    for (let item = 0; item < 4; item += 1) {
-      if ((await spokenText(nvda)).includes(text)) {
-        await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
-        return;
-      }
-      await nvda.next();
-    }
-  }
-
-  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
-  expect(await spokenText(nvda)).toContain(text);
-}
-
 async function enterFocusMode(nvda: NVDAPlaywright): Promise<void> {
   await nvda.perform(nvda.keyboardCommands.exitFocusMode);
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
@@ -69,34 +48,37 @@ async function prepareGoldenWorkspace(page: Page): Promise<void> {
 }
 
 test("announces the initial color draft", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
 
   await activateBrowser(page, nvda, "CSS color for new row 1");
 });
 
 test("adds the first and second colors without leaving the draft loop", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   await page.getByPlaceholder("fill color").fill(goldenPathColors.accentBackground);
   await activateBrowser(page, nvda, "CSS color for new row 1");
   await enterFocusMode(nvda);
   await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Color added as row 1");
   await expect(page.locator("tbody tr")).toHaveCount(2);
   await expect(page.getByRole("status")).toContainText("Color added as row 1");
-  expect(await reportFocus(nvda)).toContain("CSS color for new row 2");
+  expect(await activateBrowser(page, nvda, "CSS color for new row 2")).toContain(
+    "CSS color for new row 2",
+  );
 
   const secondDraft = page.getByPlaceholder("fill color");
   await secondDraft.fill(goldenPathColors.accentHoverBackground);
   await activateBrowser(page, nvda, "CSS color for new row 2");
-  await nvda.clearSpokenPhraseLog();
-  await secondDraft.press("Enter");
+  await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Color added as row 2");
   await expect(page.locator("tbody tr")).toHaveCount(3);
-  await expectLiveRegionReadable(page, nvda, "status", "Color added as row 2");
-  expect(await reportFocus(nvda)).toContain("CSS color for new row 3");
+  await expect(page.getByRole("status")).toContainText("Color added as row 2");
+  expect(await activateBrowser(page, nvda, "CSS color for new row 3")).toContain(
+    "CSS color for new row 3",
+  );
 });
 
 test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
   await page.getByRole("textbox", { name: "CSS color for row 5" }).focus();
   await activateBrowser(page, nvda, "CSS color for row 5");
@@ -109,22 +91,24 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   ).toBeFocused();
   expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 
-  await nvda.clearSpokenPhraseLog();
-  await nvda.press("Control+A");
-  await nvda.type("60");
-  await nvda.perform(nvda.keyboardCommands.stopSpeech);
-  await nvda.clearSpokenPhraseLog();
-  await page.keyboard.press("Enter");
+  await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A");
+      await nvda.type("60");
+      await nvda.press("Enter");
+    },
+    "Lightness 60 percent. Checks updated.",
+  );
   await expect(
     page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
   ).toHaveValue("60");
   await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
-  await expectLiveRegionReadable(page, nvda, "status", "Lightness 60 percent. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
 });
 
 test("reads contrast details and returns to the editing loop", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
   await lightness.fill("60");
@@ -155,18 +139,15 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
 });
 
 test("announces an invalid CSS color and preserves its focus", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   const draft = page.getByPlaceholder("fill color");
   await activateBrowser(page, nvda, "CSS color for new row 1");
 
   expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
   await enterFocusMode(nvda);
   await nvda.type("not-a-color");
-  await nvda.perform(nvda.keyboardCommands.stopSpeech);
-  await nvda.clearSpokenPhraseLog();
-  await nvda.press("Enter");
+  await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Invalid CSS color");
   await expect(draft).toBeFocused();
   await expect(draft).toHaveAttribute("aria-invalid", "true");
-  await expectLiveRegionReadable(page, nvda, "alert", "Invalid CSS color");
   expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
 });

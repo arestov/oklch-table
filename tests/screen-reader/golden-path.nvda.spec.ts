@@ -1,7 +1,11 @@
 import { nvdaTest as test } from "@guidepup/playwright";
 import { expect } from "@playwright/test";
 import { goldenPath } from "../fixtures/golden-path.ts";
-import { activateBrowser, restoreBrowserSession } from "./support/browser-session.ts";
+import {
+  activateBrowser,
+  openNativeWorkspace,
+  restoreBrowserSession,
+} from "./support/browser-session.ts";
 import { restoreNativeClipboard, setNativeClipboard } from "./support/clipboard.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
@@ -41,7 +45,7 @@ test.afterEach(async ({ page }) => {
 
 /** Full user transcript: all mutations come from the NVDA keyboard, never page setup. */
 test("completes the empty-workspace error-hover transcript", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
   await activateBrowser(page, nvda, "CSS color for new row 1");
   await enterBrowseMode(nvda);
@@ -208,7 +212,7 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
 });
 
 test("accepts a CSS token typed character by character", async ({ page, nvda }) => {
-  await page.goto("/");
+  await openNativeWorkspace(page);
   const draft = page.getByPlaceholder("fill color");
   await activateBrowser(page, nvda, "CSS color for new row 1");
   await enterBrowseMode(nvda);
