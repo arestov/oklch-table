@@ -48,9 +48,9 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   await expect(page.getByRole("status")).toContainText(
     "APCA: Text row 3 is now readable on background row 5.",
   );
-  await derivedLightness.fill("60.1");
+  await derivedLightness.fill("59.9");
   await derivedLightness.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Lightness 60.1 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("Lightness 59.9 percent. Checks updated.");
   await derivedLightness.fill("60");
   await derivedLightness.press("Enter");
   await expect(page.getByRole("status")).toHaveText("Lightness 60 percent. Checks updated.");

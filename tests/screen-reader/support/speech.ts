@@ -7,7 +7,8 @@ export async function expectSpokenAfterAction(
   action: () => Promise<void>,
   phrase: string | RegExp,
   timeout = 5000,
-): Promise<void> {
+): Promise<string> {
+  await nvda.perform(nvda.keyboardCommands.stopSpeech);
   await nvda.clearSpokenPhraseLog();
   await action();
   const deadline = Date.now() + timeout;
@@ -15,7 +16,21 @@ export async function expectSpokenAfterAction(
   do {
     log = await nvda.spokenPhraseLog();
     const spoken = log.join(" ");
-    if (typeof phrase === "string" ? spoken.includes(phrase) : phrase.test(spoken)) return;
+    if (typeof phrase === "string" ? spoken.includes(phrase) : phrase.test(spoken)) {
+      await new Promise((resolve) => setTimeout(resolve, 750));
+      log = await nvda.spokenPhraseLog();
+      const stableSpeech = log.join(" ");
+      const matches =
+        typeof phrase === "string"
+          ? stableSpeech.split(phrase).length - 1
+          : [
+              ...stableSpeech.matchAll(
+                new RegExp(phrase.source, `${phrase.flags.replace("g", "")}g`),
+              ),
+            ].length;
+      expect(matches, `Expected one automatic utterance. Full log: ${stableSpeech}`).toBe(1);
+      return stableSpeech;
+    }
     await new Promise((resolve) => setTimeout(resolve, 100));
   } while (Date.now() < deadline);
   expect(
@@ -24,4 +39,5 @@ export async function expectSpokenAfterAction(
   ).toMatch(
     typeof phrase === "string" ? new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) : phrase,
   );
+  return log.join(" ");
 }
