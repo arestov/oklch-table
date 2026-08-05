@@ -17,7 +17,7 @@ export async function expectSpokenAfterAction(
     log = await nvda.spokenPhraseLog();
     const spoken = log.join(" ");
     if (typeof phrase === "string" ? spoken.includes(phrase) : phrase.test(spoken)) {
-      await new Promise((resolve) => setTimeout(resolve, 750));
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
       log = await nvda.spokenPhraseLog();
       const stableSpeech = log.join(" ");
       const matches =
