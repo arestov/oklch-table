@@ -43,10 +43,9 @@ represented as covered merely because a related UI is present.
 ## Screen reader suite
 
 The browser golden path is executable from an empty workspace and reaches the
-native clipboard. The complete empty-workspace-to-clipboard NVDA transcript
-remains **pending**: current native cases are focused diagnostics and do not
-count as the full 18-step acceptance flow until `golden-path.nvda.spec.ts`
-drives it exclusively through NVDA and keyboard input.
+native clipboard. `completes the error-hover golden path through the copied
+token` now starts empty and performs the workflow with NVDA/keyboard input;
+Playwright is restricted to assertions and infrastructure setup.
 
 | Related TCs | Native test in `tests/screen-reader/nvda.spec.ts` | Status |
 | --- | --- | --- |
@@ -81,5 +80,6 @@ keyboard, mouse, or application switcher while this command is running.
 The six native scenarios cover initial focus, consecutive color entry, column
 jump and grouped feedback, contrast-detail reading and focus return, invalid
 input, and the complete error-hover golden path through clipboard verification.
-Native status at the latest verification: **6 passed on Windows with NVDA and
-Firefox**.
+Native status requires a functioning Guidepup/NVDA browser fixture; the latest
+local run was blocked before app interaction by Guidepup's
+`browserContext.newPage` `_page` initialization error.
