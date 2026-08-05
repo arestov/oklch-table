@@ -13,10 +13,14 @@ import {
   activeEditStore,
   addColorFromDraft,
   candidateStore,
+  deleteColor,
+  duplicateColor,
   finishEdit,
   newColorDraftStore,
   previewStore,
+  setContrastBackground,
   setNewColorDraft,
+  updateColorDraft,
 } from "./core/workspace/index.ts";
 import { executeUiEffects } from "./ui/focus-effects.ts";
 
@@ -47,6 +51,27 @@ const onDraftKeydown = (event: KeyboardEvent) => {
 };
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
   executeUiEffects(mountedWorkspace(), effects);
+const onActionResult = async (result: ReturnType<typeof duplicateColor>) => {
+  if (result.status === "invalid") {
+    announceAlert(result.message);
+    return;
+  }
+  if (result.status === "accepted") await onAction(result.effects);
+};
+const onEdit = (
+  colorId: import("./domain/types.ts").ColorId,
+  field: "css" | "l" | "c" | "h",
+  raw: string,
+) => {
+  updateColorDraft(colorId, field, raw);
+  feedbackCoordinator.schedule();
+};
+const onDuplicate = (colorId: import("./domain/types.ts").ColorId) =>
+  onActionResult(duplicateColor(colorId));
+const onDelete = (colorId: import("./domain/types.ts").ColorId) =>
+  onActionResult(deleteColor(colorId));
+const onSetBackground = (colorId: import("./domain/types.ts").ColorId, enabled: boolean) =>
+  onActionResult(setContrastBackground(colorId, enabled));
 const focusInvalidField = (
   colorId: import("./domain/types.ts").ColorId,
   field: "css" | "l" | "c" | "h",
@@ -179,8 +204,10 @@ onMount(() => {
     draftRaw={$newColorDraftStore}
     {draftError}
     bind:draftInput
-    {onAction}
-    onDraftChanged={() => feedbackCoordinator.schedule()}
+    {onEdit}
+    {onDuplicate}
+    {onDelete}
+    {onSetBackground}
     {onFinishEdit}
     onNewColorInput={setNewColorDraft}
     onNewColorKeydown={onDraftKeydown}
