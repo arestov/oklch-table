@@ -18,6 +18,7 @@ let {
   onSetBackground,
   onFinishEdit,
   onNewColorInput,
+  onNewColorPaste,
   onNewColorKeydown,
 }: {
   candidate: ValidCandidate<AnalysisTree>;
@@ -33,6 +34,7 @@ let {
   onSetBackground: (colorId: ColorId, enabled: boolean) => void | Promise<void>;
   onFinishEdit: (reason: "enter" | "blur") => void;
   onNewColorInput: (raw: string) => void;
+  onNewColorPaste: (raw: string) => void;
   onNewColorKeydown: (event: KeyboardEvent) => void;
 } = $props();
 const presentation = $derived(buildWorkspacePresentation(candidate));
@@ -98,6 +100,12 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
             aria-invalid={draftError ? "true" : undefined}
             aria-describedby={draftError ? "draft-help draft-error" : "draft-help"}
             oninput={(event) => onNewColorInput(event.currentTarget.value)}
+            onpaste={(event) => {
+              const raw = event.clipboardData?.getData("text/plain");
+              if (raw === undefined) return;
+              event.preventDefault();
+              onNewColorPaste(raw);
+            }}
             onkeydown={onNewColorKeydown}
           >
         </td>
