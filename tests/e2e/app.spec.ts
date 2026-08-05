@@ -210,23 +210,39 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
   ).toEqual(["Lightness 80 percent. Checks updated."]);
 });
 
-test("keeps a valid numeric draft transactional until an explicit boundary", async ({ page }) => {
+test("creates one idle checkpoint after 700 ms and does not repeat it on Enter", async ({
+  page,
+}) => {
   await page.goto("/");
   await addColor(page, "#ffffff");
   const status = page.getByRole("status");
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  await page.evaluate(() => {
+    const target = document.querySelector('[role="status"]');
+    if (!target) throw new Error("Missing status live region");
+    const mutations: string[] = [];
+    const observer = new MutationObserver(() => {
+      mutations.push(target.textContent ?? "");
+      window.sessionStorage.setItem("idle-status-mutations", JSON.stringify(mutations));
+    });
+    observer.observe(target, { childList: true, characterData: true, subtree: true });
+  });
 
   await lightness.focus();
   await page.keyboard.press("Control+A");
   await page.keyboard.press("8");
-  await page.waitForTimeout(900);
-  await expect(status).toHaveText("Color added as row 1.");
+  await page.waitForTimeout(500);
   await page.keyboard.press("0");
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(199);
   await expect(status).toHaveText("Color added as row 1.");
+  await page.waitForTimeout(1);
+  await expect(status).toHaveText("Lightness 80 percent. Checks updated.");
 
   await lightness.press("Enter");
-  await expect(status).toContainText("Lightness 80 percent. Checks updated.");
+  await page.waitForTimeout(50);
+  expect(
+    await page.evaluate(() => JSON.parse(sessionStorage.getItem("idle-status-mutations") ?? "[]")),
+  ).toEqual(["Lightness 80 percent. Checks updated."]);
 });
 
 test("uses bounded, unit-aware numeric controls", async ({ page }) => {
