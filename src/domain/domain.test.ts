@@ -32,4 +32,37 @@ describe("semantic color analysis", () => {
     expect(comparison.readableTextSupported).toBe(true);
     expect(comparison.recommendation.key).toBeGreaterThan(0);
   });
+
+  it("compares every unordered color pair in every color-vision mode", () => {
+    const colors = ["#ffffff", "#000000", "#ff0000", "#0000ff"].map((value, index) => {
+      const color = colorFromCss(`color_${index + 1}`, value);
+      if (!color) throw new Error("Fixture parsing failed");
+      return color;
+    });
+    const candidate = createCandidate({
+      colors: {
+        order: colors.map((color) => color.id),
+        byId: Object.fromEntries(colors.map((color) => [color.id, color])),
+      },
+    });
+
+    const comparisons = Object.values(candidate.analysis.comparisons.colorVision);
+    expect(comparisons).toHaveLength(6);
+    expect(comparisons.map((comparison) => comparison.key)).toEqual([
+      "color_1|color_2",
+      "color_1|color_3",
+      "color_1|color_4",
+      "color_2|color_3",
+      "color_2|color_4",
+      "color_3|color_4",
+    ]);
+    for (const comparison of comparisons) {
+      expect(comparison.leftId).not.toBe(comparison.rightId);
+      expect(Object.keys(comparison.modes).sort()).toEqual([
+        "deuteranopia",
+        "protanopia",
+        "tritanopia",
+      ]);
+    }
+  });
 });
