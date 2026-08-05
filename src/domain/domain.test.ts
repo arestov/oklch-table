@@ -17,4 +17,19 @@ describe("semantic color analysis", () => {
       "color_text|color_background",
     ]);
   });
+
+  it("exposes recommendation facts without claiming configured text support", () => {
+    const text = colorFromCss("color_text", "#fff");
+    const background = colorFromCss("color_background", "#000", true);
+    if (!text || !background) throw new Error("Fixture parsing failed");
+    const candidate = createCandidate({
+      colors: {
+        order: [text.id, background.id],
+        byId: { [text.id]: text, [background.id]: background },
+      },
+    });
+    const comparison = candidate.analysis.comparisons.contrast["color_text|color_background"];
+    expect(comparison.readableTextSupported).toBe(true);
+    expect(comparison.recommendation.key).toBeGreaterThan(0);
+  });
 });

@@ -39,7 +39,7 @@ describe("English announcements", () => {
       recommendationKey: 60,
       regular: 60,
       bold: 45,
-      configuredTextSupported: false,
+      readableTextSupported: false,
       wcagKey: 2,
     };
     const cvd = {
@@ -100,7 +100,7 @@ describe("English announcements", () => {
       recommendationKey: 2,
       regular: 24,
       bold: 16,
-      configuredTextSupported: false,
+      readableTextSupported: false,
       wcagKey: 2,
     });
     const transaction = {
