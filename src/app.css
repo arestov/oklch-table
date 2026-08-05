@@ -394,6 +394,46 @@ input[aria-invalid="true"] {
   background: oklch(0 0 0 / 15%);
 }
 
+@supports (position-anchor: --popover-anchor) and (top: anchor(bottom)) {
+  .anchored-popover {
+    position: absolute;
+    inset: auto;
+    top: calc(anchor(bottom) + 0.75rem);
+    right: anchor(right);
+    max-height: none;
+    margin: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .anchored-popover::before {
+    position: absolute;
+    z-index: 1;
+    top: -0.45rem;
+    right: 1.35rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    content: "";
+    transform: rotate(45deg);
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .anchored-popover .popover-surface {
+    position: relative;
+    z-index: 2;
+    max-height: min(82vh, 820px);
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 20px 60px oklch(0 0 0 / 25%);
+  }
+}
+
 .popover-head {
   position: sticky;
   top: 0;

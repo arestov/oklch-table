@@ -43,6 +43,31 @@ test("compares two accent colors through the text-contrast details", async ({ pa
   await expect(page.getByRole("table", { name: "Background color 1" })).toBeVisible();
 });
 
+test("anchors each result popover below its table cell", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+
+  const verifyPopover = async (triggerName: string) => {
+    const trigger = page.getByRole("button", { name: triggerName });
+    const cell = trigger.locator("xpath=..");
+    await trigger.click();
+    const popover = page.locator("[popover]:popover-open");
+    await expect(popover).toBeVisible();
+
+    const [cellBox, popoverBox] = await Promise.all([cell.boundingBox(), popover.boundingBox()]);
+    expect(cellBox).not.toBeNull();
+    expect(popoverBox).not.toBeNull();
+    if (!cellBox || !popoverBox) return;
+
+    expect(popoverBox.y).toBeGreaterThan(cellBox.y + cellBox.height);
+    expect(Math.abs(popoverBox.x + popoverBox.width - (cellBox.x + cellBox.width))).toBeLessThan(1);
+    await page.keyboard.press("Escape");
+  };
+
+  await verifyPopover("Text contrast for row 1");
+  await verifyPopover("Checks for row 1");
+});
+
 test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
   page,
 }) => {
