@@ -85,7 +85,7 @@ describe("English announcements", () => {
       },
     } as never);
     expect(rendered.spoken).toBe(
-      "Lightness 68 percent. Checks updated. APCA: Text row 1 is no longer readable on background row 2. WCAG: Text row 1 on background row 2: issue added (AA pass). Color vision: New warning (protanopia) between rows 1 and 2.",
+      "Lightness 68 percent. Checks updated. APCA: Text row 1 is no longer readable on background row 2. WCAG: 1 issue added; 0 remain. Color vision: conflict with row 1 and row 2 detected.",
     );
   });
 
@@ -104,9 +104,19 @@ describe("English announcements", () => {
       wcagKey: 2,
     });
     const transaction = {
-      cause: { type: "add-color", createdId: "color_test_1" },
+      cause: {
+        type: "edit-field",
+        edit: { colorId: "color_test_1", field: "l", raw: "0.5", lastValidPatch: null },
+        reason: "enter",
+      },
       before: { document: createEmptyDocument() },
-      after: { document: { colors: { order: ["color_test_1"], byId: {} } } },
+      after: {
+        document: { colors: { order: ["color_test_1"], byId: {} } },
+        semantic: {
+          rows: { color_test_1: { l: 0.5 } },
+          comparisons: { contrast: {}, colorVision: {} },
+        },
+      },
       changes: {
         rows: {},
         comparisons: {
@@ -119,13 +129,13 @@ describe("English announcements", () => {
       },
     } as never;
     const plan = buildAnnouncementPlan(transaction);
-    expect(plan.apca.map((item) => `${item.direction}:${item.comparison.leftRow}`)).toEqual([
+    expect(plan.apca.map((item) => `${item.direction}:${item.textRows[0]}`)).toEqual([
       "lost:1",
       "restored:2",
     ]);
     const rendered = buildEnglishAnnouncement(transaction);
     expect(rendered.spoken).toBe(
-      "Color added as row 1. APCA: Text row 1 is no longer readable on background row 9. APCA: Text row 2 is now readable on background row 9.",
+      "Lightness 50 percent. Checks updated. APCA: Text row 1 is no longer readable on background row 9. APCA: Text row 2 is now readable on background row 9.",
     );
     expect(rendered.visible).toMatchObject({ wcag: "", cvd: "" });
   });

@@ -23,20 +23,44 @@ export function buildEnglishAnnouncement(transaction: Transaction): RenderedAnno
               ? `Row ${plan.edit.row} selected as a contrast background.`
               : `Row ${plan.edit.row} is no longer a contrast background.`
             : `${plan.edit.field} ${plan.edit.value}. Checks updated.`;
-  const apca = plan.apca.map(
-    ({ comparison, direction }) =>
-      `APCA: Text row ${comparison.leftRow} ${direction === "lost" ? "is no longer readable" : "is now readable"} on background row ${comparison.rightRow}.`,
-  );
-  const wcag = plan.wcag.map(({ comparison, before, after }) => {
-    const label = (key: number) =>
-      key === 0 ? "an issue" : key === 1 ? "large text only" : "AA pass";
-    const change = after < before ? "issue added" : "issue resolved";
-    return `WCAG: Text row ${comparison.leftRow} on background row ${comparison.rightRow}: ${change} (${label(after)}).`;
+  const rows = (items: readonly number[]) =>
+    items.length === 1
+      ? `row ${items[0]}`
+      : items.length <= 4
+        ? `rows ${items.join(", ")}`
+        : `${items.length} rows`;
+  const apca = plan.apca.map(({ textRows, backgroundRow, direction }) => {
+    const singular = textRows.length === 1;
+    const message =
+      direction === "lost"
+        ? singular
+          ? "is no longer readable"
+          : "are no longer readable"
+        : direction === "restored"
+          ? singular
+            ? "is now readable"
+            : "are now readable"
+          : direction === "stricter"
+            ? singular
+              ? "now requires larger text"
+              : "now require larger text"
+            : singular
+              ? "now allows smaller text"
+              : "now allow smaller text";
+    return `APCA: Text ${rows(textRows)} ${message} on background row ${backgroundRow}.`;
   });
-  const cvd = plan.cvd.map(
-    ({ comparison, direction, modes }) =>
-      `Color vision: ${direction === "added" ? "New" : "Resolved"} warning${modes.length === 1 ? "" : "s"} (${modes.join(", ")}) between rows ${comparison.leftRow} and ${comparison.rightRow}.`,
+  const wcag = plan.wcag.map(({ direction, count, remaining }) =>
+    direction === "added"
+      ? `WCAG: ${count} issue${count === 1 ? "" : "s"} added; ${remaining} remain.`
+      : `WCAG: ${count} issue${count === 1 ? "" : "s"} resolved; ${remaining} remain.`,
   );
+  const cvd = plan.cvd.map(({ direction, pairs }) => {
+    const details =
+      pairs.length === 1
+        ? `row ${pairs[0][0]} and row ${pairs[0][1]}`
+        : `${pairs.length} color pairs`;
+    return `Color vision: conflict${pairs.length === 1 ? "" : "s"} with ${details} ${direction === "added" ? "detected" : "resolved"}.`;
+  });
   return {
     spoken: [edited, ...apca, ...wcag, ...cvd].join(" "),
     visible: { edited, apca: apca.join(" "), wcag: wcag.join(" "), cvd: cvd.join(" ") },

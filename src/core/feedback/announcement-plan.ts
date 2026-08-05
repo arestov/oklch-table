@@ -1,16 +1,9 @@
-import type {
-  AnalysisTree,
-  SemanticChanges,
-  SemanticContrast,
-  SemanticCvd,
-  SemanticSnapshot,
-} from "../../domain/types.ts";
+import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
 import { formatLightnessPercent } from "../workspace/numeric-fields.ts";
 import type { WorkspaceTransaction } from "../workspace/transactions.ts";
 
 type Transaction = WorkspaceTransaction<AnalysisTree, SemanticSnapshot, SemanticChanges>;
-type Comparison = SemanticContrast;
-type CvdComparison = SemanticCvd;
+type ApcaDirection = "lost" | "restored" | "stricter" | "easier";
 
 export interface AnnouncementPlan {
   edit:
@@ -19,105 +12,121 @@ export interface AnnouncementPlan {
     | { type: "delete"; row: number }
     | { type: "background"; row: number; enabled: boolean }
     | { type: "edit"; field: "CSS color" | "Lightness" | "Chroma" | "Hue"; value: string | number };
-  apca: readonly { comparison: Comparison; direction: "lost" | "restored" }[];
-  wcag: readonly { comparison: Comparison; before: number; after: number }[];
-  cvd: readonly {
-    comparison: CvdComparison;
-    direction: "added" | "removed";
-    modes: readonly string[];
-  }[];
+  apca: readonly { direction: ApcaDirection; textRows: readonly number[]; backgroundRow: number }[];
+  wcag: readonly { direction: "added" | "resolved"; count: number; remaining: number }[];
+  cvd: readonly { direction: "added" | "resolved"; pairs: readonly [number, number][] }[];
 }
 
 const rowOf = (order: readonly string[], id: string): number => order.indexOf(id) + 1;
-const compareRows = <T extends { comparison: { leftRow: number; rightRow: number } }>(
-  left: T,
-  right: T,
-): number =>
-  left.comparison.leftRow - right.comparison.leftRow ||
-  left.comparison.rightRow - right.comparison.rightRow;
+const topologyCause = (type: Transaction["cause"]["type"]): boolean =>
+  type === "add-color" ||
+  type === "duplicate-color" ||
+  type === "delete-color" ||
+  type === "set-background-role";
 
-/** Produces language-neutral announcement facts from one accepted transaction. */
+function editFor(transaction: Transaction): AnnouncementPlan["edit"] {
+  const { cause, before, after } = transaction;
+  if (cause.type === "add-color")
+    return { type: "add", row: rowOf(after.document.colors.order, cause.createdId) };
+  if (cause.type === "duplicate-color")
+    return {
+      type: "duplicate",
+      sourceRow: rowOf(before.document.colors.order, cause.sourceId),
+      destinationRow: rowOf(after.document.colors.order, cause.createdId),
+      inheritsBackground: after.document.colors.byId[cause.createdId].roles.contrastBackground,
+    };
+  if (cause.type === "delete-color")
+    return { type: "delete", row: rowOf(before.document.colors.order, cause.deletedId) };
+  if (cause.type === "set-background-role")
+    return {
+      type: "background",
+      row: rowOf(after.document.colors.order, cause.colorId),
+      enabled: cause.enabled,
+    };
+  const row = after.semantic.rows[cause.edit.colorId];
+  const field =
+    cause.edit.field === "css"
+      ? "CSS color"
+      : cause.edit.field === "l"
+        ? "Lightness"
+        : cause.edit.field === "c"
+          ? "Chroma"
+          : "Hue";
+  const value =
+    cause.edit.field === "css"
+      ? row.css
+      : cause.edit.field === "l"
+        ? `${formatLightnessPercent(row.l)} percent`
+        : cause.edit.field === "h"
+          ? `${row.h} degrees`
+          : row.c;
+  return { type: "edit", field, value };
+}
+
+/** Produces bounded language-neutral facts from one accepted transaction. */
 export function buildAnnouncementPlan(transaction: Transaction): AnnouncementPlan {
-  const { cause, changes, before, after } = transaction;
-  const edit =
-    cause.type === "add-color"
-      ? { type: "add" as const, row: rowOf(after.document.colors.order, cause.createdId) }
-      : cause.type === "duplicate-color"
-        ? {
-            type: "duplicate" as const,
-            sourceRow: rowOf(before.document.colors.order, cause.sourceId),
-            destinationRow: rowOf(after.document.colors.order, cause.createdId),
-            inheritsBackground:
-              after.document.colors.byId[cause.createdId].roles.contrastBackground,
-          }
-        : cause.type === "delete-color"
-          ? { type: "delete" as const, row: rowOf(before.document.colors.order, cause.deletedId) }
-          : cause.type === "set-background-role"
-            ? {
-                type: "background" as const,
-                row: rowOf(after.document.colors.order, cause.colorId),
-                enabled: cause.enabled,
-              }
-            : (() => {
-                const row = after.semantic.rows[cause.edit.colorId];
-                const field: "CSS color" | "Lightness" | "Chroma" | "Hue" =
-                  cause.edit.field === "css"
-                    ? "CSS color"
-                    : cause.edit.field === "l"
-                      ? "Lightness"
-                      : cause.edit.field === "c"
-                        ? "Chroma"
-                        : "Hue";
-                const value =
-                  cause.edit.field === "css"
-                    ? row.css
-                    : cause.edit.field === "l"
-                      ? `${formatLightnessPercent(row.l)} percent`
-                      : cause.edit.field === "h"
-                        ? `${row.h} degrees`
-                        : row.c;
-                return { type: "edit" as const, field, value };
-              })();
-  const apca = Object.values(changes.comparisons.contrast)
-    .flatMap((change) => {
-      if (!change.support) return [];
-      const comparison = change.after ?? change.before;
-      return comparison
-        ? [
-            {
-              comparison,
-              direction: change.support.after ? ("restored" as const) : ("lost" as const),
-            },
-          ]
-        : [];
-    })
-    .sort(
-      (left, right) =>
-        Number(left.direction === "restored") - Number(right.direction === "restored") ||
-        compareRows(left, right),
-    );
-  const wcag = Object.values(changes.comparisons.contrast)
-    .flatMap((change) => {
-      const comparison = change.after ?? change.before;
-      return comparison && change.wcagKey
-        ? [{ comparison, before: change.wcagKey.before, after: change.wcagKey.after }]
-        : [];
-    })
-    .sort(compareRows);
-  const cvd = Object.values(changes.comparisons.colorVision)
-    .flatMap((change) => {
-      const comparison = change.after ?? change.before;
-      if (!comparison) return [];
-      const added = change.warningsAdded.length
-        ? [{ comparison, direction: "added" as const, modes: change.warningsAdded }]
-        : [];
-      const removed = change.warningsResolved.length
-        ? [{ comparison, direction: "removed" as const, modes: change.warningsResolved }]
-        : [];
-      return [...added, ...removed];
-    })
-    .sort(
-      (left, right) => compareRows(left, right) || left.direction.localeCompare(right.direction),
-    );
-  return { edit, apca, wcag, cvd };
+  const edit = editFor(transaction);
+  if (topologyCause(transaction.cause.type)) return { edit, apca: [], wcag: [], cvd: [] };
+
+  const apcaFacts = new Map<
+    string,
+    { direction: ApcaDirection; textRows: number[]; backgroundRow: number }
+  >();
+  const wcagAdded: number[] = [];
+  const wcagResolved: number[] = [];
+  for (const change of Object.values(transaction.changes.comparisons.contrast)) {
+    const comparison = change.after ?? change.before;
+    if (!comparison) continue;
+    let direction: ApcaDirection | undefined;
+    if (change.support) direction = change.support.after ? "restored" : "lost";
+    else if (change.recommendationKey)
+      direction =
+        change.recommendationKey.after < change.recommendationKey.before ? "stricter" : "easier";
+    if (direction) {
+      const key = `${direction}:${comparison.rightRow}`;
+      const group = apcaFacts.get(key) ?? {
+        direction,
+        textRows: [],
+        backgroundRow: comparison.rightRow,
+      };
+      group.textRows.push(comparison.leftRow);
+      apcaFacts.set(key, group);
+    }
+    if (change.wcagKey) {
+      if (change.wcagKey.after < change.wcagKey.before) wcagAdded.push(comparison.wcagKey);
+      else wcagResolved.push(comparison.wcagKey);
+    }
+  }
+  const remaining = Object.values(transaction.after.semantic.comparisons?.contrast ?? {}).filter(
+    (item) => item.wcagKey === 0,
+  ).length;
+  const wcag = [
+    ...(wcagAdded.length
+      ? [{ direction: "added" as const, count: wcagAdded.length, remaining }]
+      : []),
+    ...(wcagResolved.length
+      ? [{ direction: "resolved" as const, count: wcagResolved.length, remaining }]
+      : []),
+  ];
+  const pairs = { added: [] as [number, number][], resolved: [] as [number, number][] };
+  for (const change of Object.values(transaction.changes.comparisons.colorVision)) {
+    const comparison = change.after ?? change.before;
+    if (!comparison) continue;
+    if (change.warningsAdded.length) pairs.added.push([comparison.leftRow, comparison.rightRow]);
+    if (change.warningsResolved.length)
+      pairs.resolved.push([comparison.leftRow, comparison.rightRow]);
+  }
+  const cvd = [
+    ...(pairs.added.length ? [{ direction: "added" as const, pairs: pairs.added }] : []),
+    ...(pairs.resolved.length ? [{ direction: "resolved" as const, pairs: pairs.resolved }] : []),
+  ];
+  const order = { lost: 0, stricter: 1, restored: 2, easier: 3 };
+  return {
+    edit,
+    apca: [...apcaFacts.values()]
+      .map((group) => ({ ...group, textRows: group.textRows.sort((a, b) => a - b) }))
+      .sort((a, b) => order[a.direction] - order[b.direction] || a.backgroundRow - b.backgroundRow),
+    wcag,
+    cvd,
+  };
 }
