@@ -460,6 +460,24 @@ test("creates one idle checkpoint after 700 ms and does not repeat it on Enter",
   ).toEqual(["L 80. Checks updated."]);
 });
 
+test("continues numeric input after an idle commit boundary", async ({ page }) => {
+  await page.clock.install({ time: new Date("2025-01-01T00:00:00Z") });
+  await page.goto("/");
+  await page.clock.pauseAt(new Date("2025-01-01T00:01:00Z"));
+  await addColor(page, "#ffffff");
+  const status = page.getByRole("status");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+
+  await lightness.fill("8");
+  await page.clock.runFor(700);
+  await expect(status).toHaveText("L 8. Checks updated.");
+
+  await lightness.pressSequentially("0");
+  await expect(lightness).toHaveValue("80");
+  await page.clock.runFor(700);
+  await expect(status).toHaveText("L 80. Checks updated.");
+});
+
 test("uses bounded, unit-aware numeric controls", async ({ page }) => {
   await page.goto("/");
   await addColor(page, "#ffffff");
