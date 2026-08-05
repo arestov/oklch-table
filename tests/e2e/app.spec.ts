@@ -11,11 +11,11 @@ async function expectNoAxeViolations(page: import("@playwright/test").Page): Pro
 
 async function pasteText(input: import("@playwright/test").Locator, text: string): Promise<void> {
   await input.evaluate((element, value) => {
-    const clipboardData = new DataTransfer();
-    clipboardData.setData("text/plain", value);
-    element.dispatchEvent(
-      new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData }),
-    );
+    const event = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", {
+      value: { getData: (type: string) => (type === "text/plain" ? value : "") },
+    });
+    element.dispatchEvent(event);
   }, text);
 }
 
@@ -54,7 +54,7 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await expectNoAxeViolations(page);
 });
 
-test("adds a pasted CSS color immediately", async ({ page }) => {
+test("adds a pasted CSS color immediately", async ({ page, context, browserName }) => {
   await page.goto("/");
 
   const draft = page.getByPlaceholder("fill color");
@@ -68,12 +68,17 @@ test("adds a pasted CSS color immediately", async ({ page }) => {
     }).observe(target, { childList: true, characterData: true, subtree: true });
     window.sessionStorage.setItem("paste-status-mutations", JSON.stringify(mutations));
   });
-  await pasteText(draft, "oklch(0.7 0.1 60)");
+  const token = "oklch(0.7 0.1 60)";
+  if (browserName === "chromium") {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.evaluate((text) => navigator.clipboard.writeText(text), token);
+    await draft.press("Control+V");
+  } else {
+    await pasteText(draft, token);
+  }
 
   await expect(page.locator("tbody tr")).toHaveCount(2);
-  await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(
-    "oklch(0.7 0.1 60)",
-  );
+  await expect(page.getByRole("textbox", { name: "CSS color for row 1" })).toHaveValue(token);
   await expect(page.getByRole("textbox", { name: "CSS color for new row 2" })).toBeFocused();
   await expect(page.getByRole("status")).toHaveText("Color added as row 1.");
   expect(
