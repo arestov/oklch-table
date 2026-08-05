@@ -78,6 +78,49 @@ test("adds the first and second colors without leaving the draft loop", async ({
   );
 });
 
+test("announces background selection and inherited duplication", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  const background = page.getByRole("checkbox", { name: "Contrast background for row 1" });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 1");
+  await enterFocusMode(nvda);
+
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("6", { capture: false });
+  await expect(background).toBeFocused();
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Space", { capture: true }),
+    "Row 1 selected as a contrast background.",
+  );
+  await expect(background).toBeChecked();
+
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("1", { capture: false });
+  await expect(page.getByRole("button", { name: "Duplicate color 1" })).toBeFocused();
+  const duplicateSpeech = await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Enter", { capture: true }),
+    "Row 1 duplicated as row 2. It inherits the contrast-background role.",
+  );
+
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 2" }),
+  ).toBeFocused();
+  await expect(page.getByRole("checkbox", { name: "Contrast background for row 2" })).toBeChecked();
+  expect(duplicateSpeech).toContain("It inherits the contrast-background role.");
+});
+
 test("jumps to Lightness and reaches one grouped idle result", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
