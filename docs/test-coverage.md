@@ -42,6 +42,11 @@ represented as covered merely because a related UI is present.
 
 ## Screen reader suite
 
+The complete empty-workspace-to-clipboard NVDA transcript remains **pending**.
+The current native cases are focused diagnostics; none is counted as the full
+18-step acceptance flow until `golden-path.nvda.spec.ts` drives it exclusively
+through NVDA and keyboard input.
+
 | Related TCs | Native test in `tests/screen-reader/nvda.spec.ts` | Status |
 | --- | --- | --- |
 | TC-01 | `announces the initial color draft` | Guidepup |
