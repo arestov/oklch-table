@@ -166,6 +166,38 @@ test("reads WCAG and color-vision issues from Checks and returns to its trigger"
   expect(await reportFocus(nvda)).toContain("Checks for row 1");
 });
 
+test("traverses compact Checks summaries vertically", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  await addColor(page, "#fefefe");
+
+  const checks = [1, 2, 3].map((row) =>
+    page.getByRole("button", { name: new RegExp(`^Checks for row ${row}:`) }),
+  );
+  await expect(checks[0]).toHaveAccessibleName(/1 CVD warning/);
+  await expect(checks[1]).toHaveAccessibleName(/No issues/);
+  await expect(checks[2]).toHaveAccessibleName(/1 CVD warning/);
+
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 1");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("8", { capture: false });
+  await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
+
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
+  await nvda.press("Escape");
+  await expect(checks[0]).toBeFocused();
+  expect(await reportFocus(nvda)).toContain("Checks for row 1");
+
+  for (const row of [2, 3]) {
+    await nvda.press("Control+Alt+Down");
+    expect(await nvda.itemText()).toContain(`Checks for row ${row}`);
+  }
+});
+
 test("announces WCAG and color-vision transitions after one committed edit", async ({
   page,
   nvda,
