@@ -34,7 +34,7 @@ importers:
         specifier: 1.0.1
         version: 1.0.1(stylelint@17.13.0(@typescript/typescript6@6.0.2)(supports-color@10.2.2))
       '@playwright/test':
-        specifier: ^1.0.0
+        specifier: ^1.62.1
         version: 1.62.1
       '@size-limit/file':
         specifier: ^12.0.0
