@@ -156,6 +156,26 @@ test("renders non-live summaries that update in place and explain their issues",
   await expect(textContrast.locator("small")).toBeVisible();
 });
 
+test("reveals all passing color-vision comparisons from Checks on request", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  await addColor(page, "#fefefe");
+
+  const checks = page.getByRole("button", { name: /^Checks for row 1:/ });
+  await checks.click();
+  const popover = page.getByLabel("Checks — color 1");
+  const hidePass = popover.getByRole("checkbox", { name: "Hide all-pass comparisons" });
+
+  await expect(hidePass).toBeChecked();
+  await expect(popover.getByText("Color 3:")).toBeVisible();
+  await expect(popover.getByText("Color 2:")).toHaveCount(0);
+
+  await hidePass.uncheck();
+  await expect(popover.getByText("Color 2:")).toBeVisible();
+  await expect(popover.getByText("Color 3:")).toBeVisible();
+});
+
 test("keeps invalid input focused and publishes only an alert", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
