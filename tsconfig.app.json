@@ -6,11 +6,13 @@
     "isolatedModules": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "strict": true,
     "target": "ES2024",
     "types": ["vite/client"],
     "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*.svelte", "src/**/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src/**/*.svelte", "src/**/*.ts", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }

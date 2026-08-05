@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false
+  },
   "include": [
     "src/**/*.svelte",
     "src/**/*.ts",

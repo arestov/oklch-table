@@ -16,13 +16,13 @@ Compile-time contract tests live beside the domain code as `*.type.test.ts`.
 They cover branded IDs, comparison keys, and transaction discriminants. A
 documented `@ts-expect-error` is allowed only for a negative type contract.
 
-## Deferred strictness
+## Strictness policy
 
-`noUncheckedIndexedAccess` is intentionally not enabled yet. A trial run
-identified more than 80 unchecked reads from color maps and arrays across the
-domain and presentation code. Enable it in a dedicated hardening change after
-introducing checked access helpers and updating the affected fixtures; do not
-silence those errors with non-null assertions.
+Production TypeScript enables both `noUncheckedIndexedAccess` and
+`exactOptionalPropertyTypes`. Reads from maps and arrays therefore require an
+explicit fallback or a checked invariant through `requireValue`.
 
-`exactOptionalPropertyTypes` should follow as a separate change, after the
-unchecked-read migration is complete.
+The external-test configuration keeps the ordinary strict settings but disables
+`noUncheckedIndexedAccess`: test fixtures routinely address known positions
+after asserting their setup, while the production boundary must preserve the
+runtime checks.
