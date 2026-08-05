@@ -2,12 +2,11 @@
 import { announceAlert } from "../core/feedback/index.ts";
 import type { ValidCandidate } from "../core/workspace/draft.ts";
 import {
-  beginEdit,
   deleteColor,
   duplicateColor,
   finishEdit,
   setContrastBackground,
-  updateDraft,
+  updateColorDraft,
 } from "../core/workspace/index.ts";
 import type { UiEffect } from "../core/workspace/transactions.ts";
 import type { RowView } from "../domain/presentation.ts";
@@ -37,8 +36,7 @@ let {
 let textContrastTrigger = $state<HTMLButtonElement>();
 let checksTrigger = $state<HTMLButtonElement>();
 const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
-  beginEdit(row.id, field);
-  updateDraft(raw);
+  updateColorDraft(row.id, field, raw);
   onDraftChanged();
 };
 const finishOnEnter = (event: KeyboardEvent) => {
