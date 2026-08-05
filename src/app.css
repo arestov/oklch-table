@@ -59,8 +59,7 @@ h3 {
   margin-block-end: 20px;
 }
 
-.panel,
-.feedback-panel {
+.panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -320,20 +319,6 @@ input[aria-invalid="true"] {
   font-size: 0.92rem;
 }
 
-.feedback-panel {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-block-start: 14px;
-  padding: 14px 16px;
-}
-
-.feedback-panel h2 {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: 1rem;
-}
-
 .feedback-section {
   padding: 11px 12px;
   border: 1px solid var(--border);
@@ -458,72 +443,64 @@ input[aria-invalid="true"] {
   border: 0;
 }
 
-/* Demonstration only: the same live regions remain visible on screen. */
-.announcement-stack {
-  position: absolute;
-  inset-block-start: 16px;
-  inset-inline-start: 16px;
-  z-index: 1000;
-  display: grid;
-  gap: 8px;
-  width: min(25rem, calc(100vw - 32px));
-  pointer-events: none;
+/* The actual live regions stay visible so sighted users can observe screen-reader feedback. */
+.announcement-monitor {
+  margin-block: 14px 18px;
 }
 
-.announcement-card {
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  box-shadow: 0 5px 18px oklch(0 0 0 / 14%);
-  color: var(--text);
-  font-size: 0.88rem;
-  line-height: 1.35;
-  backdrop-filter: blur(8px);
-}
-
-.announcement-card:empty {
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  box-shadow: none;
-}
-
-.announcement-card::before {
-  content: attr(data-channel);
-  display: block;
-  margin-block-end: 3px;
+.announcement-monitor h2 {
+  margin-block-end: 6px;
   color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 760;
-  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.announcement-viewport {
+  block-size: 7.5rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 9px 11px;
+  border-inline-start: 3px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
+}
+
+.announcement-channel {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 8px;
+}
+
+.announcement-channel + .announcement-channel {
+  margin-block-start: 7px;
+}
+
+.announcement-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.announcement-card:empty::before {
-  display: none;
-}
-
-.announcement-card[data-kind="alert"] {
-  border-color: color-mix(in srgb, var(--danger) 60%, var(--border));
-}
-
-.announcement-card[data-kind="alert"]::before {
+.alert-label {
   color: var(--danger);
 }
 
+.announcement-content p {
+  margin: 0;
+}
+
+.announcement-placeholder {
+  color: var(--muted);
+}
+
 @media (width <= 850px) {
-  .toolbar,
-  .feedback-panel {
+  .toolbar {
     grid-template-columns: 1fr;
   }
 
   .toolbar-actions {
     justify-content: start;
-  }
-
-  .feedback-panel h2 {
-    grid-column: auto;
   }
 }
 
@@ -531,7 +508,6 @@ input[aria-invalid="true"] {
   button,
   input,
   .panel,
-  .feedback-panel,
   [popover] {
     forced-color-adjust: auto;
   }

@@ -8,26 +8,34 @@ let {
 } = $props();
 </script>
 
-<aside class="announcement-stack" aria-label="Live announcement demonstration">
-  <div
-    class="announcement-card"
-    data-channel="Status"
-    role="status"
-    aria-live="polite"
-    aria-atomic="true"
-    aria-relevant="additions text"
-  >
-    {status}
+<section class="announcement-monitor" aria-labelledby="announcement-monitor-heading">
+  <h2 id="announcement-monitor-heading">Screen reader feedback</h2>
+  <div class="announcement-viewport">
+    <div class="announcement-channel">
+      <span class="announcement-label" aria-hidden="true">Status</span>
+      <div class="announcement-content">
+        <p role="status" aria-live="polite" aria-atomic="true" aria-relevant="additions text">
+          {status}
+        </p>
+        {#if !status}
+          <span class="announcement-placeholder" aria-hidden="true"
+            >No status announcement yet.</span
+          >
+        {/if}
+      </div>
+    </div>
+    <div class="announcement-channel">
+      <span class="announcement-label alert-label" aria-hidden="true">Alert</span>
+      <div class="announcement-content">
+        <p role="alert" aria-live="assertive" aria-atomic="true" aria-relevant="additions text">
+          {alert}
+        </p>
+        {#if !alert}
+          <span class="announcement-placeholder" aria-hidden="true"
+            >No alert announcement yet.</span
+          >
+        {/if}
+      </div>
+    </div>
   </div>
-  <div
-    class="announcement-card"
-    data-channel="Alert"
-    data-kind="alert"
-    role="alert"
-    aria-live="assertive"
-    aria-atomic="true"
-    aria-relevant="additions text"
-  >
-    {alert}
-  </div>
-</aside>
+</section>

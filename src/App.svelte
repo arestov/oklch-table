@@ -1,6 +1,5 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import FeedbackPanel from "./components/FeedbackPanel.svelte";
 import LiveRegions from "./components/LiveRegions.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import WorkspaceTable from "./components/WorkspaceTable.svelte";
@@ -9,7 +8,6 @@ import {
   announcementStore,
   announceShortcut,
   createFeedbackCoordinator,
-  visibleFeedbackStore,
 } from "./core/feedback/index.ts";
 import {
   addColorFromDraft,
@@ -139,6 +137,7 @@ onMount(() => {
     Keyboard shortcuts
   </button>
   <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
+  <LiveRegions status={$announcementStore.result.text} alert={$announcementStore.alert.text} />
   <p class="jump-prompt">Column jump is active. Press 1 through 8, or Escape to cancel.</p>
   <WorkspaceTable
     candidate={$previewStore}
@@ -161,6 +160,4 @@ onMount(() => {
   {#if draftError}
     <p class="error-message">{draftError}</p>
   {/if}
-  <FeedbackPanel edited={$visibleFeedbackStore.edited} />
-  <LiveRegions status={$announcementStore.result.text} alert={$announcementStore.alert.text} />
 </main>
