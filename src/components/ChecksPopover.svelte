@@ -15,8 +15,10 @@ let {
 } = $props();
 let hidePass = $state(true);
 let popover: HTMLElement;
+let open = $state(false);
 const manageFocus = () => {
-  if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
+  open = popover.matches(":popover-open");
+  if (open) popover.querySelector<HTMLElement>("h2")?.focus();
   else trigger?.focus();
 };
 const rows = $derived(buildCvdRows(index, colorId).filter((item) => !hidePass || item.hasWarning));
@@ -38,30 +40,32 @@ const contrastIssues = $derived(
       Close
     </button>
   </div>
-  <div class="popover-body">
-    {#if contrastIssues.length}
-      <h3>WCAG issues</h3>
-      <ul>
-        {#each contrastIssues as item (item.key)}
-          <li>Text row {item.textRow} on background row {item.backgroundRow}: {item.wcag}</li>
-        {/each}
-      </ul>
-    {/if}
-    <h3>Color vision</h3>
-    <label><input type="checkbox" bind:checked={hidePass}> Hide all-pass comparisons</label>
-    {#if rows.length}
-      <ul>
-        {#each rows as item (item.key)}
-          <li>
-            Color {item.otherRow}:
-            {#each Object.entries(item.modes) as [mode, signal]}
-              {mode} {signal.label}{" "}
-            {/each}
-          </li>
-        {/each}
-      </ul>
-    {:else}
-      <p class="empty-state">No possible color-vision conflicts are visible.</p>
-    {/if}
-  </div>
+  {#if open}
+    <div class="popover-body">
+      {#if contrastIssues.length}
+        <h3>WCAG issues</h3>
+        <ul>
+          {#each contrastIssues as item (item.key)}
+            <li>Text row {item.textRow} on background row {item.backgroundRow}: {item.wcag}</li>
+          {/each}
+        </ul>
+      {/if}
+      <h3>Color vision</h3>
+      <label><input type="checkbox" bind:checked={hidePass}> Hide all-pass comparisons</label>
+      {#if rows.length}
+        <ul>
+          {#each rows as item (item.key)}
+            <li>
+              Color {item.otherRow}:
+              {#each Object.entries(item.modes) as [mode, signal]}
+                {mode} {signal.label}{" "}
+              {/each}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <p class="empty-state">No possible color-vision conflicts are visible.</p>
+      {/if}
+    </div>
+  {/if}
 </section>
