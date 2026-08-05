@@ -166,6 +166,52 @@ test("reads WCAG and color-vision issues from Checks and returns to its trigger"
   expect(await reportFocus(nvda)).toContain("Checks for row 1");
 });
 
+test("announces WCAG and color-vision transitions after one committed edit", async ({
+  page,
+  nvda,
+}) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  await addColor(page, "#ffffff");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+  const css = page.getByRole("textbox", { name: "CSS color for row 2" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 2" });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 2");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  // NVDA emits an automatic live-region utterance only for a native edit.
+  // `typeNumericFast` sends the complete value as one keyboard action, rather
+  // than modelling a user's character-by-character editing behaviour.
+  const commit = (value: string, phrase: string) =>
+    expectSpokenAfterAction(
+      nvda,
+      async () => {
+        await nvda.press("Control+A", { capture: false });
+        await typeNumericFast(nvda, value);
+        await nvda.press("Enter");
+      },
+      phrase,
+    );
+
+  const resolved = await commit(
+    "0",
+    "Color vision: conflict between row 1 and row 2 resolved; 0 remain.",
+  );
+  expect(resolved).toContain("WCAG: 1 failure resolved; 0 remain.");
+  await expect(lightness).toHaveValue("0");
+
+  const detected = await commit(
+    "96",
+    "Color vision: conflict between row 1 and row 2 detected; 1 remain.",
+  );
+  expect(detected).toContain("WCAG: 1 failure added; 1 remain.");
+  await expect(lightness).toHaveValue("96");
+});
+
 test("jumps to Lightness and reaches one grouped idle result", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
