@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const includeAllBrowsers = Boolean(process.env.CI || process.env.PLAYWRIGHT_ALL_BROWSERS);
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -16,5 +18,17 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    ...(includeAllBrowsers
+      ? [
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+          },
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+          },
+        ]
+      : []),
   ],
 });

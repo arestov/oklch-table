@@ -75,6 +75,13 @@ test("explains the font-metrics limit of contrast size guidance", async ({ page 
 
 test("anchors each result popover below its table cell", async ({ page }) => {
   await page.goto("/");
+  test.skip(
+    !(await page.evaluate(
+      () =>
+        CSS.supports("position-anchor: --popover-anchor") && CSS.supports("top: anchor(bottom)"),
+    )),
+    "CSS anchor positioning is unavailable in this browser.",
+  );
   await addColor(page, "#ffffff");
 
   const verifyPopover = async (triggerName: string) => {
