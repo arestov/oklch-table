@@ -46,16 +46,25 @@ const onDraftKeydown = (event: KeyboardEvent) => {
 };
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
   executeUiEffects(mountedWorkspace(), effects);
+const focusInvalidField = (
+  colorId: import("./domain/types.ts").ColorId,
+  field: "css" | "l" | "c" | "h",
+) => {
+  requestAnimationFrame(() => {
+    const row = Array.from(
+      mountedWorkspace().querySelectorAll<HTMLTableRowElement>("tr[data-row-id]"),
+    ).find((item) => item.dataset.rowId === colorId);
+    row?.querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus();
+  });
+};
 const onFinishEdit = (reason: "enter" | "blur") => {
   feedbackCoordinator.cancel();
   const result = finishEdit(reason);
   if (result.status === "invalid") {
     announceAlert(result.message);
+    const active = $draftStore.active;
     const field = $candidateStore.status === "invalid" ? $candidateStore.issue.field : null;
-    if (field && field !== "new-color")
-      requestAnimationFrame(() =>
-        mountedWorkspace().querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus(),
-      );
+    if (active && field && field !== "new-color") focusInvalidField(active.colorId, field);
   }
 };
 const columnTargets: Record<string, string> = {
@@ -157,6 +166,9 @@ onMount(() => {
   </p>
   <WorkspaceTable
     candidate={$previewStore}
+    invalidColorId={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
+      ? $draftStore.active?.colorId ?? null
+      : null}
     invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
       ? $candidateStore.issue.field
       : null}

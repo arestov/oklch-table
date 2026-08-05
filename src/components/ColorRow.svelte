@@ -18,6 +18,7 @@ import TextContrastPopover from "./TextContrastPopover.svelte";
 let {
   candidate,
   colorId,
+  invalidColorId,
   invalidField = null,
   fieldError = "",
   onAction = () => {},
@@ -26,6 +27,7 @@ let {
 }: {
   candidate: ValidCandidate<AnalysisTree>;
   colorId: ColorId;
+  invalidColorId: ColorId | null;
   invalidField?: "css" | "l" | "c" | "h" | null;
   fieldError?: string;
   onAction?: (effects: readonly UiEffect[]) => void | Promise<void>;
@@ -87,7 +89,7 @@ const setBackground = (enabled: boolean) => {
       value={row.css}
       data-field="css"
       aria-label={`CSS color for row ${row.row}`}
-      aria-invalid={invalidField === "css" ? "true" : undefined}
+      aria-invalid={invalidColorId === colorId && invalidField === "css" ? "true" : undefined}
       oninput={(event) => edit("css", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
@@ -103,13 +105,13 @@ const setBackground = (enabled: boolean) => {
       step="0.1"
       inputmode="decimal"
       aria-label={`Lightness percentage for row ${row.row}`}
-      aria-invalid={invalidField === "l" ? "true" : undefined}
-      aria-describedby={invalidField === "l" ? `field-error-${colorId}` : undefined}
+      aria-invalid={invalidColorId === colorId && invalidField === "l" ? "true" : undefined}
+      aria-describedby={invalidColorId === colorId && invalidField === "l" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("l", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
-    {#if invalidField === "l"}
+    {#if invalidColorId === colorId && invalidField === "l"}
       <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
@@ -122,13 +124,13 @@ const setBackground = (enabled: boolean) => {
       step="0.001"
       inputmode="decimal"
       aria-label={`Chroma for row ${row.row}`}
-      aria-invalid={invalidField === "c" ? "true" : undefined}
-      aria-describedby={invalidField === "c" ? `field-error-${colorId}` : undefined}
+      aria-invalid={invalidColorId === colorId && invalidField === "c" ? "true" : undefined}
+      aria-describedby={invalidColorId === colorId && invalidField === "c" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("c", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
-    {#if invalidField === "c"}
+    {#if invalidColorId === colorId && invalidField === "c"}
       <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
@@ -142,13 +144,13 @@ const setBackground = (enabled: boolean) => {
       step="0.1"
       inputmode="decimal"
       aria-label={`Hue in degrees for row ${row.row}`}
-      aria-invalid={invalidField === "h" ? "true" : undefined}
-      aria-describedby={invalidField === "h" ? `field-error-${colorId}` : undefined}
+      aria-invalid={invalidColorId === colorId && invalidField === "h" ? "true" : undefined}
+      aria-describedby={invalidColorId === colorId && invalidField === "h" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("h", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
-    {#if invalidField === "h"}
+    {#if invalidColorId === colorId && invalidField === "h"}
       <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>

@@ -7,6 +7,7 @@ import ColorRow from "./ColorRow.svelte";
 
 let {
   candidate,
+  invalidColorId,
   invalidField,
   fieldError,
   draftRaw,
@@ -19,6 +20,7 @@ let {
   onNewColorKeydown,
 }: {
   candidate: ValidCandidate<AnalysisTree>;
+  invalidColorId: ColorId | null;
   invalidField: "css" | "l" | "c" | "h" | null;
   fieldError: string;
   draftRaw: string;
@@ -66,6 +68,7 @@ let {
         <ColorRow
           {candidate}
           colorId={row.id}
+          {invalidColorId}
           {invalidField}
           {fieldError}
           {onAction}

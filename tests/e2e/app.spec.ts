@@ -139,6 +139,23 @@ test("keeps invalid input focused and publishes only an alert", async ({ page })
   await expect(status).toHaveText("");
 });
 
+test("scopes an invalid numeric edit and its focus recovery to the active row", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  const first = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  const second = page.getByRole("spinbutton", { name: "Lightness percentage for row 2" });
+
+  await second.fill("101");
+  await second.press("Enter");
+
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAttribute("aria-invalid", "true");
+  await expect(first).not.toHaveAttribute("aria-invalid", "true");
+});
+
 test("requires a populated row and cancels column jump without moving focus", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
