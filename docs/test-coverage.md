@@ -9,6 +9,7 @@ represented as covered merely because a related UI is present.
 | --- | --- |
 | Domain | Color parsing, analysis and semantic projection/diff |
 | Core | Drafts, accepted revisions and workspace transactions |
+| Nanostore integration | Public workspace commands through transaction, semantic analysis, and feedback stores |
 | Browser | Keyboard, focus, popovers, live regions and clipboard |
 | Screen reader | Native Guidepup/NVDA acceptance flows |
 
@@ -40,6 +41,28 @@ represented as covered merely because a related UI is present.
 | TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-25 | Screen reader | `tests/screen-reader/golden-path.nvda.spec.ts` | `completes the empty-workspace error-hover transcript` | automated (native clipboard readback) |
 | APCA oracle | Domain | `src/domain/apca-oracle.test.ts` | `matches independent APCA-W3 0.0.98G-4g reference fixtures` | automated |
+
+## Golden-path feedback publication
+
+`src/core/feedback/golden-path.integration.test.ts` is the integration boundary
+for the main announcement matrix. It invokes only public workspace commands and
+observes the production nanostores, proving this chain:
+
+```text
+command → accepted revision + transaction → semantic analysis → announcementStore + visibleFeedbackStore
+```
+
+| Scenario step | Nanostore integration assertion | Delivery assertion |
+| --- | --- | --- |
+| Add rows, select background, duplicate | Stable order, inherited role/provenance, one result-id increment, and topology text | `nvda.spec.ts` confirms the background and duplicate speech |
+| Enter `L 60` | Draft preview is silent; one commit accepts `60`; repeated Enter is unchanged | `nvda.spec.ts` confirms fast native numeric speech; browser/NVDA idle case checks the status DOM |
+| `60 → 90 → 60` | Production APCA loss/restoration is retained in `apca`; WCAG remains its own section; spoken order equals non-empty sections | `nvda.spec.ts` confirms native APCA loss/restoration speech |
+| `60 → 59.9` | Only the edited-value section is published; APCA/WCAG/CVD are empty | `nvda.spec.ts` confirms no metric speech |
+| Color-vision add/resolve | CVD feedback is separate from APCA and WCAG, and the spoken result joins sections deterministically | Renderer unit tests cover plural aggregation; browser live-region tests cover DOM mutation |
+
+The nanostore test validates the content, ordering, atomic store publication,
+and deduplication policy. It does not claim that a screen reader spoke the
+message: that transport-level fact belongs to the native NVDA cases above.
 
 ## Screen reader suite
 
