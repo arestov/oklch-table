@@ -21,6 +21,7 @@ let {
   invalidField = null,
   fieldError = "",
   onAction = () => {},
+  onDraftChanged = () => {},
   onFinishEdit = () => undefined,
 }: {
   candidate: ValidCandidate<AnalysisTree>;
@@ -28,6 +29,7 @@ let {
   invalidField?: "css" | "l" | "c" | "h" | null;
   fieldError?: string;
   onAction?: (effects: readonly UiEffect[]) => void | Promise<void>;
+  onDraftChanged?: () => void;
   onFinishEdit?: (reason: "enter" | "blur") => void;
 } = $props();
 const row = $derived.by(() => {
@@ -40,6 +42,7 @@ let checksTrigger = $state<HTMLButtonElement>();
 const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
   beginEdit(colorId, field);
   updateDraft(raw);
+  onDraftChanged();
 };
 const finishOnEnter = (event: KeyboardEvent) => {
   if (event.key !== "Enter") return;

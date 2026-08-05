@@ -52,7 +52,7 @@ describe("workspace commands", () => {
 
     beginEdit(colorId, "l");
     updateDraft("80");
-    const accepted = finishEdit("enter", ids);
+    const accepted = finishEdit("idle", ids);
     expect(accepted.status).toBe("accepted");
     expect(finishEdit("enter", ids)).toEqual({ status: "unchanged" });
     expect(lastTransactionStore.get()).toBe(
@@ -60,7 +60,7 @@ describe("workspace commands", () => {
     );
   });
 
-  it.each(["enter", "blur", "navigation"] as const)(
+  it.each(["idle", "enter", "blur", "navigation"] as const)(
     "accepts the %s boundary as exactly one transaction",
     (reason) => {
       const ids = createSequenceIds();

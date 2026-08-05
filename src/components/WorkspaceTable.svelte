@@ -13,6 +13,7 @@ let {
   draftError,
   draftInput = $bindable(),
   onAction,
+  onDraftChanged,
   onFinishEdit,
   onNewColorInput,
   onNewColorKeydown,
@@ -24,6 +25,7 @@ let {
   draftError: string;
   draftInput?: HTMLInputElement;
   onAction: (effects: readonly UiEffect[]) => void | Promise<void>;
+  onDraftChanged: () => void;
   onFinishEdit: (reason: "enter" | "blur") => void;
   onNewColorInput: (raw: string) => void;
   onNewColorKeydown: (event: KeyboardEvent) => void;
@@ -56,6 +58,7 @@ let {
           {invalidField}
           {fieldError}
           {onAction}
+          {onDraftChanged}
           {onFinishEdit}
         />
       {/each}
