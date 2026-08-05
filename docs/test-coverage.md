@@ -18,7 +18,7 @@ represented as covered merely because a related UI is present.
 | TC-02 | Core | `src/core/workspace/commands.test.ts` | `adds a valid CSS draft with a generated stable ID and resets the next draft` | automated |
 | TC-03 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
 | TC-04 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
-| TC-05 | Browser | `tests/e2e/app.spec.ts` | `compares two accent colors through the text-contrast details` | automated |
+| TC-05 | Screen reader | `tests/screen-reader/golden-path.nvda.spec.ts` | `completes the empty-workspace error-hover transcript` | automated (native L/C/H navigation) |
 | TC-06 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated (empty workspace) |
 | TC-07 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-08 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
@@ -38,7 +38,7 @@ represented as covered merely because a related UI is present.
 | TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps each opened popover accessible and restores its trigger focus` | automated |
 | TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
-| TC-25 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated (native clipboard) |
+| TC-25 | Screen reader | `tests/screen-reader/golden-path.nvda.spec.ts` | `completes the empty-workspace error-hover transcript` | automated (native clipboard readback) |
 
 ## Screen reader suite
 
@@ -51,20 +51,23 @@ restricted to assertions and infrastructure setup.
 | --- | --- | --- |
 | Initial draft focus | `nvda.spec.ts` — `announces the initial color draft` | covered |
 | Consecutive additions | `nvda.spec.ts` — `adds the first and second colors without leaving the draft loop` | covered |
-| Isolated field edit and feedback | `nvda.spec.ts` — `jumps to Lightness and hears one grouped result` | covered |
+| Isolated fast field edit | `nvda.spec.ts` — `announces a fast numeric commit before the idle checkpoint` | covered (native speech) |
+| APCA transition feedback | `nvda.spec.ts` — `announces APCA loss and restoration` | covered (native speech) |
+| No-category feedback | `nvda.spec.ts` — `announces a no-category edit without metric sections` | covered (native speech) |
+| Idle field edit and feedback | `nvda.spec.ts` — `jumps to Lightness and reaches one grouped idle result` | covered (status DOM) |
 | Isolated details/focus return | `nvda.spec.ts` — `reads contrast details and returns to the editing loop` | covered |
 | Invalid draft | `nvda.spec.ts` — `announces an invalid CSS color and preserves its focus` | covered |
 | Empty-workspace golden path | `golden-path.nvda.spec.ts` — `completes the empty-workspace error-hover transcript` | covered |
 
 The complete native path asserts the two-dimensional `Ctrl+Alt+Up/Down`
 navigation, column shortcuts, row-4 and row-5 contrast details, duplicate
-inheritance, APCA lost/restored/no-category final status transitions, idle
-checkpoint behaviour, no duplicate status after Enter, and native clipboard
-readback. Browser Playwright covers atomic live-region mutations; native NVDA
-coverage is required for OS-generated focus/table speech. Guidepup logs speech
-associated with a command, but not ambient speech from an asynchronous 700 ms
-idle callback, so the latter is asserted through the actual status DOM rather
-than a manual readback.
+inheritance, idle checkpoint behaviour, no duplicate status after Enter, and
+native clipboard readback. Focused native tests assert actual NVDA speech for a
+fast numeric commit and for APCA lost/restored/no-category transitions. Browser
+Playwright covers atomic live-region mutations. Guidepup logs speech associated
+with a command, but not ambient speech from an asynchronous 700 ms idle callback,
+so the latter is asserted through the actual status DOM rather than a manual
+readback.
 
 `pnpm test:screen-reader` is intentionally separate from the ordinary browser
 suite. It launches NVDA through Guidepup and therefore requires a Windows
@@ -87,9 +90,9 @@ English (US) for keyboard input and restores the original layout after every
 test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
-On 2026-08-05, every native case passed in the documented Windows NVDA +
-Firefox Guidepup environment. The 2.5-minute golden path and the isolated
-cases were run in bounded groups because the local shell limits a command to
-four minutes. The suite is deliberately separate from `pnpm verify`;
+On 2026-08-05, the focused fast-numeric, APCA lost/restored, and no-category
+native cases passed in the documented Windows NVDA + Firefox Guidepup
+environment. Native cases are run in bounded groups because they control the
+foreground session. The suite is deliberately separate from `pnpm verify`;
 operating the foreground NVDA/Firefox session remains an environmental
 requirement, not a pre-commit requirement.

@@ -24,12 +24,12 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
       {#each rows as comparison (comparison.key)}
         <tr>
           <th scope="row">Color {comparison.textRow}</th>
-          <td class={comparison.className}>Color {comparison.backgroundRow}</td>
-          <td class={comparison.className}>{comparison.recommendation}</td>
-          <td class={comparison.className}>{comparison.regular}</td>
-          <td class={comparison.className}>{comparison.bold}</td>
-          <td class={comparison.className}>{comparison.apca}</td>
-          <td class={comparison.className}>{comparison.wcag}</td>
+          <td>Color {comparison.backgroundRow}</td>
+          <td class={comparison.apcaClassName}>{comparison.recommendation}</td>
+          <td class={comparison.apcaClassName}>{comparison.regular}</td>
+          <td class={comparison.apcaClassName}>{comparison.bold}</td>
+          <td class={comparison.apcaClassName}>{comparison.apca}</td>
+          <td class={comparison.wcagClassName}>{comparison.wcag}</td>
         </tr>
       {/each}
     </tbody>

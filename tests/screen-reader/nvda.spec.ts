@@ -1,3 +1,4 @@
+import { WindowsKeyCodes } from "@guidepup/guidepup";
 import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect, type Page } from "@playwright/test";
 import { addColor, goldenPathColors } from "../e2e/support/workspace.ts";
@@ -38,7 +39,12 @@ async function enterFocusMode(nvda: NVDAPlaywright): Promise<void> {
 
 /** Sends real native key events without Guidepup waiting for speech between each character. */
 async function typeContinuous(nvda: NVDAPlaywright, text: string): Promise<void> {
-  await nvda.type(text, { capture: false });
+  const keyCode = [...text].map((character) =>
+    character === "."
+      ? WindowsKeyCodes.Period
+      : WindowsKeyCodes[`Digit${character}` as keyof typeof WindowsKeyCodes],
+  );
+  await nvda.perform({ keyCode }, { capture: false });
 }
 
 async function prepareGoldenWorkspace(page: Page): Promise<void> {
@@ -102,11 +108,107 @@ test("jumps to Lightness and reaches one grouped idle result", async ({ page, nv
   await expect(
     page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
   ).toHaveValue("60");
-  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
+  await expect(page.getByRole("status")).toContainText("L 60. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
   const acceptedStatus = await page.getByRole("status").textContent();
   await nvda.press("Enter");
   await expect(page.getByRole("status")).toHaveText(acceptedStatus ?? "");
+});
+
+test("announces a fast numeric commit before the idle checkpoint", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 1");
+  await enterFocusMode(nvda);
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const speech = await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeContinuous(nvda, "80");
+      await nvda.press("Enter");
+    },
+    "L 80. Checks updated.",
+  );
+
+  await expect(lightness).toHaveValue("80");
+  await expect(page.getByRole("status")).toHaveText("L 80. Checks updated.");
+  expect(speech).toContain("L 80. Checks updated.");
+});
+
+test("announces APCA loss and restoration", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await prepareGoldenWorkspace(page);
+  const css = page.getByRole("textbox", { name: "CSS color for row 5" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 5");
+  await enterFocusMode(nvda);
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const commit = (value: string, announcement: string | RegExp) =>
+    expectSpokenAfterAction(
+      nvda,
+      async () => {
+        await nvda.press("Control+A", { capture: false });
+        await typeContinuous(nvda, value);
+        await nvda.press("Enter");
+      },
+      announcement,
+    );
+
+  await commit("90", "APCA: row 3 is no longer readable on background row 5.");
+  await expect(lightness).toHaveValue("90");
+  const restoredSpeech = await commit("60", "APCA: row 3 is now readable on background row 5.");
+  await expect(lightness).toHaveValue("60");
+  expect(restoredSpeech).toContain("L 60. Checks updated.");
+});
+
+test("announces a no-category edit without metric sections", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await prepareGoldenWorkspace(page);
+  const css = page.getByRole("textbox", { name: "CSS color for row 5" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await lightness.fill("60");
+  await lightness.press("Enter");
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 5");
+  await enterFocusMode(nvda);
+  await expectSpokenAfterAction(
+    nvda,
+    () => nvda.press("Control+."),
+    "Column jump. Press 1 through 8. Escape cancels.",
+  );
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const noCategorySpeech = await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeContinuous(nvda, "59.9");
+      await nvda.press("Enter");
+    },
+    "L 59.9. Checks updated.",
+  );
+  await expect(lightness).toHaveValue("59.9");
+  expect(noCategorySpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
 });
 
 test("keeps the final numeric state after delayed native character input", async ({
@@ -123,12 +225,12 @@ test("keeps the final numeric state after delayed native character input", async
   await nvda.press("Control+A");
   await nvda.type("8");
   await page.waitForTimeout(750);
-  await expect(page.getByRole("status")).toHaveText("Lightness 8 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 8. Checks updated.");
 
   await nvda.type("0");
   await page.waitForTimeout(750);
   await expect(lightness).toHaveValue("80");
-  await expect(page.getByRole("status")).toHaveText("Lightness 80 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 80. Checks updated.");
 });
 
 test("reads contrast details and returns to the editing loop", async ({ page, nvda }) => {
