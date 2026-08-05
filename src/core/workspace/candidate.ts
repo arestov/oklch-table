@@ -49,12 +49,13 @@ function parsePatch<TAnalysis>(
 export function buildCandidateRevision<TAnalysis>(
   document: DocumentTree,
   edit: DraftEdit | null,
+  acceptedAnalysis: TAnalysis,
   dependencies: CandidateDependencies<TAnalysis>,
 ): CandidateRevision<TAnalysis> {
   const valid = (value: DocumentTree): ValidCandidate<TAnalysis> => ({
     status: "valid",
     document: value,
-    analysis: dependencies.analyze(value),
+    analysis: value === document ? acceptedAnalysis : dependencies.analyze(value),
   });
   if (!edit) return valid(document);
   const parsed = parsePatch(edit, dependencies.parseCss);

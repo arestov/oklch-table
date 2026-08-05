@@ -30,9 +30,23 @@ describe("candidate revisions", () => {
       raw: "0.",
       lastValidPatch: { field: "l", value: 0.6 },
     };
-    const candidate = buildCandidateRevision(document, edit, dependencies);
+    const candidate = buildCandidateRevision(document, edit, 1, dependencies);
     expect(candidate.status).toBe("invalid");
     if (candidate.status === "invalid")
       expect(candidate.lastValid.document.colors.byId[id].value.l).toBe(0.6);
+  });
+
+  it("reuses the accepted analysis when no edit changes the document", () => {
+    let analyzeCalls = 0;
+    const candidate = buildCandidateRevision(document, null, 42, {
+      parseCss: () => null,
+      analyze: () => {
+        analyzeCalls += 1;
+        return 1;
+      },
+    });
+
+    expect(candidate).toEqual({ status: "valid", document, analysis: 42 });
+    expect(analyzeCalls).toBe(0);
   });
 });
