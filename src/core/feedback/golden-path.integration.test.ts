@@ -141,6 +141,26 @@ describe("golden-path feedback stores", () => {
     expectSpokenSections();
   });
 
+  it("publishes stricter and easier APCA recommendations from production semantic analysis", () => {
+    const ids = createSequenceIds();
+    const derivedId = prepareGoldenPath(ids);
+    commitLightness(ids, derivedId, "60");
+
+    commitLightness(ids, derivedId, "75");
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      edited: "L 75. Checks updated.",
+      apca: "APCA: row 3 now requires larger text on background row 5.",
+    });
+    expectSpokenSections();
+
+    commitLightness(ids, derivedId, "60");
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      edited: "L 60. Checks updated.",
+      apca: "APCA: row 3 now allows smaller text on background row 5.",
+    });
+    expectSpokenSections();
+  });
+
   it("suppresses metric feedback when a numeric edit stays in the same category", () => {
     const ids = createSequenceIds();
     const derivedId = prepareGoldenPath(ids);
