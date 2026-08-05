@@ -72,7 +72,7 @@ const setBackground = (enabled: boolean) => {
 
 <tr data-row-id={colorId}>
   <th scope="row">{row.row}</th>
-  <td>
+  <td class="actions">
     <button type="button" aria-label={`Duplicate color ${row.row}`} onclick={duplicate}>
       Duplicate
     </button>
@@ -139,10 +139,12 @@ const setBackground = (enabled: boolean) => {
       id={`text-contrast-trigger-${colorId}`}
       bind:this={textContrastTrigger}
       type="button"
-      aria-label={`Text contrast for row ${row.row}`}
+      class="result-button"
+      aria-label={`Text contrast for row ${row.row}: ${row.textContrast.text}. ${row.textContrast.detail}`}
       popovertarget={`text-contrast-${colorId}`}
     >
-      Text contrast
+      <span class={row.textContrast.className}>{row.textContrast.text}</span>
+      <small>{row.textContrast.detail}</small>
     </button>
     <TextContrastPopover {candidate} {colorId} row={row.row} trigger={textContrastTrigger} />
   </td>
@@ -151,10 +153,12 @@ const setBackground = (enabled: boolean) => {
       id={`checks-trigger-${colorId}`}
       bind:this={checksTrigger}
       type="button"
-      aria-label={`Checks for row ${row.row}`}
+      class="result-button"
+      aria-label={`Checks for row ${row.row}: ${row.checks.text}. ${row.checks.detail}`}
       popovertarget={`checks-${colorId}`}
     >
-      Checks
+      <span class={row.checks.className}>{row.checks.text}</span>
+      <small>{row.checks.detail}</small>
     </button>
     <ChecksPopover {candidate} {colorId} row={row.row} trigger={checksTrigger} />
   </td>
