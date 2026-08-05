@@ -32,7 +32,7 @@ export const newColorDraftStore = atom("");
 export const candidateStore = computed(
   [acceptedRevisionStore, activeEditStore],
   (accepted, activeEdit): CandidateRevision<AnalysisTree> =>
-    buildCandidateRevision(accepted.document, activeEdit, { parseCss, analyze }),
+    buildCandidateRevision(accepted.document, activeEdit, accepted.analysis, { parseCss, analyze }),
 );
 export const previewStore = computed(candidateStore, (candidate) =>
   candidate.status === "valid" ? candidate : candidate.lastValid,

@@ -27,6 +27,7 @@ import {
 } from "./transactions.ts";
 
 type Result = FinishEditResult<AnalysisTree, SemanticSnapshot, SemanticChanges>;
+type AnalyzedRevision = Pick<ReturnType<typeof acceptedRevisionStore.get>, "document" | "analysis">;
 
 function actionDocument(): DocumentTree | Result {
   const candidate = candidateStore.get();
@@ -46,17 +47,11 @@ function applyTransaction(
   });
 }
 
-function accept(
-  cause: TransactionCause,
-  document: ReturnType<typeof acceptedRevisionStore.get>["document"],
-  ids: IdGenerator,
-): Result {
+function accept(cause: TransactionCause, revision: AnalyzedRevision, ids: IdGenerator): Result {
   const before = acceptedRevisionStore.get();
-  const analysis = candidateDependencies.analyze(document);
   const after = {
-    document,
-    analysis,
-    semantic: createSemanticSnapshot({ document, analysis }),
+    ...revision,
+    semantic: createSemanticSnapshot(revision),
   };
   const input = {
     ids,
@@ -72,6 +67,10 @@ function accept(
       : createActionTransaction({ ...input, cause });
   if (result.status === "accepted") applyTransaction(result.transaction);
   return result;
+}
+
+function analyzeDocument(document: DocumentTree): AnalyzedRevision {
+  return { document, analysis: candidateDependencies.analyze(document) };
 }
 
 export function updateColorDraft(colorId: ColorId, field: DraftEdit["field"], raw: string): void {
@@ -104,7 +103,7 @@ export function finishEdit(reason: FinishReason, ids: IdGenerator = nanoIdGenera
     return { status: "invalid", message: candidate.issue.message };
   const active = activeEditStore.get();
   if (!active) return { status: "unchanged" };
-  return accept({ type: "edit-field", edit: active, reason }, candidate.document, ids);
+  return accept({ type: "edit-field", edit: active, reason }, candidate, ids);
 }
 export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
   const raw = newColorDraftStore.get();
@@ -116,7 +115,7 @@ export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
   if ("status" in current) return current;
   return accept(
     { type: "add-color", createdId: id },
-    {
+    analyzeDocument({
       colors: {
         order: [...current.colors.order, id],
         byId: {
@@ -124,7 +123,7 @@ export function addColorFromDraft(ids: IdGenerator = nanoIdGenerator): Result {
           [id]: { id, ...parsed, roles: { contrastBackground: false } },
         },
       },
-    },
+    }),
     ids,
   );
 }
@@ -141,7 +140,7 @@ export function duplicateColor(sourceId: ColorId, ids: IdGenerator = nanoIdGener
   order.splice(order.indexOf(sourceId) + 1, 0, id);
   return accept(
     { type: "duplicate-color", sourceId, createdId: id },
-    {
+    analyzeDocument({
       colors: {
         order,
         byId: {
@@ -154,7 +153,7 @@ export function duplicateColor(sourceId: ColorId, ids: IdGenerator = nanoIdGener
           },
         },
       },
-    },
+    }),
     ids,
   );
 }
@@ -166,7 +165,9 @@ export function deleteColor(deletedId: ColorId, ids: IdGenerator = nanoIdGenerat
   delete byId[deletedId];
   return accept(
     { type: "delete-color", deletedId },
-    { colors: { order: current.colors.order.filter((id) => id !== deletedId), byId } },
+    analyzeDocument({
+      colors: { order: current.colors.order.filter((id) => id !== deletedId), byId },
+    }),
     ids,
   );
 }
@@ -181,7 +182,7 @@ export function setContrastBackground(
   if (!color || color.roles.contrastBackground === enabled) return { status: "unchanged" };
   return accept(
     { type: "set-background-role", colorId, enabled },
-    {
+    analyzeDocument({
       colors: {
         ...current.colors,
         byId: {
@@ -189,7 +190,7 @@ export function setContrastBackground(
           [colorId]: { ...color, roles: { contrastBackground: enabled } },
         },
       },
-    },
+    }),
     ids,
   );
 }
