@@ -31,6 +31,8 @@ test.use({
   },
 });
 
+test.setTimeout(240_000);
+
 test.afterEach(async ({ page }) => {
   await restoreBrowserSession(page);
 });
@@ -116,6 +118,25 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   await nvda.press("Space");
   await expect(page.getByRole("checkbox", { name: "Contrast background for row 4" })).toBeChecked();
   await nvda.press("Control+.");
+  await nvda.press("7");
+  await expect(page.getByRole("heading", { name: "Text contrast — color 4" })).toBeFocused();
+  await nvda.clearSpokenPhraseLog();
+  await enterBrowseMode(nvda);
+  await nvda.perform(nvda.keyboardCommands.moveToNextTable);
+  for (
+    let index = 0;
+    index < 50 && !(await nvda.spokenPhraseLog()).join(" ").includes("Color 3");
+    index += 1
+  ) {
+    await nvda.next();
+  }
+  const rowFourDetailsSpeech = (await nvda.spokenPhraseLog()).join(" ");
+  expect(rowFourDetailsSpeech).toContain("Color 3");
+  expect(rowFourDetailsSpeech).toContain("Lc");
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
+  await nvda.press("Escape");
+  await expect(page.getByRole("button", { name: "Text contrast for row 4" })).toBeFocused();
+  await nvda.press("Control+.");
   await nvda.press("1");
   await nvda.press("Enter");
 
@@ -131,9 +152,44 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
     /Lightness 60 percent\. Checks updated\./,
   );
 
+  const commitLightness = async (value: string, announcement: string | RegExp) =>
+    expectSpokenAfterAction(
+      nvda,
+      async () => {
+        await nvda.press("Control+A");
+        await nvda.type(value);
+        await nvda.press("Enter");
+        await expect(lightness).toHaveValue(value);
+      },
+      announcement,
+    );
+  await commitLightness("90", "APCA: Text row 3 is no longer readable on background row 5.");
+  await commitLightness("60", "APCA: Text row 3 is now readable on background row 5.");
+  const sameCategorySpeech = await commitLightness(
+    "59.9",
+    "Lightness 59.9 percent. Checks updated.",
+  );
+  expect(sameCategorySpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
+  const finalEditSpeech = await commitLightness("60", "Lightness 60 percent. Checks updated.");
+  expect(finalEditSpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
+
   await nvda.press("Control+.");
   await nvda.press("7");
   await expect(page.getByRole("heading", { name: "Text contrast — color 5" })).toBeFocused();
+  await nvda.clearSpokenPhraseLog();
+  await enterBrowseMode(nvda);
+  await nvda.perform(nvda.keyboardCommands.moveToNextTable);
+  for (
+    let index = 0;
+    index < 50 && !(await nvda.spokenPhraseLog()).join(" ").includes("Color 3");
+    index += 1
+  ) {
+    await nvda.next();
+  }
+  const detailsSpeech = (await nvda.spokenPhraseLog()).join(" ");
+  expect(detailsSpeech).toContain("Color 3");
+  expect(detailsSpeech).toContain("Lc");
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
   await nvda.press("Escape");
   await nvda.press("Control+.");
   await nvda.press("2");
