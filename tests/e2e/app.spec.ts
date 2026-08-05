@@ -200,8 +200,18 @@ test("keeps invalid input focused and publishes only an alert", async ({ page })
 
   await expect(draft).toBeFocused();
   await expect(draft).toHaveAttribute("aria-invalid", "true");
+  await expect(draft).toHaveAttribute("aria-describedby", "draft-help draft-error");
+  await expect(page.locator("#draft-error")).toHaveText(
+    "Invalid CSS color. Enter HEX, RGB, or OKLCH.",
+  );
   await expect(alert).toContainText("Invalid CSS color");
   await expect(status).toHaveText("");
+
+  await draft.fill("#ffffff");
+  await draft.press("Enter");
+  await expect(draft).not.toHaveAttribute("aria-invalid", "true");
+  await expect(alert).toHaveText("");
+  await expect(status).toContainText("Color added as row 1.");
 });
 
 test("scopes an invalid numeric edit and its focus recovery to the active row", async ({
@@ -219,6 +229,31 @@ test("scopes an invalid numeric edit and its focus recovery to the active row", 
   await expect(second).toBeFocused();
   await expect(second).toHaveAttribute("aria-invalid", "true");
   await expect(first).not.toHaveAttribute("aria-invalid", "true");
+});
+
+test("associates an invalid CSS edit with its field error and clears the alert on recovery", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+
+  await css.fill("invalid color");
+  await css.press("Enter");
+
+  await expect(css).toBeFocused();
+  await expect(css).toHaveAttribute("aria-invalid", "true");
+  const errorId = await css.getAttribute("aria-describedby");
+  expect(errorId).toBeTruthy();
+  await expect(page.locator(`#${errorId}`)).toHaveText(
+    "Invalid CSS color. Enter HEX, RGB, or OKLCH.",
+  );
+
+  await css.fill("#000000");
+  await css.press("Enter");
+  await expect(css).not.toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByRole("alert")).toHaveText("");
+  await expect(page.getByRole("status")).toContainText("CSS color #000000. Checks updated.");
 });
 
 test("requires a populated row and cancels column jump without moving focus", async ({ page }) => {

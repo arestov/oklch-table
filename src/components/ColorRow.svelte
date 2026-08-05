@@ -59,10 +59,16 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       data-field="css"
       aria-label={`CSS color for row ${row.row}`}
       aria-invalid={invalidColorId === row.id && invalidField === "css" ? "true" : undefined}
+      aria-describedby={invalidColorId === row.id && invalidField === "css"
+        ? `field-error-${row.id}`
+        : undefined}
       oninput={(event) => edit("css", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
+    {#if invalidColorId === row.id && invalidField === "css"}
+      <p id={`field-error-${row.id}`} class="visually-hidden">{fieldError}</p>
+    {/if}
   </td>
   <td>
     <input
