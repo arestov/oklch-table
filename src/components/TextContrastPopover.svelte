@@ -17,8 +17,10 @@ let {
   trigger: HTMLButtonElement | undefined;
 } = $props();
 let popover: HTMLElement;
+let open = $state(false);
 const manageFocus = () => {
-  if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
+  open = popover.matches(":popover-open");
+  if (open) popover.querySelector<HTMLElement>("h2")?.focus();
   else trigger?.focus();
 };
 const asBackground = $derived(buildContrastRows(index, colorId, "background"));
@@ -38,10 +40,12 @@ const asText = $derived(buildContrastRows(index, colorId, "text"));
       Close
     </button>
   </div>
-  <div class="popover-body">
-    {#if background}
-      <ContrastTable caption={`Background color ${row}`} rows={asBackground} />
-    {/if}
-    <ContrastTable caption={`Color ${row} as text`} rows={asText} />
-  </div>
+  {#if open}
+    <div class="popover-body">
+      {#if background}
+        <ContrastTable caption={`Background color ${row}`} rows={asBackground} />
+      {/if}
+      <ContrastTable caption={`Color ${row} as text`} rows={asText} />
+    </div>
+  {/if}
 </section>
