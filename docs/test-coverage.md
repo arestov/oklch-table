@@ -51,6 +51,7 @@ restricted to assertions and infrastructure setup.
 | --- | --- | --- |
 | Initial draft focus | `nvda.spec.ts` — `announces the initial color draft` | covered |
 | Consecutive additions | `nvda.spec.ts` — `adds the first and second colors without leaving the draft loop` | covered |
+| Background role and duplicate inheritance | `nvda.spec.ts` — `announces background selection and inherited duplication` | covered (native speech) |
 | Isolated fast field edit | `nvda.spec.ts` — `announces a fast numeric commit before the idle checkpoint` | covered (native speech) |
 | APCA transition feedback | `nvda.spec.ts` — `announces APCA loss and restoration` | covered (native speech) |
 | No-category feedback | `nvda.spec.ts` — `announces a no-category edit without metric sections` | covered (native speech) |
