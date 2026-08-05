@@ -36,6 +36,11 @@ async function enterFocusMode(nvda: NVDAPlaywright): Promise<void> {
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 }
 
+/** Sends real native key events without Guidepup waiting for speech between each character. */
+async function typeContinuous(nvda: NVDAPlaywright, text: string): Promise<void> {
+  await nvda.type(text, { capture: false });
+}
+
 async function prepareGoldenWorkspace(page: Page): Promise<void> {
   await addColor(page, goldenPathColors.accentBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
@@ -95,7 +100,7 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
     nvda,
     async () => {
       await nvda.press("Control+A");
-      await nvda.type("60");
+      await typeContinuous(nvda, "60");
       await nvda.press("Enter");
     },
     "Lightness 60 percent. Checks updated.",
@@ -105,6 +110,28 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   ).toHaveValue("60");
   await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
+});
+
+test("keeps the final numeric state after delayed native character input", async ({
+  page,
+  nvda,
+}) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  await lightness.focus();
+  await activateBrowser(page, nvda, "Lightness percentage for row 1");
+
+  await enterFocusMode(nvda);
+  await nvda.press("Control+A");
+  await nvda.type("8");
+  await page.waitForTimeout(750);
+  await expect(page.getByRole("status")).toHaveText("Lightness 8 percent. Checks updated.");
+
+  await nvda.type("0");
+  await page.waitForTimeout(750);
+  await expect(lightness).toHaveValue("80");
+  await expect(page.getByRole("status")).toHaveText("Lightness 80 percent. Checks updated.");
 });
 
 test("reads contrast details and returns to the editing loop", async ({ page, nvda }) => {
