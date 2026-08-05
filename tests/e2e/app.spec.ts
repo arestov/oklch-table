@@ -317,6 +317,13 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   expect(cssBox).not.toBeNull();
   expect(draftBox).not.toBeNull();
   expect(draftBox?.x).toBe(cssBox?.x);
+
+  const firstRow = page.locator("tbody tr").first();
+  const [cssInputBox, resultButtonBox] = await Promise.all([
+    firstRow.getByRole("textbox").boundingBox(),
+    firstRow.getByRole("button", { name: /^Text contrast/ }).boundingBox(),
+  ]);
+  expect(cssInputBox?.y).toBe(resultButtonBox?.y);
 });
 
 test("keeps visible screen-reader feedback in stable page flow", async ({ page }) => {

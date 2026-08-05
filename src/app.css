@@ -103,7 +103,7 @@ button {
 tbody button {
   border-color: transparent;
   background: transparent;
-  padding: 5px 6px;
+  padding: 6px 7px;
 }
 
 button:hover {
@@ -203,7 +203,7 @@ th,
 td {
   padding: 10px 9px;
   border: 0;
-  vertical-align: middle;
+  vertical-align: top;
   white-space: nowrap;
 }
 
