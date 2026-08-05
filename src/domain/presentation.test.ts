@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { summarizeChecks, summarizeTextContrast } from "./presentation.ts";
+import { buildContrastRows, summarizeChecks, summarizeTextContrast } from "./presentation.ts";
 
 const recommendation = (key: number) =>
   key === 0
@@ -11,6 +11,7 @@ function candidate(
   cvdWarnings: readonly boolean[] = [],
   background = true,
   wcagKeys: readonly number[] = readable.map((value) => (value ? 2 : 0)),
+  apcaValues: readonly number[] = readable.map((value) => (value ? 60 : 20)),
 ) {
   const order = ["color_target", ...readable.map((_, index) => `color_${index + 1}`)];
   return {
@@ -44,7 +45,7 @@ function candidate(
                 key,
                 leftId,
                 rightId: "color_target",
-                apca: isReadable ? 60 : 20,
+                apca: apcaValues[index],
                 recommendation: recommendation(isReadable ? 2 : 0),
                 readableTextSupported: isReadable,
                 ratio: isReadable ? 4.5 : 1,
@@ -130,5 +131,19 @@ describe("bounded result summaries", () => {
       text: "No issues",
       className: "status-pass",
     });
+  });
+});
+
+describe("contrast details", () => {
+  it("states APCA polarity in text", () => {
+    const positive = candidate([true]);
+    expect(buildContrastRows(positive, "color_target", "background")[0]?.polarity).toBe(
+      "Dark text on light background",
+    );
+
+    const negative = candidate([true], [], true, [2], [-60]);
+    expect(buildContrastRows(negative, "color_target", "background")[0]?.polarity).toBe(
+      "Light text on dark background",
+    );
   });
 });
