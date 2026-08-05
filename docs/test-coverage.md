@@ -39,6 +39,7 @@ represented as covered merely because a related UI is present.
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps each opened popover accessible and restores its trigger focus` | automated |
 | TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-25 | Screen reader | `tests/screen-reader/golden-path.nvda.spec.ts` | `completes the empty-workspace error-hover transcript` | automated (native clipboard readback) |
+| APCA oracle | Domain | `src/domain/apca-oracle.test.ts` | `matches independent APCA-W3 0.0.98G-4g reference fixtures` | automated |
 
 ## Screen reader suite
 
@@ -91,9 +92,17 @@ English (US) for keyboard input and restores the original layout after every
 test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
-On 2026-08-05, the focused fast-numeric, APCA lost/restored, and no-category
-native cases passed in the documented Windows NVDA + Firefox Guidepup
-environment. Native cases are run in bounded groups because they control the
-foreground session. The suite is deliberately separate from `pnpm verify`;
-operating the foreground NVDA/Firefox session remains an environmental
-requirement, not a pre-commit requirement.
+On 2026-08-05, the focused background/duplicate, fast-numeric, APCA
+lost/restored, and no-category native cases passed in the documented Windows
+NVDA + Firefox Guidepup environment. The full native golden path is not claimed
+as rerun after these focused regressions. Native cases are run in bounded groups
+because they control the foreground session. The suite is deliberately separate
+from `pnpm verify`; operating the foreground NVDA/Firefox session remains an
+environmental requirement, not a pre-commit requirement.
+
+## APCA reference oracle
+
+`src/domain/apca-oracle.test.ts` stores signed Lc values calculated by the
+independent APCA-W3 0.0.98G-4g reference algorithm (apca-w3 library 0.1.9),
+using the text-first, background-second order. The source version and constants
+are documented by the official [apca-w3 repository](https://github.com/Myndex/apca-w3#current-apca-constants).
