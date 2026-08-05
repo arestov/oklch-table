@@ -1,15 +1,14 @@
 <script lang="ts">
-import type { ValidCandidate } from "../core/workspace/draft.ts";
-import { buildContrastRows, buildCvdRows } from "../domain/presentation.ts";
-import type { AnalysisTree, ColorId } from "../domain/types.ts";
+import { buildContrastRows, buildCvdRows, type PresentationIndex } from "../domain/presentation.ts";
+import type { ColorId } from "../domain/types.ts";
 
 let {
-  candidate,
+  index,
   colorId,
   row,
   trigger,
 }: {
-  candidate: ValidCandidate<AnalysisTree>;
+  index: PresentationIndex;
   colorId: ColorId;
   row: number;
   trigger: HTMLButtonElement | undefined;
@@ -20,11 +19,9 @@ const manageFocus = () => {
   if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
   else trigger?.focus();
 };
-const rows = $derived(
-  buildCvdRows(candidate, colorId).filter((item) => !hidePass || item.hasWarning),
-);
+const rows = $derived(buildCvdRows(index, colorId).filter((item) => !hidePass || item.hasWarning));
 const contrastIssues = $derived(
-  buildContrastRows(candidate, colorId, "all").filter((item) => item.wcagKey === 0),
+  buildContrastRows(index, colorId, "all").filter((item) => item.wcagKey === 0),
 );
 </script>
 

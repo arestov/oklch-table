@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildContrastRows, summarizeChecks, summarizeTextContrast } from "./presentation.ts";
+import {
+  buildContrastRows,
+  createPresentationIndex,
+  summarizeChecks,
+  summarizeTextContrast,
+} from "./presentation.ts";
 
 const recommendation = (key: number) =>
   key === 0
@@ -81,53 +86,60 @@ function candidate(
   } as never;
 }
 
+const textSummary = (value: ReturnType<typeof candidate>) =>
+  summarizeTextContrast(value, createPresentationIndex(value), "color_target");
+const checksSummary = (value: ReturnType<typeof candidate>) =>
+  summarizeChecks(value, createPresentationIndex(value), "color_target");
+const contrastRows = (value: ReturnType<typeof candidate>) =>
+  buildContrastRows(createPresentationIndex(value), "color_target", "background");
+
 describe("bounded result summaries", () => {
   it("distinguishes unchecked, supported, mixed, and unreadable contrast", () => {
-    expect(summarizeTextContrast(candidate([]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([]))).toMatchObject({
       text: "Not checked",
     });
-    expect(summarizeTextContrast(candidate([true, true]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([true, true]))).toMatchObject({
       text: "All 2 supported",
     });
-    expect(summarizeTextContrast(candidate([true, false]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([true, false]))).toMatchObject({
       text: "1 not readable · 1 supported",
     });
-    expect(summarizeTextContrast(candidate([false, false]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([false, false]))).toMatchObject({
       text: "2 not readable",
     });
   });
 
   it("keeps contrast summary length bounded as comparison count grows", () => {
-    const three = summarizeTextContrast(candidate([false, false, false]), "color_target");
-    const thirty = summarizeTextContrast(candidate(Array(30).fill(false)), "color_target");
+    const three = textSummary(candidate([false, false, false]));
+    const thirty = textSummary(candidate(Array(30).fill(false)));
     expect(three.text).toBe("3 not readable");
     expect(thirty.text).toBe("30 not readable");
     expect(thirty.text.length - three.text.length).toBeLessThanOrEqual(2);
   });
 
   it("counts one CVD pair once even when several modes warn", () => {
-    expect(summarizeChecks(candidate([true], [true]), "color_target")).toMatchObject({
+    expect(checksSummary(candidate([true], [true]))).toMatchObject({
       text: "1 CVD warning",
     });
-    expect(summarizeChecks(candidate([false], [true]), "color_target")).toMatchObject({
+    expect(checksSummary(candidate([false], [true]))).toMatchObject({
       text: "1 WCAG issue, 1 CVD warning",
     });
   });
 
   it("keeps APCA text suitability independent from WCAG checks", () => {
-    expect(summarizeTextContrast(candidate([true], [], true, [0]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([true], [], true, [0]))).toMatchObject({
       text: "All 1 supported",
       className: "status-pass",
     });
-    expect(summarizeChecks(candidate([true], [], true, [0]), "color_target")).toMatchObject({
+    expect(checksSummary(candidate([true], [], true, [0]))).toMatchObject({
       text: "1 WCAG issue",
       className: "status-fail",
     });
-    expect(summarizeTextContrast(candidate([false], [], true, [2]), "color_target")).toMatchObject({
+    expect(textSummary(candidate([false], [], true, [2]))).toMatchObject({
       text: "1 not readable",
       className: "status-fail",
     });
-    expect(summarizeChecks(candidate([false], [], true, [2]), "color_target")).toMatchObject({
+    expect(checksSummary(candidate([false], [], true, [2]))).toMatchObject({
       text: "No issues",
       className: "status-pass",
     });
@@ -137,13 +149,9 @@ describe("bounded result summaries", () => {
 describe("contrast details", () => {
   it("states APCA polarity in text", () => {
     const positive = candidate([true]);
-    expect(buildContrastRows(positive, "color_target", "background")[0]?.polarity).toBe(
-      "Dark text on light background",
-    );
+    expect(contrastRows(positive)[0]?.polarity).toBe("Dark text on light background");
 
     const negative = candidate([true], [], true, [2], [-60]);
-    expect(buildContrastRows(negative, "color_target", "background")[0]?.polarity).toBe(
-      "Light text on dark background",
-    );
+    expect(contrastRows(negative)[0]?.polarity).toBe("Light text on dark background");
   });
 });
