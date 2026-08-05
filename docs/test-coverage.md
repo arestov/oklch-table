@@ -22,7 +22,7 @@ represented as covered merely because a related UI is present.
 | TC-06 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated (empty workspace) |
 | TC-07 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-08 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
-| TC-09 | Core | `src/core/workspace/commands.test.ts` | `accepts the idle boundary as exactly one transaction` | automated |
+| TC-09 | Feedback | `src/core/feedback/coordinator.test.ts` | `runs one checkpoint at 700 ms after the final input` | automated |
 | TC-10 | Core | `src/core/workspace/commands.test.ts` | `accepts one edit once, then leaves the already accepted edit unchanged` | automated |
 | TC-11 | Feedback | `src/core/feedback/english-announcement.test.ts` | `renders edit, APCA, WCAG, and color-vision sections in deterministic order` | automated |
 | TC-12 | Feedback | `src/core/feedback/english-announcement.test.ts` | `orders lost support before restored support and omits unchanged sections` | automated |
@@ -58,10 +58,13 @@ restricted to assertions and infrastructure setup.
 
 The complete native path asserts the two-dimensional `Ctrl+Alt+Up/Down`
 navigation, column shortcuts, row-4 and row-5 contrast details, duplicate
-inheritance, APCA lost/restored/no-category transitions, one automatic
-utterance per action, and native clipboard readback. Browser Playwright covers
-the deterministic DOM, keyboard and clipboard contracts; native NVDA coverage
-is required for OS-generated focus/table speech.
+inheritance, APCA lost/restored/no-category final status transitions, idle
+checkpoint behaviour, no duplicate status after Enter, and native clipboard
+readback. Browser Playwright covers atomic live-region mutations; native NVDA
+coverage is required for OS-generated focus/table speech. Guidepup logs speech
+associated with a command, but not ambient speech from an asynchronous 700 ms
+idle callback, so the latter is asserted through the actual status DOM rather
+than a manual readback.
 
 `pnpm test:screen-reader` is intentionally separate from the ordinary browser
 suite. It launches NVDA through Guidepup and therefore requires a Windows
@@ -84,8 +87,9 @@ English (US) for keyboard input and restores the original layout after every
 test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
-The latest complete local native run passed on 2026-08-05 in the documented
-Windows NVDA + Firefox Guidepup environment (`golden-path.nvda.spec.ts`,
-one test, approximately 2.7 minutes). It is deliberately separate from
-`pnpm verify`; operating the foreground NVDA/Firefox session remains an
-environmental requirement, not a pre-commit requirement.
+On 2026-08-05, every native case passed in the documented Windows NVDA +
+Firefox Guidepup environment. The 2.5-minute golden path and the isolated
+cases were run in bounded groups because the local shell limits a command to
+four minutes. The suite is deliberately separate from `pnpm verify`;
+operating the foreground NVDA/Firefox session remains an environmental
+requirement, not a pre-commit requirement.
