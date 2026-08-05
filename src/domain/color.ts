@@ -21,6 +21,10 @@ export function round(value: number, digits = 3): number {
   return Math.round((value + Number.EPSILON) * p) / p;
 }
 
+export function formatLightnessPercent(value: number): number {
+  return round(value * 100, 1);
+}
+
 export function srgbToLinear(channel255: number): number {
   const channel = channel255 / 255;
   return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;

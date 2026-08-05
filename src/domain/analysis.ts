@@ -1,4 +1,3 @@
-import type { ValidCandidate } from "../core/workspace/draft.ts";
 import {
   APCA_LEVELS,
   CVD_WARNING_THRESHOLD,
@@ -14,7 +13,6 @@ import type {
   AnalysisTree,
   ApcaRecommendation,
   ColorId,
-  ColorNode,
   ColorVisionKey,
   ContrastKey,
   CvdMode,
@@ -184,10 +182,9 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
   return { colors, comparisons: { contrast, colorVision: cvd } };
 }
 
-export function createCandidate(document: DocumentTree): ValidCandidate<AnalysisTree> {
-  return { status: "valid", document, analysis: deriveAnalysis(document) };
-}
-
-export function createEmptyDocument(): DocumentTree {
-  return { colors: { order: [], byId: {} as Record<ColorId, ColorNode> } };
+export function createCandidate(document: DocumentTree): {
+  document: DocumentTree;
+  analysis: AnalysisTree;
+} {
+  return { document, analysis: deriveAnalysis(document) };
 }

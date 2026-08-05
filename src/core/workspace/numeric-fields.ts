@@ -2,10 +2,6 @@ import type { EditableField } from "./draft.ts";
 
 type NumericField = Extract<EditableField, "l" | "c" | "h">;
 
-export function formatLightnessPercent(value: number): number {
-  return Math.round(value * 1000) / 10;
-}
-
 export function parseLightnessPercent(raw: string): number {
   return Number(raw) / 100;
 }

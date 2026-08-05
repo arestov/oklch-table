@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  formatLightnessPercent,
-  parseLightnessPercent,
-  parseNumericField,
-} from "./numeric-fields.ts";
+import { formatLightnessPercent } from "../../domain/color.ts";
+import { parseLightnessPercent, parseNumericField } from "./numeric-fields.ts";
 
 describe("OKLCH numeric fields", () => {
   it("converts lightness between the normalized model and percent UI", () => {
