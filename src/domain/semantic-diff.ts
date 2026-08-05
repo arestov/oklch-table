@@ -26,7 +26,12 @@ export function diffSemanticSnapshots(
     const previous = before.rows[id];
     const next = after.rows[id];
     if (!previous || !next) {
-      rows[id] = { id, before: previous, after: next, fields: {} };
+      rows[id] = {
+        id,
+        ...(previous ? { before: previous } : {}),
+        ...(next ? { after: next } : {}),
+        fields: {},
+      };
       continue;
     }
     const fields = {
@@ -53,7 +58,11 @@ export function diffSemanticSnapshots(
     const previous = before.comparisons.contrast[key];
     const next = after.comparisons.contrast[key];
     if (!previous || !next) {
-      contrast[key] = { key, before: previous, after: next };
+      contrast[key] = {
+        key,
+        ...(previous ? { before: previous } : {}),
+        ...(next ? { after: next } : {}),
+      };
       continue;
     }
     const support = changed(previous.readableTextSupported, next.readableTextSupported);
@@ -84,8 +93,8 @@ export function diffSemanticSnapshots(
     if (!previous || !next) {
       colorVision[key] = {
         key,
-        before: previous,
-        after: next,
+        ...(previous ? { before: previous } : {}),
+        ...(next ? { after: next } : {}),
         warningsAdded: next?.warnings ?? [],
         warningsResolved: previous?.warnings ?? [],
       };
