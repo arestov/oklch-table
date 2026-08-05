@@ -96,7 +96,7 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
             autocomplete="off"
             spellcheck="false"
             aria-invalid={draftError ? "true" : undefined}
-            aria-describedby="draft-help"
+            aria-describedby={draftError ? "draft-help draft-error" : "draft-help"}
             oninput={(event) => onNewColorInput(event.currentTarget.value)}
             onkeydown={onNewColorKeydown}
           >

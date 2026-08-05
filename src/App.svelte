@@ -214,6 +214,6 @@ onMount(() => {
   />
   <p id="draft-help" class="visually-hidden">Paste a HEX, RGB, or OKLCH color and press Enter.</p>
   {#if draftError}
-    <p class="error-message">{draftError}</p>
+    <p id="draft-error" class="error-message">{draftError}</p>
   {/if}
 </main>

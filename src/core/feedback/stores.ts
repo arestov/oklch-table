@@ -18,7 +18,11 @@ export const visibleFeedbackStore = atom({
 });
 export function announceResult(text: string): void {
   const current = announcementStore.get();
-  announcementStore.set({ ...current, result: { id: current.result.id + 1, text } });
+  announcementStore.set({
+    ...current,
+    result: { id: current.result.id + 1, text },
+    alert: { ...current.alert, text: "" },
+  });
   visibleFeedbackStore.set({ edited: text, apca: "", wcag: "", cvd: "" });
 }
 export function announceAlert(text: string): void {
@@ -27,13 +31,21 @@ export function announceAlert(text: string): void {
 }
 export function announceShortcut(text: string): void {
   const current = announcementStore.get();
-  announcementStore.set({ ...current, result: { id: current.result.id + 1, text } });
+  announcementStore.set({
+    ...current,
+    result: { id: current.result.id + 1, text },
+    alert: { ...current.alert, text: "" },
+  });
 }
 
 lastTransactionStore.listen((transaction) => {
   if (!transaction) return;
   const plan = buildEnglishAnnouncement(transaction);
   const current = announcementStore.get();
-  announcementStore.set({ ...current, result: { id: current.result.id + 1, text: plan.spoken } });
+  announcementStore.set({
+    ...current,
+    result: { id: current.result.id + 1, text: plan.spoken },
+    alert: { ...current.alert, text: "" },
+  });
   visibleFeedbackStore.set(plan.visible);
 });
