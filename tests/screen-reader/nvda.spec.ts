@@ -196,27 +196,49 @@ test("announces an invalid CSS color and preserves its focus", async ({ page, nv
 
 test("completes the error-hover golden path through the copied token", async ({ page, nvda }) => {
   await page.goto("/");
-  await prepareGoldenWorkspace(page);
   await activateBrowser(page);
-
-  expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
   await enterFocusMode(nvda);
-  await nvda.clearSpokenPhraseLog();
-  await nvda.press("Control+A");
-  await nvda.type("60");
-  await nvda.perform(nvda.keyboardCommands.stopSpeech);
-  await nvda.clearSpokenPhraseLog();
-  await page.keyboard.press("Enter");
-  await expectLiveRegionReadable(page, nvda, "status", "Lightness 60 percent. Checks updated.");
+  for (const color of [
+    goldenPathColors.accentBackground,
+    goldenPathColors.accentHoverBackground,
+    goldenPathColors.whiteText,
+    goldenPathColors.errorBackground,
+  ]) {
+    await nvda.type(color);
+    await nvda.press("Enter");
+  }
+  await expect(page.locator("tbody tr")).toHaveCount(5);
 
-  await page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }).focus();
-  await activateBrowser(page);
+  // Row 4 is the only initial contrast background. Duplicate is reached by
+  // the application shortcut, with no Playwright focus/click setup.
+  await nvda.press("Control+Alt+Up");
+  await nvda.press("Control+.");
+  await nvda.press("6");
+  await nvda.press("Space");
+  await expect(page.getByRole("checkbox", { name: "Contrast background for row 4" })).toBeChecked();
+  await nvda.press("Control+.");
+  await nvda.press("1");
+  await nvda.press("Enter");
+  await expect(page.locator("tbody tr")).toHaveCount(6);
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await expect(lightness).toBeFocused();
+  await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A");
+      await nvda.type("60");
+      await nvda.press("Enter");
+    },
+    "Lightness 60 percent. Checks updated.",
+  );
+  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
+
   await nvda.press("Control+.");
   await nvda.press("7");
   await expect(page.getByRole("heading", { name: "Text contrast — color 5" })).toBeFocused();
   expect(await reportFocus(nvda)).toContain("Text contrast");
 
-  await page.keyboard.press("Escape");
+  await nvda.press("Escape");
   await expect(page.getByRole("button", { name: "Text contrast for row 5" })).toBeFocused();
   await nvda.press("Control+.");
   await nvda.press("2");
