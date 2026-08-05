@@ -338,7 +338,9 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
 test("creates one idle checkpoint after 700 ms and does not repeat it on Enter", async ({
   page,
 }) => {
+  await page.clock.install({ time: new Date("2025-01-01T00:00:00Z") });
   await page.goto("/");
+  await page.clock.pauseAt(new Date("2025-01-01T00:01:00Z"));
   await addColor(page, "#ffffff");
   const status = page.getByRole("status");
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
@@ -353,18 +355,15 @@ test("creates one idle checkpoint after 700 ms and does not repeat it on Enter",
     observer.observe(target, { childList: true, characterData: true, subtree: true });
   });
 
-  await lightness.focus();
-  await page.keyboard.press("Control+A");
-  await page.keyboard.press("8");
-  await page.waitForTimeout(500);
-  await page.keyboard.press("0");
-  await page.waitForTimeout(199);
+  await lightness.fill("8");
+  await page.clock.runFor(500);
+  await lightness.fill("80");
+  await page.clock.runFor(699);
   await expect(status).toHaveText("Color added as row 1.");
-  await page.waitForTimeout(1);
+  await page.clock.runFor(1);
   await expect(status).toHaveText("L 80. Checks updated.");
 
   await lightness.press("Enter");
-  await page.waitForTimeout(50);
   expect(
     await page.evaluate(() => JSON.parse(sessionStorage.getItem("idle-status-mutations") ?? "[]")),
   ).toEqual(["L 80. Checks updated."]);
