@@ -5,10 +5,17 @@
     "erasableSyntaxOnly": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "strict": true,
     "target": "ES2024",
     "verbatimModuleSyntax": true
   },
-  "include": ["src/core/**/*.ts", "src/domain/**/*.ts", "src/feedback/**/*.ts", "src/state/**/*.ts"]
+  "include": [
+    "src/core/**/*.ts",
+    "src/domain/**/*.ts",
+    "src/feedback/**/*.ts",
+    "src/state/**/*.ts"
+  ],
+  "exclude": ["src/**/*.test.ts"]
 }
