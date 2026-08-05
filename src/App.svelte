@@ -49,6 +49,10 @@ const onDraftKeydown = (event: KeyboardEvent) => {
     void add();
   }
 };
+const onDraftPaste = (raw: string) => {
+  setNewColorDraft(raw);
+  void add();
+};
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
   executeUiEffects(mountedWorkspace(), effects);
 const onActionResult = async (result: ReturnType<typeof duplicateColor>) => {
@@ -209,9 +213,12 @@ onMount(() => {
     {onSetBackground}
     {onFinishEdit}
     onNewColorInput={setNewColorDraft}
+    onNewColorPaste={onDraftPaste}
     onNewColorKeydown={onDraftKeydown}
   />
-  <p id="draft-help" class="visually-hidden">Paste a HEX, RGB, or OKLCH color and press Enter.</p>
+  <p id="draft-help" class="visually-hidden">
+    Paste a HEX, RGB, or OKLCH color to add it, or type a color and press Enter.
+  </p>
   {#if draftError}
     <p id="draft-error" class="error-message">{draftError}</p>
   {/if}

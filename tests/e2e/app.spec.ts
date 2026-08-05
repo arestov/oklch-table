@@ -24,6 +24,22 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await expectNoAxeViolations(page);
 });
 
+test("adds a pasted CSS color immediately", async ({ page }) => {
+  await page.goto("/");
+
+  const draft = page.getByPlaceholder("fill color");
+  await draft.evaluate((input) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", "oklch(0.7 0.1 60)");
+    input.dispatchEvent(
+      new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData }),
+    );
+  });
+
+  await expect(page.locator("tbody tr")).toHaveCount(2);
+  await expect(page.getByRole("status")).toContainText("Color added as row 1.");
+});
+
 test("keeps empty, invalid, and dark workspaces accessible", async ({ page }) => {
   await page.goto("/");
   await expectNoAxeViolations(page);
