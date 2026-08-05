@@ -52,12 +52,20 @@ export interface CvdRowView {
   hasWarning: boolean;
 }
 
-function plural(count: number, one: string, many = `${one}s`): string {
-  return `${count} ${count === 1 ? one : many}`;
+export interface PresentationIndex {
+  rowById: Record<ColorId, number>;
+  contrastByText: Record<ColorId, ContrastComparison[]>;
+  contrastByBackground: Record<ColorId, ContrastComparison[]>;
+  cvdByColor: Record<ColorId, CvdComparison[]>;
 }
 
-export function rowNumber(candidate: Candidate, id: ColorId): number {
-  return candidate.document.colors.order.indexOf(id) + 1;
+export interface WorkspacePresentation {
+  index: PresentationIndex;
+  rows: readonly RowView[];
+}
+
+function plural(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`;
 }
 
 export function apcaClass(comparison: ContrastComparison): string {
@@ -72,26 +80,37 @@ export function wcagClass(comparison: ContrastComparison): string {
   return "status-pass";
 }
 
-export function comparisonsForColor(
-  candidate: Candidate,
-  id: ColorId,
-): {
-  asBackground: ContrastComparison[];
-  asText: ContrastComparison[];
-} {
-  const asBackground: ContrastComparison[] = [];
-  const asText: ContrastComparison[] = [];
-  for (const comparison of Object.values(candidate.analysis.comparisons.contrast)) {
-    if (comparison.rightId === id) asBackground.push(comparison);
-    if (comparison.leftId === id) asText.push(comparison);
+export function createPresentationIndex(candidate: Candidate): PresentationIndex {
+  const rowById = {} as PresentationIndex["rowById"];
+  const contrastByText = {} as PresentationIndex["contrastByText"];
+  const contrastByBackground = {} as PresentationIndex["contrastByBackground"];
+  const cvdByColor = {} as PresentationIndex["cvdByColor"];
+  for (const [offset, id] of candidate.document.colors.order.entries()) {
+    rowById[id] = offset + 1;
+    contrastByText[id] = [];
+    contrastByBackground[id] = [];
+    cvdByColor[id] = [];
   }
-  return { asBackground, asText };
+  for (const comparison of Object.values(candidate.analysis.comparisons.contrast)) {
+    contrastByText[comparison.leftId].push(comparison);
+    contrastByBackground[comparison.rightId].push(comparison);
+  }
+  for (const comparison of Object.values(candidate.analysis.comparisons.colorVision)) {
+    cvdByColor[comparison.leftId].push(comparison);
+    cvdByColor[comparison.rightId].push(comparison);
+  }
+  return { rowById, contrastByText, contrastByBackground, cvdByColor };
 }
 
-export function summarizeTextContrast(candidate: Candidate, id: ColorId): ResultSummary {
+export function summarizeTextContrast(
+  candidate: Candidate,
+  index: PresentationIndex,
+  id: ColorId,
+): ResultSummary {
   const color = candidate.document.colors.byId[id];
-  const comparisons = comparisonsForColor(candidate, id);
-  const list = color.roles.contrastBackground ? comparisons.asBackground : comparisons.asText;
+  const list = color.roles.contrastBackground
+    ? index.contrastByBackground[id]
+    : index.contrastByText[id];
   if (!list.length) {
     return {
       text: "Not checked",
@@ -101,9 +120,13 @@ export function summarizeTextContrast(candidate: Candidate, id: ColorId): Result
       className: "note",
     };
   }
-  const readable = list.filter((item) => item.readableTextSupported).length;
+  let readable = 0;
+  let worst = list[0];
+  for (const comparison of list) {
+    if (comparison.readableTextSupported) readable += 1;
+    if (comparison.recommendation.key < worst.recommendation.key) worst = comparison;
+  }
   const unreadable = list.length - readable;
-  const worst = [...list].sort((a, b) => a.recommendation.key - b.recommendation.key)[0];
   const worstMinimum = worst.recommendation.regular
     ? `worst: ${worst.recommendation.regular}px/400`
     : "worst: not readable";
@@ -119,24 +142,23 @@ export function summarizeTextContrast(candidate: Candidate, id: ColorId): Result
   };
 }
 
-export function cvdComparisonsForColor(candidate: Candidate, id: ColorId): CvdComparison[] {
-  return Object.values(candidate.analysis.comparisons.colorVision).filter(
-    (item) => item.leftId === id || item.rightId === id,
-  );
-}
-
-export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummary {
-  const comparisons = comparisonsForColor(candidate, id);
-  const wcagIssues = [...comparisons.asBackground, ...comparisons.asText].filter(
-    (item) => item.wcag.key === 0,
-  ).length;
-  const cvdWarnings = cvdComparisonsForColor(candidate, id).filter((item) =>
-    Object.values(item.modes).some((mode) => mode.warning),
-  ).length;
+export function summarizeChecks(
+  candidate: Candidate,
+  index: PresentationIndex,
+  id: ColorId,
+): ResultSummary {
+  let wcagIssues = 0;
+  for (const comparison of index.contrastByText[id]) if (comparison.wcag.key === 0) wcagIssues += 1;
+  for (const comparison of index.contrastByBackground[id])
+    if (comparison.wcag.key === 0) wcagIssues += 1;
+  let cvdWarnings = 0;
+  for (const comparison of index.cvdByColor[id]) {
+    if (CVD_MODES.some((mode) => comparison.modes[mode].warning)) cvdWarnings += 1;
+  }
   if (!wcagIssues && !cvdWarnings) {
     const hasAny =
-      comparisons.asBackground.length ||
-      comparisons.asText.length ||
+      index.contrastByBackground[id].length ||
+      index.contrastByText[id].length ||
       candidate.document.colors.order.length > 1;
     return {
       text: hasAny ? "No issues" : "Not checked",
@@ -154,40 +176,44 @@ export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummar
   };
 }
 
-export function buildRows(candidate: Candidate): RowView[] {
-  return candidate.document.colors.order.map((id, index) => {
+function buildRows(candidate: Candidate, index: PresentationIndex): readonly RowView[] {
+  return candidate.document.colors.order.map((id, offset) => {
     const color = candidate.document.colors.byId[id];
     const analysis = candidate.analysis.colors[id];
     return {
       id,
-      row: index + 1,
+      row: offset + 1,
       css: analysis.css,
       lPercent: formatLightnessPercent(color.value.l),
       c: round(color.value.c, 3),
       h: round(color.value.h, 1),
       background: color.roles.contrastBackground,
-      textContrast: summarizeTextContrast(candidate, id),
-      checks: summarizeChecks(candidate, id),
+      textContrast: summarizeTextContrast(candidate, index, id),
+      checks: summarizeChecks(candidate, index, id),
     };
   });
 }
 
+export function buildWorkspacePresentation(candidate: Candidate): WorkspacePresentation {
+  const index = createPresentationIndex(candidate);
+  return { index, rows: buildRows(candidate, index) };
+}
+
 export function buildContrastRows(
-  candidate: Candidate,
+  index: PresentationIndex,
   id: ColorId,
   mode: "background" | "text" | "all",
 ): ContrastRowView[] {
-  const comparisons = comparisonsForColor(candidate, id);
   const list =
     mode === "background"
-      ? comparisons.asBackground
+      ? index.contrastByBackground[id]
       : mode === "text"
-        ? comparisons.asText
-        : [...comparisons.asBackground, ...comparisons.asText];
+        ? index.contrastByText[id]
+        : [...index.contrastByBackground[id], ...index.contrastByText[id]];
   return list.map((comparison) => ({
     key: comparison.key,
-    textRow: rowNumber(candidate, comparison.leftId),
-    backgroundRow: rowNumber(candidate, comparison.rightId),
+    textRow: index.rowById[comparison.leftId],
+    backgroundRow: index.rowById[comparison.rightId],
     recommendation: comparison.recommendation.label,
     regular: comparison.recommendation.regular
       ? `${comparison.recommendation.regular}px`
@@ -207,8 +233,8 @@ export function buildContrastRows(
   }));
 }
 
-export function buildCvdRows(candidate: Candidate, id: ColorId): CvdRowView[] {
-  return cvdComparisonsForColor(candidate, id).map((comparison) => {
+export function buildCvdRows(index: PresentationIndex, id: ColorId): CvdRowView[] {
+  return index.cvdByColor[id].map((comparison) => {
     const otherId = comparison.leftId === id ? comparison.rightId : comparison.leftId;
     const modes = Object.fromEntries(
       CVD_MODES.map((mode) => {
@@ -224,9 +250,9 @@ export function buildCvdRows(candidate: Candidate, id: ColorId): CvdRowView[] {
     );
     return {
       key: comparison.key,
-      otherRow: rowNumber(candidate, otherId),
+      otherRow: index.rowById[otherId],
       modes,
-      hasWarning: Object.values(comparison.modes).some((mode) => mode.warning),
+      hasWarning: CVD_MODES.some((mode) => comparison.modes[mode].warning),
     };
   });
 }

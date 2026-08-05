@@ -1,18 +1,19 @@
 <script lang="ts">
-import type { ValidCandidate } from "../core/workspace/draft.ts";
-import { buildContrastRows } from "../domain/presentation.ts";
-import type { AnalysisTree, ColorId } from "../domain/types.ts";
+import { buildContrastRows, type PresentationIndex } from "../domain/presentation.ts";
+import type { ColorId } from "../domain/types.ts";
 import ContrastTable from "./ContrastTable.svelte";
 
 let {
-  candidate,
+  index,
   colorId,
   row,
+  background,
   trigger,
 }: {
-  candidate: ValidCandidate<AnalysisTree>;
+  index: PresentationIndex;
   colorId: ColorId;
   row: number;
+  background: boolean;
   trigger: HTMLButtonElement | undefined;
 } = $props();
 let popover: HTMLElement;
@@ -20,8 +21,8 @@ const manageFocus = () => {
   if (popover.matches(":popover-open")) popover.querySelector<HTMLElement>("h2")?.focus();
   else trigger?.focus();
 };
-const asBackground = $derived(buildContrastRows(candidate, colorId, "background"));
-const asText = $derived(buildContrastRows(candidate, colorId, "text"));
+const asBackground = $derived(buildContrastRows(index, colorId, "background"));
+const asText = $derived(buildContrastRows(index, colorId, "text"));
 </script>
 
 <section
@@ -38,7 +39,7 @@ const asText = $derived(buildContrastRows(candidate, colorId, "text"));
     </button>
   </div>
   <div class="popover-body">
-    {#if candidate.document.colors.byId[colorId].roles.contrastBackground}
+    {#if background}
       <ContrastTable caption={`Background color ${row}`} rows={asBackground} />
     {/if}
     <ContrastTable caption={`Color ${row} as text`} rows={asText} />

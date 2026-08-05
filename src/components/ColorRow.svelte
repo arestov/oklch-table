@@ -1,6 +1,5 @@
 <script lang="ts">
 import { announceAlert } from "../core/feedback/index.ts";
-import type { ValidCandidate } from "../core/workspace/draft.ts";
 import {
   deleteColor,
   duplicateColor,
@@ -9,14 +8,14 @@ import {
   updateColorDraft,
 } from "../core/workspace/index.ts";
 import type { UiEffect } from "../core/workspace/transactions.ts";
-import type { RowView } from "../domain/presentation.ts";
-import type { AnalysisTree, ColorId } from "../domain/types.ts";
+import type { PresentationIndex, RowView } from "../domain/presentation.ts";
+import type { ColorId } from "../domain/types.ts";
 import ChecksPopover from "./ChecksPopover.svelte";
 import TextContrastPopover from "./TextContrastPopover.svelte";
 
 let {
-  candidate,
   row,
+  index,
   invalidColorId,
   invalidField = null,
   fieldError = "",
@@ -24,8 +23,8 @@ let {
   onDraftChanged = () => {},
   onFinishEdit = () => undefined,
 }: {
-  candidate: ValidCandidate<AnalysisTree>;
   row: RowView;
+  index: PresentationIndex;
   invalidColorId: ColorId | null;
   invalidField?: "css" | "l" | "c" | "h" | null;
   fieldError?: string;
@@ -167,7 +166,13 @@ const setBackground = (enabled: boolean) => {
       <span class={row.textContrast.className}>{row.textContrast.text}</span>
       <small>{row.textContrast.detail}</small>
     </button>
-    <TextContrastPopover {candidate} colorId={row.id} row={row.row} trigger={textContrastTrigger} />
+    <TextContrastPopover
+      {index}
+      colorId={row.id}
+      row={row.row}
+      background={row.background}
+      trigger={textContrastTrigger}
+    />
   </td>
   <td>
     <button
@@ -181,6 +186,6 @@ const setBackground = (enabled: boolean) => {
       <span class={row.checks.className}>{row.checks.text}</span>
       <small>{row.checks.detail}</small>
     </button>
-    <ChecksPopover {candidate} colorId={row.id} row={row.row} trigger={checksTrigger} />
+    <ChecksPopover {index} colorId={row.id} row={row.row} trigger={checksTrigger} />
   </td>
 </tr>
