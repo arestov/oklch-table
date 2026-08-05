@@ -1,3 +1,4 @@
+import { requireValue } from "../core/safety/required.ts";
 import { CVD_MODES } from "./analysis.ts";
 import { formatLightnessPercent, round } from "./color.ts";
 import type {
@@ -92,12 +93,23 @@ export function createPresentationIndex(candidate: Candidate): PresentationIndex
     cvdByColor[id] = [];
   }
   for (const comparison of Object.values(candidate.analysis.comparisons.contrast)) {
-    contrastByText[comparison.leftId].push(comparison);
-    contrastByBackground[comparison.rightId].push(comparison);
+    requireValue(
+      contrastByText[comparison.leftId],
+      `Missing text index for ${comparison.leftId}`,
+    ).push(comparison);
+    requireValue(
+      contrastByBackground[comparison.rightId],
+      `Missing background index for ${comparison.rightId}`,
+    ).push(comparison);
   }
   for (const comparison of Object.values(candidate.analysis.comparisons.colorVision)) {
-    cvdByColor[comparison.leftId].push(comparison);
-    cvdByColor[comparison.rightId].push(comparison);
+    requireValue(cvdByColor[comparison.leftId], `Missing CVD index for ${comparison.leftId}`).push(
+      comparison,
+    );
+    requireValue(
+      cvdByColor[comparison.rightId],
+      `Missing CVD index for ${comparison.rightId}`,
+    ).push(comparison);
   }
   return { rowById, contrastByText, contrastByBackground, cvdByColor };
 }
@@ -107,10 +119,11 @@ export function summarizeTextContrast(
   index: PresentationIndex,
   id: ColorId,
 ): ResultSummary {
-  const color = candidate.document.colors.byId[id];
-  const list = color.roles.contrastBackground
-    ? index.contrastByBackground[id]
-    : index.contrastByText[id];
+  const color = requireValue(candidate.document.colors.byId[id], `Missing color ${id}`);
+  const list = requireValue(
+    color.roles.contrastBackground ? index.contrastByBackground[id] : index.contrastByText[id],
+    `Missing contrast index for ${id}`,
+  );
   if (!list.length) {
     return {
       text: "Not checked",
@@ -121,7 +134,7 @@ export function summarizeTextContrast(
     };
   }
   let readable = 0;
-  let worst = list[0];
+  let worst = requireValue(list[0], "A non-empty comparison list must have a first item");
   for (const comparison of list) {
     if (comparison.readableTextSupported) readable += 1;
     if (comparison.recommendation.key < worst.recommendation.key) worst = comparison;
@@ -148,17 +161,22 @@ export function summarizeChecks(
   id: ColorId,
 ): ResultSummary {
   let wcagIssues = 0;
-  for (const comparison of index.contrastByText[id]) if (comparison.wcag.key === 0) wcagIssues += 1;
-  for (const comparison of index.contrastByBackground[id])
-    if (comparison.wcag.key === 0) wcagIssues += 1;
+  const textComparisons = requireValue(index.contrastByText[id], `Missing text index for ${id}`);
+  const backgroundComparisons = requireValue(
+    index.contrastByBackground[id],
+    `Missing background index for ${id}`,
+  );
+  const cvdComparisons = requireValue(index.cvdByColor[id], `Missing CVD index for ${id}`);
+  for (const comparison of textComparisons) if (comparison.wcag.key === 0) wcagIssues += 1;
+  for (const comparison of backgroundComparisons) if (comparison.wcag.key === 0) wcagIssues += 1;
   let cvdWarnings = 0;
-  for (const comparison of index.cvdByColor[id]) {
+  for (const comparison of cvdComparisons) {
     if (CVD_MODES.some((mode) => comparison.modes[mode].warning)) cvdWarnings += 1;
   }
   if (!wcagIssues && !cvdWarnings) {
     const hasAny =
-      index.contrastByBackground[id].length ||
-      index.contrastByText[id].length ||
+      backgroundComparisons.length ||
+      textComparisons.length ||
       candidate.document.colors.order.length > 1;
     return {
       text: hasAny ? "No issues" : "Not checked",
@@ -178,8 +196,8 @@ export function summarizeChecks(
 
 function buildRows(candidate: Candidate, index: PresentationIndex): readonly RowView[] {
   return candidate.document.colors.order.map((id, offset) => {
-    const color = candidate.document.colors.byId[id];
-    const analysis = candidate.analysis.colors[id];
+    const color = requireValue(candidate.document.colors.byId[id], `Missing color ${id}`);
+    const analysis = requireValue(candidate.analysis.colors[id], `Missing analysis for ${id}`);
     return {
       id,
       row: offset + 1,
@@ -204,16 +222,24 @@ export function buildContrastRows(
   id: ColorId,
   mode: "background" | "text" | "all",
 ): ContrastRowView[] {
-  const list =
+  const list = requireValue(
     mode === "background"
       ? index.contrastByBackground[id]
       : mode === "text"
         ? index.contrastByText[id]
-        : [...index.contrastByBackground[id], ...index.contrastByText[id]];
+        : [
+            ...requireValue(index.contrastByBackground[id], `Missing background index for ${id}`),
+            ...requireValue(index.contrastByText[id], `Missing text index for ${id}`),
+          ],
+    `Missing contrast index for ${id}`,
+  );
   return list.map((comparison) => ({
     key: comparison.key,
-    textRow: index.rowById[comparison.leftId],
-    backgroundRow: index.rowById[comparison.rightId],
+    textRow: requireValue(index.rowById[comparison.leftId], `Missing row for ${comparison.leftId}`),
+    backgroundRow: requireValue(
+      index.rowById[comparison.rightId],
+      `Missing row for ${comparison.rightId}`,
+    ),
     recommendation: comparison.recommendation.label,
     regular: comparison.recommendation.regular
       ? `${comparison.recommendation.regular}px`
@@ -234,7 +260,7 @@ export function buildContrastRows(
 }
 
 export function buildCvdRows(index: PresentationIndex, id: ColorId): CvdRowView[] {
-  return index.cvdByColor[id].map((comparison) => {
+  return requireValue(index.cvdByColor[id], `Missing CVD index for ${id}`).map((comparison) => {
     const otherId = comparison.leftId === id ? comparison.rightId : comparison.leftId;
     const modes = Object.fromEntries(
       CVD_MODES.map((mode) => {
@@ -250,7 +276,7 @@ export function buildCvdRows(index: PresentationIndex, id: ColorId): CvdRowView[
     );
     return {
       key: comparison.key,
-      otherRow: index.rowById[otherId],
+      otherRow: requireValue(index.rowById[otherId], `Missing row for ${otherId}`),
       modes,
       hasWarning: CVD_MODES.some((mode) => comparison.modes[mode].warning),
     };

@@ -1,3 +1,4 @@
+import { requireValue } from "../core/safety/required.ts";
 import { round } from "./color.ts";
 import type {
   ColorVisionKey,
@@ -12,11 +13,12 @@ import type {
 export function createSemanticSnapshot(candidate: SemanticInput): SemanticSnapshot {
   const rows = {} as SemanticSnapshot["rows"];
   candidate.document.colors.order.forEach((id, index) => {
-    const color = candidate.document.colors.byId[id];
+    const color = requireValue(candidate.document.colors.byId[id], `Missing color ${id}`);
+    const analysis = requireValue(candidate.analysis.colors[id], `Missing analysis for ${id}`);
     rows[id] = {
       id,
       row: index + 1,
-      css: candidate.analysis.colors[id].css,
+      css: analysis.css,
       l: round(color.value.l),
       c: round(color.value.c),
       h: round(color.value.h, 1),
@@ -32,8 +34,8 @@ export function createSemanticSnapshot(candidate: SemanticInput): SemanticSnapsh
       key,
       leftId: value.leftId,
       rightId: value.rightId,
-      leftRow: rows[value.leftId].row,
-      rightRow: rows[value.rightId].row,
+      leftRow: requireValue(rows[value.leftId], `Missing semantic row for ${value.leftId}`).row,
+      rightRow: requireValue(rows[value.rightId], `Missing semantic row for ${value.rightId}`).row,
       apca: round(value.apca, 1),
       recommendationKey: value.recommendation.key,
       regular: value.recommendation.regular,
@@ -50,8 +52,8 @@ export function createSemanticSnapshot(candidate: SemanticInput): SemanticSnapsh
       key,
       leftId: value.leftId,
       rightId: value.rightId,
-      leftRow: rows[value.leftId].row,
-      rightRow: rows[value.rightId].row,
+      leftRow: requireValue(rows[value.leftId], `Missing semantic row for ${value.leftId}`).row,
+      rightRow: requireValue(rows[value.rightId], `Missing semantic row for ${value.rightId}`).row,
       warnings: Object.entries(value.modes)
         .filter(([, signal]) => signal.warning)
         .map(([mode]) => mode as CvdMode),

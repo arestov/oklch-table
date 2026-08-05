@@ -1,3 +1,4 @@
+import { requireValue } from "../core/safety/required.ts";
 import type { ColorFormat, ColorNode, OklchValue, Rgb } from "./types.ts";
 
 export const APCA_LEVELS = [
@@ -88,7 +89,7 @@ interface ParsedColor {
 function parseHex(value: string): ParsedColor | null {
   const match = value.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
   if (!match) return null;
-  const raw = match[1];
+  const raw = requireValue(match[1], "Hex parser must capture the color value");
   const full =
     raw.length === 3
       ? raw
@@ -111,8 +112,12 @@ function parseRgb(value: string): ParsedColor | null {
       /^rgba?\(\s*([+-]?[\d.]+)(%)?[,\s]+([+-]?[\d.]+)(%)?[,\s]+([+-]?[\d.]+)(%)?(?:\s*\/\s*[\d.]+%?)?\s*\)$/i,
     );
   if (!match) return null;
-  const values = [Number(match[1]), Number(match[3]), Number(match[5])];
-  const percents = [match[2], match[4], match[6]];
+  const values = [
+    Number(requireValue(match[1], "RGB parser must capture red")),
+    Number(requireValue(match[3], "RGB parser must capture green")),
+    Number(requireValue(match[5], "RGB parser must capture blue")),
+  ] as const;
+  const percents = [match[2], match[4], match[6]] as const;
   const rgb = {
     r: clamp(percents[0] ? values[0] * 2.55 : values[0], 0, 255),
     g: clamp(percents[1] ? values[1] * 2.55 : values[1], 0, 255),

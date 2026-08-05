@@ -1,4 +1,5 @@
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
+import { requireValue } from "../safety/required.ts";
 import type { WorkspaceTransaction } from "../workspace/transactions.ts";
 import { buildAnnouncementPlan } from "./announcement-plan.ts";
 
@@ -61,7 +62,10 @@ export function buildEnglishAnnouncement(transaction: Transaction): RenderedAnno
   const cvd = plan.cvd.map(({ direction, pairs, remaining }) => {
     const outcome = direction === "added" ? "detected" : "resolved";
     return pairs.length === 1
-      ? `Color vision: conflict between row ${pairs[0][0]} and row ${pairs[0][1]} ${outcome}; ${remaining} remain.`
+      ? (() => {
+          const [left, right] = requireValue(pairs[0], "One CVD pair must include two rows");
+          return `Color vision: conflict between row ${left} and row ${right} ${outcome}; ${remaining} remain.`;
+        })()
       : `Color vision: ${pairs.length} possible conflicts ${outcome}; ${remaining} remain.`;
   });
   return {
