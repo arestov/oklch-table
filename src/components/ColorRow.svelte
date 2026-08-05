@@ -82,6 +82,7 @@ const setBackground = (enabled: boolean) => {
   </td>
   <td>
     <input
+      type="text"
       class="css-color"
       value={row.css}
       data-field="css"

@@ -92,7 +92,7 @@ let {
             onkeydown={onNewColorKeydown}
           >
         </td>
-        <td colspan="6">New color</td>
+        <td class="row-text-cell" colspan="6">New color</td>
       </tr>
     </tbody>
   </table>

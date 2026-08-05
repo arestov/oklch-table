@@ -164,6 +164,8 @@ kbd {
 }
 
 table {
+  --control-text-inset: 7.5px;
+
   width: 100%;
   min-width: 69rem;
   border-collapse: collapse;
@@ -234,8 +236,13 @@ tbody tr + tr > * {
 }
 
 tbody th[scope="row"] {
+  padding-block-start: calc(10px + var(--control-text-inset));
   text-align: right;
   color: var(--muted);
+}
+
+.row-text-cell {
+  padding-block-start: calc(10px + var(--control-text-inset));
 }
 
 .actions {
