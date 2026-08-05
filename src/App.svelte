@@ -50,7 +50,14 @@ const onAction = async (effects: readonly import("./core/workspace/transactions.
 const onFinishEdit = (reason: "enter" | "blur") => {
   feedbackCoordinator.cancel();
   const result = finishEdit(reason);
-  if (result.status === "invalid") announceAlert(result.message);
+  if (result.status === "invalid") {
+    announceAlert(result.message);
+    const field = $candidateStore.status === "invalid" ? $candidateStore.issue.field : null;
+    if (field && field !== "new-color")
+      requestAnimationFrame(() =>
+        mountedWorkspace().querySelector<HTMLInputElement>(`input[data-field="${field}"]`)?.focus(),
+      );
+  }
 };
 const columnTargets: Record<string, string> = {
   "1": "button",
@@ -138,6 +145,9 @@ onMount(() => {
     invalidField={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
       ? $candidateStore.issue.field
       : null}
+    fieldError={$candidateStore.status === "invalid" && $candidateStore.issue.field !== "new-color"
+      ? $candidateStore.issue.message
+      : ""}
     draftRaw={$draftStore.newColor.raw}
     {draftError}
     bind:draftInput

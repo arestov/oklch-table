@@ -8,6 +8,7 @@ import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../doma
 import { type ColorId, type IdGenerator, nanoIdGenerator } from "../identity/ids.ts";
 import type { DraftEdit } from "./draft.ts";
 import type { DocumentTree } from "./model.ts";
+import { parseNumericField } from "./numeric-fields.ts";
 import {
   acceptedRevisionStore,
   candidateDependencies,
@@ -94,7 +95,7 @@ function buildCandidate(edit: DraftEdit): DraftEdit {
         : edit.lastValidPatch,
     };
   }
-  const value = /^[+-]?(?:\d+\.\d+|\d+|\.\d+)$/.test(edit.raw.trim()) ? Number(edit.raw) : null;
+  const value = parseNumericField(edit.field, edit.raw);
   return {
     ...edit,
     lastValidPatch: value === null ? edit.lastValidPatch : { field: edit.field, value },

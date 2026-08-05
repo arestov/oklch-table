@@ -54,7 +54,9 @@ test("preserves focus through duplicate, delete, shortcuts, and popover details"
   await addColor(page, "#ffffff");
 
   await page.getByRole("button", { name: "Duplicate color 1" }).click();
-  await expect(page.getByRole("spinbutton", { name: "Lightness for row 2" })).toBeFocused();
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 2" }),
+  ).toBeFocused();
 
   await page.keyboard.press("Control+.");
   await page.keyboard.press("7");
@@ -145,11 +147,44 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
     });
     observer.observe(target, { childList: true, characterData: true, subtree: true });
   });
-  const lightness = page.getByRole("spinbutton", { name: "Lightness for row 1" });
-  await lightness.fill("0.8");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  await lightness.fill("80");
   await lightness.press("Enter");
-  await expect(status).toContainText("Lightness 0.8. Checks updated.");
+  await expect(status).toContainText("Lightness 80 percent. Checks updated.");
   expect(
     await page.evaluate(() => JSON.parse(sessionStorage.getItem("status-mutations") ?? "[]")),
-  ).toEqual(["Lightness 0.8. Checks updated."]);
+  ).toEqual(["Lightness 80 percent. Checks updated."]);
+});
+
+test("uses bounded, unit-aware numeric controls", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+  const chroma = page.getByRole("spinbutton", { name: "Chroma for row 1" });
+  const hue = page.getByRole("spinbutton", { name: "Hue in degrees for row 1" });
+
+  await expect(lightness).toHaveAttribute("min", "0");
+  await expect(lightness).toHaveAttribute("max", "100");
+  await expect(lightness).toHaveAttribute("step", "0.1");
+  await expect(lightness).toHaveAttribute("inputmode", "decimal");
+  await expect(chroma).toHaveAttribute("min", "0");
+  await expect(chroma).not.toHaveAttribute("max");
+  await expect(chroma).toHaveAttribute("step", "0.001");
+  await expect(hue).toHaveAttribute("min", "0");
+  await expect(hue).toHaveAttribute("max", "360");
+  await expect(hue).toHaveAttribute("step", "0.1");
+
+  await lightness.fill("60");
+  await lightness.press("ArrowUp");
+  await expect(lightness).toHaveValue("60.1");
+  await lightness.press("Enter");
+  await expect(page.getByRole("status")).toContainText("Lightness 60.1 percent. Checks updated.");
+
+  await lightness.fill("101");
+  await lightness.press("Enter");
+  await expect(lightness).toBeFocused();
+  await expect(lightness).toHaveAttribute("aria-invalid", "true");
+  await expect(lightness).toHaveAttribute("aria-describedby");
+  await lightness.fill("60");
+  await expect(lightness).not.toHaveAttribute("aria-invalid", "true");
 });

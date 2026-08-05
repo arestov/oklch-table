@@ -1,4 +1,5 @@
 import type { ValidCandidate as CandidateRevision } from "../core/workspace/draft.ts";
+import { formatLightnessPercent } from "../core/workspace/numeric-fields.ts";
 import { CVD_MODES } from "./analysis.ts";
 import { round } from "./color.ts";
 import type {
@@ -21,7 +22,7 @@ export interface RowView {
   id: ColorId;
   row: number;
   css: string;
-  l: number;
+  lPercent: number;
   c: number;
   h: number;
   background: boolean;
@@ -151,7 +152,7 @@ export function buildRows(candidate: Candidate): RowView[] {
       id,
       row: index + 1,
       css: analysis.css,
-      l: round(color.value.l, 3),
+      lPercent: formatLightnessPercent(color.value.l),
       c: round(color.value.c, 3),
       h: round(color.value.h, 1),
       background: color.roles.contrastBackground,

@@ -126,30 +126,34 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   await enterFocusMode(nvda);
   await nvda.press("Control+.");
   await nvda.press("3");
-  await expect(page.getByRole("spinbutton", { name: "Lightness for row 5" })).toBeFocused();
-  expect(await reportFocus(nvda)).toContain("Lightness for row 5");
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
+  ).toBeFocused();
+  expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 
   await nvda.clearSpokenPhraseLog();
   await nvda.press("Control+A");
-  await nvda.type("0.6");
+  await nvda.type("60");
   await nvda.perform(nvda.keyboardCommands.stopSpeech);
   await nvda.clearSpokenPhraseLog();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("spinbutton", { name: "Lightness for row 5" })).toHaveValue("0.6");
-  await expect(page.getByRole("status")).toContainText("Lightness 0.6. Checks updated.");
-  await expectLiveRegionReadable(page, nvda, "status", "Lightness 0.6. Checks updated.");
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
+  ).toHaveValue("60");
+  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
+  await expectLiveRegionReadable(page, nvda, "status", "Lightness 60 percent. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
 });
 
 test("reads contrast details and returns to the editing loop", async ({ page, nvda }) => {
   await page.goto("/");
   await prepareGoldenWorkspace(page);
-  const lightness = page.getByRole("spinbutton", { name: "Lightness for row 5" });
-  await lightness.fill("0.6");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await lightness.fill("60");
   await lightness.press("Enter");
   await activateBrowser(page);
 
-  expect(await reportFocus(nvda)).toContain("Lightness for row 5");
+  expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
   await enterFocusMode(nvda);
   await nvda.press("Control+.");
   await nvda.press("7");
@@ -170,7 +174,7 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
   await nvda.press("Control+.");
   await nvda.press("3");
   await expect(lightness).toBeFocused();
-  expect(await reportFocus(nvda)).toContain("Lightness for row 5");
+  expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 });
 
 test("announces an invalid CSS color and preserves its focus", async ({ page, nvda }) => {
@@ -195,17 +199,17 @@ test("completes the error-hover golden path through the copied token", async ({ 
   await prepareGoldenWorkspace(page);
   await activateBrowser(page);
 
-  expect(await reportFocus(nvda)).toContain("Lightness for row 5");
+  expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
   await enterFocusMode(nvda);
   await nvda.clearSpokenPhraseLog();
   await nvda.press("Control+A");
-  await nvda.type("0.6");
+  await nvda.type("60");
   await nvda.perform(nvda.keyboardCommands.stopSpeech);
   await nvda.clearSpokenPhraseLog();
   await page.keyboard.press("Enter");
-  await expectLiveRegionReadable(page, nvda, "status", "Lightness 0.6. Checks updated.");
+  await expectLiveRegionReadable(page, nvda, "status", "Lightness 60 percent. Checks updated.");
 
-  await page.getByRole("spinbutton", { name: "Lightness for row 5" }).focus();
+  await page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }).focus();
   await activateBrowser(page);
   await nvda.press("Control+.");
   await nvda.press("7");

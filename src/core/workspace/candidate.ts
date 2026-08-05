@@ -8,6 +8,7 @@ import type {
   ValidCandidate,
 } from "./draft.ts";
 import type { ColorNode, DocumentTree, OklchValue } from "./model.ts";
+import { numericFieldError, parseNumericField } from "./numeric-fields.ts";
 
 export type CandidateIssue = InvalidCandidate<unknown>["issue"];
 
@@ -41,15 +42,10 @@ function parsePatch<TAnalysis>(
       ? { field: "css", ...parsed }
       : { field: "css", raw: edit.raw, message: "Invalid CSS color. Enter HEX, RGB, or OKLCH." };
   }
-  const value = Number(edit.raw);
-  if (!/^[+-]?(?:\d+\.\d+|\d+|\.\d+)$/.test(edit.raw.trim()) || !Number.isFinite(value)) {
-    return {
-      field: edit.field,
-      raw: edit.raw,
-      message: "Enter a valid number before leaving this field.",
-    };
-  }
-  return { field: edit.field, value };
+  const value = parseNumericField(edit.field, edit.raw);
+  return value === null
+    ? { field: edit.field, raw: edit.raw, message: numericFieldError(edit.field, edit.raw) }
+    : { field: edit.field, value };
 }
 
 export function buildCandidateRevision<TAnalysis>(

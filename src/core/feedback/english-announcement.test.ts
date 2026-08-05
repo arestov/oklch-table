@@ -85,7 +85,7 @@ describe("English announcements", () => {
       },
     } as never);
     expect(rendered.spoken).toBe(
-      "Lightness 0.68. Checks updated. APCA: Row 1 no longer supports the configured text on row 2. WCAG: Row 1 and row 2 changed from level 3 to 2. Color vision: New warning (protanopia) between rows 1 and 2.",
+      "Lightness 68 percent. Checks updated. APCA: Row 1 no longer supports the configured text on row 2. WCAG: Row 1 and row 2 changed from level 3 to 2. Color vision: New warning (protanopia) between rows 1 and 2.",
     );
   });
 
