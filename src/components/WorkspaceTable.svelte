@@ -50,12 +50,12 @@ let {
     </colgroup>
     <thead>
       <tr>
-        <th scope="col">#</th>
+        <th scope="col" class="numeric-heading">#</th>
         <th scope="col">Actions</th>
         <th scope="col">CSS color</th>
-        <th scope="col">L, %</th>
-        <th scope="col">C</th>
-        <th scope="col">H, °</th>
+        <th scope="col" class="numeric-heading">L, %</th>
+        <th scope="col" class="numeric-heading">C</th>
+        <th scope="col" class="numeric-heading">H, °</th>
         <th scope="col">Contrast<br>background</th>
         <th scope="col">Text contrast</th>
         <th scope="col">Checks</th>

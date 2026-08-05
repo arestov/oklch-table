@@ -324,6 +324,11 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     firstRow.getByRole("button", { name: /^Text contrast/ }).boundingBox(),
   ]);
   expect(cssInputBox?.y).toBe(resultButtonBox?.y);
+
+  const numericHeadingAlignment = await page
+    .locator("thead .numeric-heading")
+    .evaluateAll((headings) => headings.map((heading) => getComputedStyle(heading).textAlign));
+  expect(numericHeadingAlignment).toEqual(["right", "right", "right", "right"]);
 });
 
 test("keeps visible screen-reader feedback in stable page flow", async ({ page }) => {
