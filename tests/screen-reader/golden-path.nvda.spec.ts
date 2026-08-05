@@ -13,7 +13,8 @@ test.use({
 test("completes the empty-workspace error-hover transcript", async ({ page, nvda }) => {
   await page.goto("/");
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
-  await nvda.navigateToWebContent();
+  await nvda.perform(nvda.keyboardCommands.exitFocusMode);
+  await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 
   for (const color of [
     goldenPath.accentBackground,
