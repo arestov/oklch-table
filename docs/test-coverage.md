@@ -81,6 +81,7 @@ restricted to assertions and infrastructure setup.
 | No-category feedback | `nvda.spec.ts` — `announces a no-category edit without metric sections` | covered (native speech) |
 | Idle field edit and feedback | `nvda.spec.ts` — `jumps to Lightness and reaches one grouped idle result` | covered (status DOM) |
 | Isolated details/focus return | `nvda.spec.ts` — `reads contrast details and returns to the editing loop` | covered |
+| Checks details/focus return | `nvda.spec.ts` — `reads WCAG and color-vision issues from Checks and returns to its trigger` | covered (native speech) |
 | Invalid draft | `nvda.spec.ts` — `announces an invalid CSS color and preserves its focus` | covered |
 | Empty-workspace golden path | `golden-path.nvda.spec.ts` — `completes the empty-workspace error-hover transcript` | covered |
 
