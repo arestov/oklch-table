@@ -72,14 +72,14 @@ test("announces the initial color draft", async ({ page, nvda }) => {
   await page.goto("/");
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
 
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for new row 1");
   expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
 });
 
 test("adds the first and second colors without leaving the draft loop", async ({ page, nvda }) => {
   await page.goto("/");
   await page.getByPlaceholder("fill color").fill(goldenPathColors.accentBackground);
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for new row 1");
   await enterFocusMode(nvda);
   await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Color added as row 1");
   await expect(page.locator("tbody tr")).toHaveCount(2);
@@ -88,7 +88,7 @@ test("adds the first and second colors without leaving the draft loop", async ({
 
   const secondDraft = page.getByPlaceholder("fill color");
   await secondDraft.fill(goldenPathColors.accentHoverBackground);
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for new row 2");
   await nvda.clearSpokenPhraseLog();
   await secondDraft.press("Enter");
   await expect(page.locator("tbody tr")).toHaveCount(3);
@@ -100,7 +100,7 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   await page.goto("/");
   await prepareGoldenWorkspace(page);
   await page.getByRole("textbox", { name: "CSS color for row 5" }).focus();
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for row 5");
 
   expect(await reportFocus(nvda)).toContain("CSS color for row 5");
   await enterFocusMode(nvda);
@@ -131,7 +131,7 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
   await lightness.fill("60");
   await lightness.press("Enter");
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "Lightness percentage for row 5");
 
   expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
   await enterFocusMode(nvda);
@@ -160,7 +160,7 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
 test("announces an invalid CSS color and preserves its focus", async ({ page, nvda }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for new row 1");
 
   expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
   await enterFocusMode(nvda);
