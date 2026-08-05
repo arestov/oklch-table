@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { ColorId } from "../identity/ids.ts";
 import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
@@ -20,6 +21,39 @@ function expectOnePublication(action: () => unknown, spoken: string): void {
   action();
   expect(announcementStore.get().result).toEqual({ id: before + 1, text: spoken });
   expect(visibleFeedbackStore.get()).toEqual({ edited: spoken, apca: "", wcag: "", cvd: "" });
+}
+
+function addColor(ids: ReturnType<typeof createSequenceIds>, raw: string): void {
+  setNewColorDraft(raw);
+  expect(addColorFromDraft(ids)).toMatchObject({ status: "accepted" });
+}
+
+function prepareGoldenPath(ids: ReturnType<typeof createSequenceIds>): ColorId {
+  addColor(ids, "oklch(0.5 0.15 260)");
+  addColor(ids, "oklch(0.6 0.15 260)");
+  addColor(ids, "#ffffff");
+  addColor(ids, "oklch(0.5 0.2 25)");
+  const backgroundId = acceptedRevisionStore.get().document.colors.order[3];
+  expect(setContrastBackground(backgroundId, true, ids)).toMatchObject({ status: "accepted" });
+  expect(duplicateColor(backgroundId, ids)).toMatchObject({ status: "accepted" });
+  return acceptedRevisionStore.get().document.colors.order[4];
+}
+
+function commitLightness(
+  ids: ReturnType<typeof createSequenceIds>,
+  colorId: ColorId,
+  value: string,
+): void {
+  beginEdit(colorId, "l");
+  updateDraft(value);
+  expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
+}
+
+function expectSpokenSections(): void {
+  const visible = visibleFeedbackStore.get();
+  expect(announcementStore.get().result.text).toBe(
+    [visible.edited, visible.apca, visible.wcag, visible.cvd].filter(Boolean).join(" "),
+  );
 }
 
 describe("golden-path feedback stores", () => {
@@ -83,5 +117,29 @@ describe("golden-path feedback stores", () => {
     });
     expect(finishEdit("enter", ids)).toEqual({ status: "unchanged" });
     expect(announcementStore.get().result.id).toBe(before.id + 1);
+  });
+
+  it("publishes APCA loss and restoration from production semantic analysis", () => {
+    const ids = createSequenceIds();
+    const derivedId = prepareGoldenPath(ids);
+    commitLightness(ids, derivedId, "60");
+
+    const beforeLoss = announcementStore.get().result.id;
+    commitLightness(ids, derivedId, "90");
+    expect(announcementStore.get().result.id).toBe(beforeLoss + 1);
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      edited: "L 90. Checks updated.",
+      apca: "APCA: row 3 is no longer readable on background row 5.",
+    });
+    expectSpokenSections();
+
+    const beforeRestored = announcementStore.get().result.id;
+    commitLightness(ids, derivedId, "60");
+    expect(announcementStore.get().result.id).toBe(beforeRestored + 1);
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      edited: "L 60. Checks updated.",
+      apca: "APCA: row 3 is now readable on background row 5.",
+    });
+    expectSpokenSections();
   });
 });
