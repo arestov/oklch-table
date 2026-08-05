@@ -23,7 +23,7 @@ import type {
   WcagLevel,
 } from "./types.ts";
 
-const CVD_MATRICES: Record<CvdMode, number[][]> = {
+const CVD_MATRICES: Record<CvdMode, readonly (readonly number[])[]> = {
   protanopia: [
     [0.152286, 1.052583, -0.204868],
     [0.114503, 0.786281, 0.099216],
@@ -48,17 +48,15 @@ export function contrastKey(leftId: ColorId, rightId: ColorId): ContrastKey {
 }
 
 export function colorVisionKey(leftId: ColorId, rightId: ColorId): ColorVisionKey {
-  return [leftId, rightId].sort().join("|") as ColorVisionKey;
+  return (leftId < rightId ? `${leftId}|${rightId}` : `${rightId}|${leftId}`) as ColorVisionKey;
 }
 
 function relativeLuminance(rgb: Rgb): number {
   return 0.2126 * srgbToLinear(rgb.r) + 0.7152 * srgbToLinear(rgb.g) + 0.0722 * srgbToLinear(rgb.b);
 }
 
-function wcagContrast(foreground: Rgb, background: Rgb): number {
-  const a = relativeLuminance(foreground);
-  const b = relativeLuminance(background);
-  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+function wcagContrast(foreground: number, background: number): number {
+  return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
 }
 
 function wcagLevel(ratio: number): WcagLevel {
@@ -83,9 +81,9 @@ function softClampBlack(y: number): number {
 // APCA-W3 base algorithm 0.0.98G-4g (the base of apca-w3 library 0.1.9).
 // Source: https://github.com/Myndex/apca-w3#current-apca-constants
 // Recommendation categories, rather than an unavailable user font profile, are the product fact.
-function apcaContrast(textRgb: Rgb, backgroundRgb: Rgb): number {
-  const txtY = softClampBlack(apcaLuminance(textRgb));
-  const bgY = softClampBlack(apcaLuminance(backgroundRgb));
+function apcaContrast(textLuminance: number, backgroundLuminance: number): number {
+  const txtY = softClampBlack(textLuminance);
+  const bgY = softClampBlack(backgroundLuminance);
   if (Math.abs(bgY - txtY) < 0.0005) return 0;
   if (bgY > txtY) {
     const sapc = (bgY ** 0.56 - txtY ** 0.57) * 1.14;
@@ -98,30 +96,48 @@ function apcaContrast(textRgb: Rgb, backgroundRgb: Rgb): number {
 function apcaRecommendation(lc: number): ApcaRecommendation {
   const absolute = Math.abs(lc);
   const level = APCA_LEVELS.find((item) => absolute >= item.min) ?? APCA_LEVELS[4];
-  return { ...level };
+  return level;
 }
 
-function simulateCvd(rgb: Rgb, matrix: number[][]): Rgb {
-  const input = [rgb.r / 255, rgb.g / 255, rgb.b / 255];
-  const output = matrix.map((row) => row[0] * input[0] + row[1] * input[1] + row[2] * input[2]);
-  return {
-    r: clamp(output[0] * 255, 0, 255),
-    g: clamp(output[1] * 255, 0, 255),
-    b: clamp(output[2] * 255, 0, 255),
-  };
+function simulateCvdOklab(rgb: Rgb, matrix: readonly (readonly number[])[]) {
+  const inputR = rgb.r / 255;
+  const inputG = rgb.g / 255;
+  const inputB = rgb.b / 255;
+  const red = matrix[0];
+  const green = matrix[1];
+  const blue = matrix[2];
+  return rgbToOklab({
+    r: clamp((red[0] * inputR + red[1] * inputG + red[2] * inputB) * 255, 0, 255),
+    g: clamp((green[0] * inputR + green[1] * inputG + green[2] * inputB) * 255, 0, 255),
+    b: clamp((blue[0] * inputR + blue[1] * inputG + blue[2] * inputB) * 255, 0, 255),
+  });
 }
 
-function oklabDistance(rgbA: Rgb, rgbB: Rgb): number {
-  const a = rgbToOklab(rgbA);
-  const b = rgbToOklab(rgbB);
+function oklabDistance(a: ReturnType<typeof rgbToOklab>, b: ReturnType<typeof rgbToOklab>): number {
   return Math.sqrt((a.L - b.L) ** 2 + (a.a - b.a) ** 2 + (a.b - b.b) ** 2);
 }
 
 export function deriveAnalysis(document: DocumentTree): AnalysisTree {
   const colors = {} as AnalysisTree["colors"];
+  const metrics = {} as Record<
+    ColorId,
+    {
+      wcagLuminance: number;
+      apcaLuminance: number;
+      cvdOklab: Record<CvdMode, ReturnType<typeof rgbToOklab>>;
+    }
+  >;
   for (const id of document.colors.order) {
     const color = document.colors.byId[id];
-    colors[id] = { id, css: serializeColor(color), rgb: rgbForColor(color) };
+    const rgb = rgbForColor(color);
+    const cvdOklab = {} as Record<CvdMode, ReturnType<typeof rgbToOklab>>;
+    for (const mode of CVD_MODES) cvdOklab[mode] = simulateCvdOklab(rgb, CVD_MATRICES[mode]);
+    colors[id] = { id, css: serializeColor(color, rgb), rgb };
+    metrics[id] = {
+      wcagLuminance: relativeLuminance(rgb),
+      apcaLuminance: apcaLuminance(rgb),
+      cvdOklab,
+    };
   }
 
   const contrast = {} as AnalysisTree["comparisons"]["contrast"];
@@ -130,11 +146,9 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
     if (!background.roles.contrastBackground) continue;
     for (const leftId of document.colors.order) {
       if (leftId === rightId) continue;
-      const textAnalysis = colors[leftId];
-      const backgroundAnalysis = colors[rightId];
-      const apca = apcaContrast(textAnalysis.rgb, backgroundAnalysis.rgb);
+      const apca = apcaContrast(metrics[leftId].apcaLuminance, metrics[rightId].apcaLuminance);
       const recommendation = apcaRecommendation(apca);
-      const ratio = wcagContrast(textAnalysis.rgb, backgroundAnalysis.rgb);
+      const ratio = wcagContrast(metrics[leftId].wcagLuminance, metrics[rightId].wcagLuminance);
       const key = contrastKey(leftId, rightId);
       contrast[key] = {
         key,
@@ -158,8 +172,8 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
       const modes = {} as AnalysisTree["comparisons"]["colorVision"][ColorVisionKey]["modes"];
       for (const mode of CVD_MODES) {
         const distance = oklabDistance(
-          simulateCvd(colors[leftId].rgb, CVD_MATRICES[mode]),
-          simulateCvd(colors[rightId].rgb, CVD_MATRICES[mode]),
+          metrics[leftId].cvdOklab[mode],
+          metrics[rightId].cvdOklab[mode],
         );
         modes[mode] = { distance, warning: distance < CVD_WARNING_THRESHOLD };
       }
