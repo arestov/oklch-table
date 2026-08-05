@@ -27,7 +27,7 @@ let {
   fieldError: string;
   draftRaw: string;
   draftError: string;
-  draftInput?: HTMLInputElement;
+  draftInput?: HTMLInputElement | undefined;
   onEdit: (colorId: ColorId, field: "css" | "l" | "c" | "h", raw: string) => void;
   onDuplicate: (colorId: ColorId) => void | Promise<void>;
   onDelete: (colorId: ColorId) => void | Promise<void>;
