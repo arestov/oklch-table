@@ -212,10 +212,10 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
   await lightness.fill("80");
   await lightness.press("Enter");
-  await expect(status).toContainText("Lightness 80 percent. Checks updated.");
+  await expect(status).toContainText("L 80. Checks updated.");
   expect(
     await page.evaluate(() => JSON.parse(sessionStorage.getItem("status-mutations") ?? "[]")),
-  ).toEqual(["Lightness 80 percent. Checks updated."]);
+  ).toEqual(["L 80. Checks updated."]);
 });
 
 test("creates one idle checkpoint after 700 ms and does not repeat it on Enter", async ({
@@ -244,13 +244,13 @@ test("creates one idle checkpoint after 700 ms and does not repeat it on Enter",
   await page.waitForTimeout(199);
   await expect(status).toHaveText("Color added as row 1.");
   await page.waitForTimeout(1);
-  await expect(status).toHaveText("Lightness 80 percent. Checks updated.");
+  await expect(status).toHaveText("L 80. Checks updated.");
 
   await lightness.press("Enter");
   await page.waitForTimeout(50);
   expect(
     await page.evaluate(() => JSON.parse(sessionStorage.getItem("idle-status-mutations") ?? "[]")),
-  ).toEqual(["Lightness 80 percent. Checks updated."]);
+  ).toEqual(["L 80. Checks updated."]);
 });
 
 test("uses bounded, unit-aware numeric controls", async ({ page }) => {
@@ -275,7 +275,7 @@ test("uses bounded, unit-aware numeric controls", async ({ page }) => {
   await lightness.press("ArrowUp");
   await expect(lightness).toHaveValue("60.1");
   await lightness.press("Enter");
-  await expect(page.getByRole("status")).toContainText("Lightness 60.1 percent. Checks updated.");
+  await expect(page.getByRole("status")).toContainText("L 60.1. Checks updated.");
 
   await lightness.fill("101");
   await lightness.press("Enter");

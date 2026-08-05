@@ -24,7 +24,7 @@ const rows = $derived(
   buildCvdRows(candidate, colorId).filter((item) => !hidePass || item.hasWarning),
 );
 const contrastIssues = $derived(
-  buildContrastRows(candidate, colorId, "all").filter((item) => item.className === "status-fail"),
+  buildContrastRows(candidate, colorId, "all").filter((item) => item.wcagKey === 0),
 );
 </script>
 

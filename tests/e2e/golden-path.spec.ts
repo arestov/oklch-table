@@ -36,24 +36,24 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
 
   await derivedLightness.fill(goldenPathColors.derivedLightness);
   await derivedLightness.press("Enter");
-  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
+  await expect(page.getByRole("status")).toContainText("L 60. Checks updated.");
 
   await derivedLightness.fill("90");
   await derivedLightness.press("Enter");
   await expect(page.getByRole("status")).toContainText(
-    "APCA: Text row 3 is no longer readable on background row 5.",
+    "APCA: row 3 is no longer readable on background row 5.",
   );
   await derivedLightness.fill("60");
   await derivedLightness.press("Enter");
   await expect(page.getByRole("status")).toContainText(
-    "APCA: Text row 3 is now readable on background row 5.",
+    "APCA: row 3 is now readable on background row 5.",
   );
   await derivedLightness.fill("59.9");
   await derivedLightness.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Lightness 59.9 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 59.9. Checks updated.");
   await derivedLightness.fill("60");
   await derivedLightness.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Lightness 60 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 60. Checks updated.");
 
   // Detailed contrast remains reachable from the edit loop and restores its trigger focus.
   await page.keyboard.press("Control+.");

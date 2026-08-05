@@ -8,7 +8,7 @@ export async function expectSpokenAfterAction(
   phrase: string | RegExp,
   timeout = 5000,
 ): Promise<string> {
-  await nvda.perform(nvda.keyboardCommands.stopSpeech);
+  await nvda.perform(nvda.keyboardCommands.stopSpeech, { capture: false });
   await nvda.clearSpokenPhraseLog();
   await action();
   const deadline = Date.now() + timeout;

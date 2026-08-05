@@ -10,6 +10,7 @@ function candidate(
   readable: readonly boolean[],
   cvdWarnings: readonly boolean[] = [],
   background = true,
+  wcagKeys: readonly number[] = readable.map((value) => (value ? 2 : 0)),
 ) {
   const order = ["color_target", ...readable.map((_, index) => `color_${index + 1}`)];
   return {
@@ -47,7 +48,10 @@ function candidate(
                 recommendation: recommendation(isReadable ? 2 : 0),
                 readableTextSupported: isReadable,
                 ratio: isReadable ? 4.5 : 1,
-                wcag: { key: isReadable ? 2 : 0, label: isReadable ? "AA pass" : "fail" },
+                wcag: {
+                  key: wcagKeys[index],
+                  label: wcagKeys[index] === 0 ? "fail" : "AA pass",
+                },
               },
             ];
           }),
@@ -105,7 +109,26 @@ describe("bounded result summaries", () => {
       text: "1 CVD warning",
     });
     expect(summarizeChecks(candidate([false], [true]), "color_target")).toMatchObject({
-      text: "1 contrast issue, 1 CVD warning",
+      text: "1 WCAG issue, 1 CVD warning",
+    });
+  });
+
+  it("keeps APCA text suitability independent from WCAG checks", () => {
+    expect(summarizeTextContrast(candidate([true], [], true, [0]), "color_target")).toMatchObject({
+      text: "All 1 usable",
+      className: "status-pass",
+    });
+    expect(summarizeChecks(candidate([true], [], true, [0]), "color_target")).toMatchObject({
+      text: "1 WCAG issue",
+      className: "status-fail",
+    });
+    expect(summarizeTextContrast(candidate([false], [], true, [2]), "color_target")).toMatchObject({
+      text: "1 not readable",
+      className: "status-fail",
+    });
+    expect(summarizeChecks(candidate([false], [], true, [2]), "color_target")).toMatchObject({
+      text: "No issues",
+      className: "status-pass",
     });
   });
 });

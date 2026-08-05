@@ -39,7 +39,9 @@ export interface ContrastRowView {
   bold: string;
   apca: string;
   wcag: string;
-  className: string;
+  apcaClassName: string;
+  wcagClassName: string;
+  wcagKey: number;
 }
 
 export interface CvdRowView {
@@ -57,9 +59,15 @@ export function rowNumber(candidate: Candidate, id: ColorId): number {
   return candidate.document.colors.order.indexOf(id) + 1;
 }
 
-export function contrastClass(comparison: ContrastComparison): string {
-  if (comparison.recommendation.key === 0 || comparison.wcag.key === 0) return "status-fail";
-  if (comparison.recommendation.key <= 1 || comparison.wcag.key === 1) return "status-warning";
+export function apcaClass(comparison: ContrastComparison): string {
+  if (comparison.recommendation.key === 0) return "status-fail";
+  if (comparison.recommendation.key === 1) return "status-warning";
+  return "status-pass";
+}
+
+export function wcagClass(comparison: ContrastComparison): string {
+  if (comparison.wcag.key === 0) return "status-fail";
+  if (comparison.wcag.key === 1) return "status-warning";
   return "status-pass";
 }
 
@@ -106,7 +114,7 @@ export function summarizeTextContrast(candidate: Candidate, id: ColorId): Result
           ? plural(unreadable, "not readable", "not readable")
           : `${plural(unreadable, "not readable", "not readable")} · ${plural(readable, "usable")}`,
     detail: `${plural(list.length, "comparison")} · ${worstMinimum}`,
-    className: contrastClass(worst),
+    className: apcaClass(worst),
   };
 }
 
@@ -118,13 +126,13 @@ export function cvdComparisonsForColor(candidate: Candidate, id: ColorId): CvdCo
 
 export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummary {
   const comparisons = comparisonsForColor(candidate, id);
-  const contrastIssues = [...comparisons.asBackground, ...comparisons.asText].filter(
-    (item) => !item.readableTextSupported || item.wcag.key === 0,
+  const wcagIssues = [...comparisons.asBackground, ...comparisons.asText].filter(
+    (item) => item.wcag.key === 0,
   ).length;
   const cvdWarnings = cvdComparisonsForColor(candidate, id).filter((item) =>
     Object.values(item.modes).some((mode) => mode.warning),
   ).length;
-  if (!contrastIssues && !cvdWarnings) {
+  if (!wcagIssues && !cvdWarnings) {
     const hasAny =
       comparisons.asBackground.length ||
       comparisons.asText.length ||
@@ -136,12 +144,12 @@ export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummar
     };
   }
   const parts: string[] = [];
-  if (contrastIssues) parts.push(plural(contrastIssues, "contrast issue"));
+  if (wcagIssues) parts.push(plural(wcagIssues, "WCAG issue"));
   if (cvdWarnings) parts.push(plural(cvdWarnings, "CVD warning"));
   return {
     text: parts.join(", "),
     detail: "Open for details",
-    className: contrastIssues ? "status-fail" : "status-warning",
+    className: wcagIssues ? "status-fail" : "status-warning",
   };
 }
 
@@ -186,7 +194,9 @@ export function buildContrastRows(
     bold: comparison.recommendation.bold ? `${comparison.recommendation.bold}px` : "Not supported",
     apca: `${round(comparison.apca, 1)} Lc`,
     wcag: `${round(comparison.ratio, 2)}:1 · ${comparison.wcag.label}`,
-    className: contrastClass(comparison),
+    apcaClassName: apcaClass(comparison),
+    wcagClassName: wcagClass(comparison),
+    wcagKey: comparison.wcag.key,
   }));
 }
 

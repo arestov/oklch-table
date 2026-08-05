@@ -70,7 +70,7 @@ describe("English announcements", () => {
               key: "color_test_1|color_test_2",
               after: contrast,
               support: { before: true, after: false },
-              wcagKey: { before: 3, after: 2 },
+              wcagKey: { before: 1, after: 0 },
             },
           },
           colorVision: {
@@ -85,7 +85,7 @@ describe("English announcements", () => {
       },
     } as never);
     expect(rendered.spoken).toBe(
-      "Lightness 68 percent. Checks updated. APCA: Text row 1 is no longer readable on background row 2. WCAG: 1 issue added; 0 remain. Color vision: conflict with row 1 and row 2 detected.",
+      "L 68. Checks updated. APCA: row 1 is no longer readable on background row 2. WCAG: 1 failure added; 0 remain. Color vision: conflict between row 1 and row 2 detected; 0 remain.",
     );
   });
 
@@ -135,7 +135,7 @@ describe("English announcements", () => {
     ]);
     const rendered = buildEnglishAnnouncement(transaction);
     expect(rendered.spoken).toBe(
-      "Lightness 50 percent. Checks updated. APCA: Text row 1 is no longer readable on background row 9. APCA: Text row 2 is now readable on background row 9.",
+      "L 50. Checks updated. APCA: row 1 is no longer readable on background row 9. APCA: row 2 is now readable on background row 9.",
     );
     expect(rendered.visible).toMatchObject({ wcag: "", cvd: "" });
   });

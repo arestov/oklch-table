@@ -1,3 +1,4 @@
+import { WindowsKeyCodes } from "@guidepup/guidepup";
 import { nvdaTest as test } from "@guidepup/playwright";
 import { expect } from "@playwright/test";
 import { goldenPath } from "../fixtures/golden-path.ts";
@@ -31,7 +32,12 @@ async function typeContinuous(
   nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"],
   text: string,
 ) {
-  await nvda.type(text, { capture: false });
+  const keyCode = [...text].map((character) =>
+    character === "."
+      ? WindowsKeyCodes.Period
+      : WindowsKeyCodes[`Digit${character}` as keyof typeof WindowsKeyCodes],
+  );
+  await nvda.perform({ keyCode }, { capture: false });
 }
 
 async function enterBrowseMode(nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"]) {
@@ -159,32 +165,26 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   await expect(lightness).toBeFocused();
   await nvda.press("Control+A");
   await typeContinuous(nvda, goldenPath.derivedLightness);
-  await page.waitForTimeout(800);
+  await nvda.press("Enter");
   await expect(lightness).toHaveValue(goldenPath.derivedLightness);
-  await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
+  await expect(page.getByRole("status")).toContainText("L 60. Checks updated.");
 
   const commitLightness = async (value: string, announcement: string | RegExp) => {
     await nvda.press("Control+A");
     await typeContinuous(nvda, value);
-    await page.waitForTimeout(800);
+    await nvda.press("Enter");
     await expect(lightness).toHaveValue(value);
     const status = page.getByRole("status");
     await expect(status).toContainText(announcement);
-    const acceptedStatus = await status.textContent();
-    await nvda.press("Enter");
-    await expect(status).toHaveText(acceptedStatus ?? "");
-    return acceptedStatus ?? "";
+    return (await status.textContent()) ?? "";
   };
-  await commitLightness("90", "APCA: Text row 3 is no longer readable on background row 5.");
-  await commitLightness("60", "APCA: Text row 3 is now readable on background row 5.");
-  const sameCategorySpeech = await commitLightness(
-    "59.9",
-    "Lightness 59.9 percent. Checks updated.",
-  );
-  await expect(page.getByRole("status")).toHaveText("Lightness 59.9 percent. Checks updated.");
+  await commitLightness("90", "APCA: row 3 is no longer readable on background row 5.");
+  await commitLightness("60", "APCA: row 3 is now readable on background row 5.");
+  const sameCategorySpeech = await commitLightness("59.9", "L 59.9. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 59.9. Checks updated.");
   expect(sameCategorySpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
-  const finalEditSpeech = await commitLightness("60", "Lightness 60 percent. Checks updated.");
-  await expect(page.getByRole("status")).toHaveText("Lightness 60 percent. Checks updated.");
+  const finalEditSpeech = await commitLightness("60", "L 60. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("L 60. Checks updated.");
   expect(finalEditSpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
 
   await nvda.press("Control+.");

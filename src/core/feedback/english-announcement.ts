@@ -47,19 +47,22 @@ export function buildEnglishAnnouncement(transaction: Transaction): RenderedAnno
             : singular
               ? "now allows smaller text"
               : "now allow smaller text";
-    return `APCA: Text ${rows(textRows)} ${message} on background row ${backgroundRow}.`;
+    return `APCA: ${rows(textRows)} ${message} on background row ${backgroundRow}.`;
   });
   const wcag = plan.wcag.map(({ direction, count, remaining }) =>
-    direction === "added"
-      ? `WCAG: ${count} issue${count === 1 ? "" : "s"} added; ${remaining} remain.`
-      : `WCAG: ${count} issue${count === 1 ? "" : "s"} resolved; ${remaining} remain.`,
+    direction === "failed"
+      ? `WCAG: ${count} failure${count === 1 ? "" : "s"} added; ${remaining} remain.`
+      : direction === "resolved"
+        ? `WCAG: ${count} failure${count === 1 ? "" : "s"} resolved; ${remaining} remain.`
+        : direction === "large-only"
+          ? `WCAG: ${count} comparison${count === 1 ? "" : "s"} now support${count === 1 ? "s" : ""} large text only.`
+          : `WCAG: ${count} comparison${count === 1 ? "" : "s"} now support${count === 1 ? "s" : ""} normal text.`,
   );
-  const cvd = plan.cvd.map(({ direction, pairs }) => {
-    const details =
-      pairs.length === 1
-        ? `row ${pairs[0][0]} and row ${pairs[0][1]}`
-        : `${pairs.length} color pairs`;
-    return `Color vision: conflict${pairs.length === 1 ? "" : "s"} with ${details} ${direction === "added" ? "detected" : "resolved"}.`;
+  const cvd = plan.cvd.map(({ direction, pairs, remaining }) => {
+    const outcome = direction === "added" ? "detected" : "resolved";
+    return pairs.length === 1
+      ? `Color vision: conflict between row ${pairs[0][0]} and row ${pairs[0][1]} ${outcome}; ${remaining} remain.`
+      : `Color vision: ${pairs.length} possible conflicts ${outcome}; ${remaining} remain.`;
   });
   return {
     spoken: [edited, ...apca, ...wcag, ...cvd].join(" "),

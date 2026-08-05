@@ -11,10 +11,18 @@ export interface AnnouncementPlan {
     | { type: "duplicate"; sourceRow: number; destinationRow: number; inheritsBackground: boolean }
     | { type: "delete"; row: number }
     | { type: "background"; row: number; enabled: boolean }
-    | { type: "edit"; field: "CSS color" | "Lightness" | "Chroma" | "Hue"; value: string | number };
+    | { type: "edit"; field: "CSS color" | "L" | "C" | "H"; value: string | number };
   apca: readonly { direction: ApcaDirection; textRows: readonly number[]; backgroundRow: number }[];
-  wcag: readonly { direction: "added" | "resolved"; count: number; remaining: number }[];
-  cvd: readonly { direction: "added" | "resolved"; pairs: readonly [number, number][] }[];
+  wcag: readonly {
+    direction: "failed" | "resolved" | "large-only" | "normal";
+    count: number;
+    remaining: number;
+  }[];
+  cvd: readonly {
+    direction: "added" | "resolved";
+    pairs: readonly [number, number][];
+    remaining: number;
+  }[];
 }
 
 const rowOf = (order: readonly string[], id: string): number => order.indexOf(id) + 1;
@@ -48,17 +56,17 @@ function editFor(transaction: Transaction): AnnouncementPlan["edit"] {
     cause.edit.field === "css"
       ? "CSS color"
       : cause.edit.field === "l"
-        ? "Lightness"
+        ? "L"
         : cause.edit.field === "c"
-          ? "Chroma"
-          : "Hue";
+          ? "C"
+          : "H";
   const value =
     cause.edit.field === "css"
       ? row.css
       : cause.edit.field === "l"
-        ? `${formatLightnessPercent(row.l)} percent`
+        ? formatLightnessPercent(row.l)
         : cause.edit.field === "h"
-          ? `${row.h} degrees`
+          ? row.h
           : row.c;
   return { type: "edit", field, value };
 }
@@ -72,8 +80,10 @@ export function buildAnnouncementPlan(transaction: Transaction): AnnouncementPla
     string,
     { direction: ApcaDirection; textRows: number[]; backgroundRow: number }
   >();
-  const wcagAdded: number[] = [];
+  const wcagFailed: number[] = [];
   const wcagResolved: number[] = [];
+  const wcagLargeOnly: number[] = [];
+  const wcagNormal: number[] = [];
   for (const change of Object.values(transaction.changes.comparisons.contrast)) {
     const comparison = change.after ?? change.before;
     if (!comparison) continue;
@@ -93,19 +103,28 @@ export function buildAnnouncementPlan(transaction: Transaction): AnnouncementPla
       apcaFacts.set(key, group);
     }
     if (change.wcagKey) {
-      if (change.wcagKey.after < change.wcagKey.before) wcagAdded.push(comparison.wcagKey);
-      else wcagResolved.push(comparison.wcagKey);
+      const { before, after } = change.wcagKey;
+      if (after === 0) wcagFailed.push(comparison.wcagKey);
+      else if (before === 0) wcagResolved.push(comparison.wcagKey);
+      else if (after === 1) wcagLargeOnly.push(comparison.wcagKey);
+      else wcagNormal.push(comparison.wcagKey);
     }
   }
   const remaining = Object.values(transaction.after.semantic.comparisons?.contrast ?? {}).filter(
     (item) => item.wcagKey === 0,
   ).length;
   const wcag = [
-    ...(wcagAdded.length
-      ? [{ direction: "added" as const, count: wcagAdded.length, remaining }]
+    ...(wcagFailed.length
+      ? [{ direction: "failed" as const, count: wcagFailed.length, remaining }]
       : []),
     ...(wcagResolved.length
       ? [{ direction: "resolved" as const, count: wcagResolved.length, remaining }]
+      : []),
+    ...(wcagLargeOnly.length
+      ? [{ direction: "large-only" as const, count: wcagLargeOnly.length, remaining }]
+      : []),
+    ...(wcagNormal.length
+      ? [{ direction: "normal" as const, count: wcagNormal.length, remaining }]
       : []),
   ];
   const pairs = { added: [] as [number, number][], resolved: [] as [number, number][] };
@@ -116,9 +135,23 @@ export function buildAnnouncementPlan(transaction: Transaction): AnnouncementPla
     if (change.warningsResolved.length)
       pairs.resolved.push([comparison.leftRow, comparison.rightRow]);
   }
+  const remainingCvd = Object.values(
+    transaction.after.semantic.comparisons?.colorVision ?? {},
+  ).filter((item) => item.warnings.length > 0).length;
+  const byRows = (a: [number, number], b: [number, number]) => a[0] - b[0] || a[1] - b[1];
   const cvd = [
-    ...(pairs.added.length ? [{ direction: "added" as const, pairs: pairs.added }] : []),
-    ...(pairs.resolved.length ? [{ direction: "resolved" as const, pairs: pairs.resolved }] : []),
+    ...(pairs.added.length
+      ? [{ direction: "added" as const, pairs: pairs.added.sort(byRows), remaining: remainingCvd }]
+      : []),
+    ...(pairs.resolved.length
+      ? [
+          {
+            direction: "resolved" as const,
+            pairs: pairs.resolved.sort(byRows),
+            remaining: remainingCvd,
+          },
+        ]
+      : []),
   ];
   const order = { lost: 0, stricter: 1, restored: 2, easier: 3 };
   return {
