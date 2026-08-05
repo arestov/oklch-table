@@ -1,12 +1,8 @@
-import { windowsActivate } from "@guidepup/guidepup";
 import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect, type Page } from "@playwright/test";
 import { addColor, goldenPathColors } from "../e2e/support/workspace.ts";
-import { setForegroundKeyboardLayout } from "./support/keyboard-layout.ts";
+import { activateBrowser, restoreBrowserSession } from "./support/browser-session.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
-
-const englishUsLayout = "00000409";
-const originalLayouts = new WeakMap<Page, string>();
 
 test.use({
   nvdaStartOptions: {
@@ -17,24 +13,8 @@ test.use({
   },
 });
 
-async function activateBrowser(page: Page): Promise<void> {
-  const browser = page.context().browser();
-  if (!browser) throw new Error("Expected a browser for the NVDA test");
-  await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
-  if (!originalLayouts.has(page)) {
-    originalLayouts.set(page, await setForegroundKeyboardLayout(englishUsLayout));
-  }
-}
-
 test.afterEach(async ({ page }) => {
-  const originalLayout = originalLayouts.get(page);
-  if (!originalLayout || page.isClosed()) return;
-
-  const browser = page.context().browser();
-  if (!browser) return;
-  await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
-  await setForegroundKeyboardLayout(originalLayout);
-  originalLayouts.delete(page);
+  await restoreBrowserSession(page);
 });
 
 async function spokenText(nvda: NVDAPlaywright): Promise<string> {

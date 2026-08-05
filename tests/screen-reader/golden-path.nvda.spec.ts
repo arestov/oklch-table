@@ -1,6 +1,7 @@
 import { nvdaTest as test } from "@guidepup/playwright";
 import { expect } from "@playwright/test";
 import { goldenPath } from "../fixtures/golden-path.ts";
+import { activateBrowser, restoreBrowserSession } from "./support/browser-session.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
 test.use({
@@ -9,10 +10,15 @@ test.use({
   },
 });
 
+test.afterEach(async ({ page }) => {
+  await restoreBrowserSession(page);
+});
+
 /** Full user transcript: all mutations come from the NVDA keyboard, never page setup. */
 test("completes the empty-workspace error-hover transcript", async ({ page, nvda }) => {
   await page.goto("/");
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
+  await activateBrowser(page);
   await nvda.perform(nvda.keyboardCommands.exitFocusMode);
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 
