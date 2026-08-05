@@ -17,14 +17,14 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   await page.getByRole("checkbox", { name: "Contrast background for row 4" }).check();
   await page.getByRole("button", { name: "Duplicate color 4" }).click();
 
-  const derivedLightness = page.getByRole("spinbutton", { name: "Lightness for row 5" });
+  const derivedLightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
   await expect(derivedLightness).toBeFocused();
   await expect(page.getByRole("checkbox", { name: "Contrast background for row 5" })).toBeChecked();
 
-  await derivedLightness.fill("0.6");
+  await derivedLightness.fill("60");
   await derivedLightness.press("Enter");
   await expect(page.getByRole("region", { name: "Last feedback checkpoint" })).toContainText(
-    "Lightness 0.6. Checks updated.",
+    "Lightness 60 percent. Checks updated.",
   );
 
   // Detailed contrast remains reachable from the edit loop and restores its trigger focus.

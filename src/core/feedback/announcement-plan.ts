@@ -5,6 +5,7 @@ import type {
   SemanticCvd,
   SemanticSnapshot,
 } from "../../domain/types.ts";
+import { formatLightnessPercent } from "../workspace/numeric-fields.ts";
 import type { WorkspaceTransaction } from "../workspace/transactions.ts";
 
 type Transaction = WorkspaceTransaction<AnalysisTree, SemanticSnapshot, SemanticChanges>;
@@ -68,7 +69,13 @@ export function buildAnnouncementPlan(transaction: Transaction): AnnouncementPla
                         ? "Chroma"
                         : "Hue";
                 const value =
-                  cause.edit.field === "css" ? row.css : row[cause.edit.field as "l" | "c" | "h"];
+                  cause.edit.field === "css"
+                    ? row.css
+                    : cause.edit.field === "l"
+                      ? `${formatLightnessPercent(row.l)} percent`
+                      : cause.edit.field === "h"
+                        ? `${row.h} degrees`
+                        : row.c;
                 return { type: "edit" as const, field, value };
               })();
   const apca = Object.values(changes.comparisons.contrast)

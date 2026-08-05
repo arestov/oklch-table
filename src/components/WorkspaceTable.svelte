@@ -8,6 +8,7 @@ import ColorRow from "./ColorRow.svelte";
 let {
   candidate,
   invalidField,
+  fieldError,
   draftRaw,
   draftError,
   draftInput = $bindable(),
@@ -19,6 +20,7 @@ let {
 }: {
   candidate: ValidCandidate<AnalysisTree>;
   invalidField: "css" | "l" | "c" | "h" | null;
+  fieldError: string;
   draftRaw: string;
   draftError: string;
   draftInput?: HTMLInputElement;
@@ -40,9 +42,9 @@ let {
         <th scope="col">#</th>
         <th scope="col">Actions</th>
         <th scope="col">CSS color</th>
-        <th scope="col">L</th>
+        <th scope="col">L, %</th>
         <th scope="col">C</th>
-        <th scope="col">H</th>
+        <th scope="col">H, °</th>
         <th scope="col">Contrast background</th>
         <th scope="col">Text contrast</th>
         <th scope="col">Checks</th>
@@ -54,6 +56,7 @@ let {
           {candidate}
           colorId={row.id}
           {invalidField}
+          {fieldError}
           {onAction}
           {onDraftChanged}
           {onFinishEdit}

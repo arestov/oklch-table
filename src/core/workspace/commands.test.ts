@@ -51,7 +51,7 @@ describe("workspace commands", () => {
     const colorId = acceptedRevisionStore.get().document.colors.order[0];
 
     beginEdit(colorId, "l");
-    updateDraft("0.8");
+    updateDraft("80");
     const accepted = finishEdit("idle", ids);
     expect(accepted.status).toBe("accepted");
     expect(finishEdit("enter", ids)).toEqual({ status: "unchanged" });
@@ -69,7 +69,7 @@ describe("workspace commands", () => {
       if (added.status !== "accepted") throw new Error("Expected color to be added");
       const colorId = acceptedRevisionStore.get().document.colors.order[0];
       beginEdit(colorId, "l");
-      updateDraft("0.8");
+      updateDraft("80");
       const result = finishEdit(reason, ids);
       expect(result).toMatchObject({ status: "accepted" });
       expect(finishEdit(reason, ids)).toEqual({ status: "unchanged" });
@@ -84,7 +84,7 @@ describe("workspace commands", () => {
     const colorId = acceptedRevisionStore.get().document.colors.order[0];
 
     beginEdit(colorId, "l");
-    updateDraft("0.6");
+    updateDraft("60");
     updateDraft("0.");
     const candidate = candidateStore.get();
     expect(candidate.status).toBe("invalid");
@@ -123,7 +123,7 @@ describe("workspace commands", () => {
     const sourceId = acceptedRevisionStore.get().document.colors.order[0];
 
     beginEdit(sourceId, "l");
-    updateDraft("0.8");
+    updateDraft("80");
     const duplicated = duplicateColor(sourceId, ids);
     if (duplicated.status !== "accepted" || duplicated.transaction.cause.type !== "duplicate-color")
       throw new Error("Expected duplicate");

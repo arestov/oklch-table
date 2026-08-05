@@ -19,6 +19,7 @@ let {
   candidate,
   colorId,
   invalidField = null,
+  fieldError = "",
   onAction = () => {},
   onFinishEdit = () => undefined,
   onDraftChanged = () => {},
@@ -26,6 +27,7 @@ let {
   candidate: ValidCandidate<AnalysisTree>;
   colorId: ColorId;
   invalidField?: "css" | "l" | "c" | "h" | null;
+  fieldError?: string;
   onAction?: (effects: readonly UiEffect[]) => void | Promise<void>;
   onFinishEdit?: (reason: "enter" | "blur") => void;
   onDraftChanged?: () => void;
@@ -93,38 +95,61 @@ const setBackground = (enabled: boolean) => {
   <td>
     <input
       type="number"
-      value={row.l}
+      value={row.lPercent}
       data-field="l"
-      aria-label={`Lightness for row ${row.row}`}
+      min="0"
+      max="100"
+      step="0.1"
+      inputmode="decimal"
+      aria-label={`Lightness percentage for row ${row.row}`}
       aria-invalid={invalidField === "l" ? "true" : undefined}
+      aria-describedby={invalidField === "l" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("l", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
+    {#if invalidField === "l"}
+      <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
+    {/if}
   </td>
   <td>
     <input
       type="number"
       value={row.c}
       data-field="c"
+      min="0"
+      step="0.001"
+      inputmode="decimal"
       aria-label={`Chroma for row ${row.row}`}
       aria-invalid={invalidField === "c" ? "true" : undefined}
+      aria-describedby={invalidField === "c" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("c", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
+    {#if invalidField === "c"}
+      <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
+    {/if}
   </td>
   <td>
     <input
       type="number"
       value={row.h}
       data-field="h"
-      aria-label={`Hue for row ${row.row}`}
+      min="0"
+      max="360"
+      step="0.1"
+      inputmode="decimal"
+      aria-label={`Hue in degrees for row ${row.row}`}
       aria-invalid={invalidField === "h" ? "true" : undefined}
+      aria-describedby={invalidField === "h" ? `field-error-${colorId}` : undefined}
       oninput={(event) => edit("h", event.currentTarget.value)}
       onkeydown={finishOnEnter}
       onblur={() => finish("blur")}
     >
+    {#if invalidField === "h"}
+      <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
+    {/if}
   </td>
   <td>
     <input
