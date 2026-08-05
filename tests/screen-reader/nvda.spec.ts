@@ -48,7 +48,7 @@ async function prepareGoldenWorkspace(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Duplicate color 4" }).click();
 }
 
-test("announces the initial color draft", async ({ page, nvda }) => {
+test("announces the initial color draft", { tag: "@smoke" }, async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
 
@@ -121,10 +121,9 @@ test("announces background selection and inherited duplication", async ({ page, 
   expect(duplicateSpeech).toContain("It inherits the contrast-background role.");
 });
 
-test("reads WCAG and color-vision issues from Checks and returns to its trigger", async ({
-  page,
-  nvda,
-}) => {
+test("reads WCAG and color-vision issues from Checks and returns to its trigger", {
+  tag: "@smoke",
+}, async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await addColor(page, "#ffffff");
   await addColor(page, "#ffffff");
@@ -166,7 +165,7 @@ test("reads WCAG and color-vision issues from Checks and returns to its trigger"
   expect(await reportFocus(nvda)).toContain("Checks for row 1");
 });
 
-test("traverses compact Checks summaries vertically", async ({ page, nvda }) => {
+test("traverses compact Checks summaries vertically", { tag: "@smoke" }, async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await addColor(page, "#ffffff");
   await addColor(page, "#000000");
@@ -273,7 +272,10 @@ test("jumps to Lightness and reaches one grouped idle result", async ({ page, nv
   await expect(page.getByRole("status")).toHaveText(acceptedStatus ?? "");
 });
 
-test("announces a fast numeric commit before the idle checkpoint", async ({ page, nvda }) => {
+test("announces a fast numeric commit before the idle checkpoint", { tag: "@smoke" }, async ({
+  page,
+  nvda,
+}) => {
   await openNativeWorkspace(page);
   await addColor(page, "#ffffff");
   const css = page.getByRole("textbox", { name: "CSS color for row 1" });
@@ -484,7 +486,10 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
   expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 });
 
-test("announces an invalid CSS color and preserves its focus", async ({ page, nvda }) => {
+test("announces an invalid CSS color and preserves its focus", { tag: "@smoke" }, async ({
+  page,
+  nvda,
+}) => {
   await openNativeWorkspace(page);
   const draft = page.getByPlaceholder("fill color");
   await activateBrowser(page, nvda, "CSS color for new row 1");
