@@ -25,12 +25,14 @@ export function buildEnglishAnnouncement(transaction: Transaction): RenderedAnno
             : `${plan.edit.field} ${plan.edit.value}. Checks updated.`;
   const apca = plan.apca.map(
     ({ comparison, direction }) =>
-      `APCA: Row ${comparison.leftRow} ${direction === "lost" ? "no longer supports" : "now supports"} the configured text on row ${comparison.rightRow}.`,
+      `APCA: Text row ${comparison.leftRow} ${direction === "lost" ? "is no longer readable" : "is now readable"} on background row ${comparison.rightRow}.`,
   );
-  const wcag = plan.wcag.map(
-    ({ comparison, before, after }) =>
-      `WCAG: Row ${comparison.leftRow} and row ${comparison.rightRow} changed from level ${before} to ${after}.`,
-  );
+  const wcag = plan.wcag.map(({ comparison, before, after }) => {
+    const label = (key: number) =>
+      key === 0 ? "an issue" : key === 1 ? "large text only" : "AA pass";
+    const change = after < before ? "issue added" : "issue resolved";
+    return `WCAG: Text row ${comparison.leftRow} on background row ${comparison.rightRow}: ${change} (${label(after)}).`;
+  });
   const cvd = plan.cvd.map(
     ({ comparison, direction, modes }) =>
       `Color vision: ${direction === "added" ? "New" : "Resolved"} warning${modes.length === 1 ? "" : "s"} (${modes.join(", ")}) between rows ${comparison.leftRow} and ${comparison.rightRow}.`,
