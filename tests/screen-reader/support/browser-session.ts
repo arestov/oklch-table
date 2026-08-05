@@ -5,6 +5,7 @@ import { setForegroundKeyboardLayout } from "./keyboard-layout.ts";
 
 const englishUsLayout = "00000409";
 const originalLayouts = new WeakMap<Page, string>();
+const activationAttempts = 10;
 
 async function activateFirefoxPage(page: Page): Promise<void> {
   const browser = page.context().browser();
@@ -12,7 +13,8 @@ async function activateFirefoxPage(page: Page): Promise<void> {
   await page.bringToFront();
   await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
   await page.bringToFront();
-  await page.waitForTimeout(100);
+  await page.waitForFunction(() => document.hasFocus());
+  await page.waitForTimeout(250);
 }
 
 /** Opens a stable app document before a test starts native window activation. */
@@ -40,18 +42,25 @@ export async function activateBrowser(
   const browser = page.context().browser();
   if (!browser) throw new Error("Expected a browser for the NVDA test");
   let observedFocus = "";
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await activateFirefoxPage(page);
-    if (!originalLayouts.has(page)) {
-      originalLayouts.set(page, await setForegroundKeyboardLayout(englishUsLayout));
+  let activationError: unknown;
+  for (let attempt = 0; attempt < activationAttempts; attempt += 1) {
+    try {
+      await activateFirefoxPage(page);
+      if (!originalLayouts.has(page)) {
+        originalLayouts.set(page, await setForegroundKeyboardLayout(englishUsLayout));
+      }
+      await nvda.clearSpokenPhraseLog();
+      await nvda.perform(nvda.keyboardCommands.reportCurrentFocus);
+      observedFocus = await nvda.itemText();
+      if (observedFocus.includes(expectedFocus)) return observedFocus;
+    } catch (error) {
+      if (page.isClosed()) throw error;
+      activationError = error;
     }
-    await nvda.clearSpokenPhraseLog();
-    await nvda.perform(nvda.keyboardCommands.reportCurrentFocus);
-    observedFocus = await nvda.itemText();
-    if (observedFocus.includes(expectedFocus)) return observedFocus;
+    await page.waitForTimeout(250);
   }
   throw new Error(
-    `Firefox did not obtain the expected native focus. Expected ${JSON.stringify(expectedFocus)}, observed ${JSON.stringify(observedFocus)}.`,
+    `Firefox did not obtain the expected native focus. Expected ${JSON.stringify(expectedFocus)}, observed ${JSON.stringify(observedFocus)}.${activationError instanceof Error ? ` Last activation error: ${activationError.message}` : ""}`,
   );
 }
 
