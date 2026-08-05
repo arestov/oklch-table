@@ -38,7 +38,7 @@ export function createSemanticSnapshot(candidate: SemanticInput): SemanticSnapsh
       recommendationKey: value.recommendation.key,
       regular: value.recommendation.regular,
       bold: value.recommendation.bold,
-      configuredTextSupported: value.configuredTextSupported,
+      readableTextSupported: value.readableTextSupported,
       wcagKey: value.wcag.key,
     };
   const colorVision = {} as SemanticSnapshot["comparisons"]["colorVision"];

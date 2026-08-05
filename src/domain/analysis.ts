@@ -80,7 +80,8 @@ function softClampBlack(y: number): number {
   return y < threshold ? y + (threshold - y) ** 1.414 : y;
 }
 
-// APCA-W3-style prototype calculation. Production code should use a maintained official implementation/version.
+// APCA-W3-style calculation pinned to the constants below. Its recommendation
+// categories, rather than an unavailable user font profile, are the product fact.
 function apcaContrast(textRgb: Rgb, backgroundRgb: Rgb): number {
   const txtY = softClampBlack(apcaLuminance(textRgb));
   const bgY = softClampBlack(apcaLuminance(backgroundRgb));
@@ -140,7 +141,7 @@ export function deriveAnalysis(document: DocumentTree): AnalysisTree {
         rightId,
         apca,
         recommendation,
-        configuredTextSupported: recommendation.key > 0,
+        readableTextSupported: recommendation.key > 0,
         ratio,
         wcag: wcagLevel(ratio),
       };

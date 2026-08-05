@@ -56,7 +56,7 @@ export function diffSemanticSnapshots(
       key,
       before: previous,
       after: next,
-      support: changed(previous.configuredTextSupported, next.configuredTextSupported),
+      support: changed(previous.readableTextSupported, next.readableTextSupported),
       recommendationKey: changed(previous.recommendationKey, next.recommendationKey),
       regular: changed(previous.regular, next.regular),
       bold: changed(previous.bold, next.bold),

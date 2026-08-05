@@ -49,7 +49,7 @@ export interface ContrastComparison {
   rightId: ColorId;
   apca: number;
   recommendation: ApcaRecommendation;
-  configuredTextSupported: boolean;
+  readableTextSupported: boolean;
   ratio: number;
   wcag: WcagLevel;
 }
@@ -89,7 +89,7 @@ export interface SemanticContrast {
   recommendationKey: number;
   regular: number | null;
   bold: number | null;
-  configuredTextSupported: boolean;
+  readableTextSupported: boolean;
   wcagKey: number;
 }
 export interface SemanticCvd {
