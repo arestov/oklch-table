@@ -408,18 +408,35 @@ input[aria-invalid="true"] {
     box-shadow: none;
   }
 
-  .anchored-popover::before {
+  .anchored-popover-arrow {
     position: absolute;
-    z-index: 1;
-    top: -0.45rem;
-    right: 1.35rem;
-    width: 0.9rem;
-    height: 0.9rem;
+    inset: auto;
+    top: calc(anchor(bottom) + 0.2rem + 1px);
+    left: calc(anchor(left) + anchor-size(width) / 2);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    transform: translateX(-50%);
+    width: 1.1rem;
+    height: 0.55rem;
+    background: var(--border);
+    box-shadow: none;
+  }
+
+  .anchored-popover-arrow::before {
+    position: absolute;
+    top: 0.08rem;
+    left: 0.08rem;
+    width: 0.94rem;
+    height: 0.47rem;
     content: "";
-    transform: rotate(45deg);
-    border-top: 1px solid var(--border);
-    border-left: 1px solid var(--border);
+    clip-path: inherit;
     background: var(--surface);
+  }
+
+  .anchored-popover-arrow::backdrop {
+    background: transparent;
   }
 
   .anchored-popover .popover-surface {

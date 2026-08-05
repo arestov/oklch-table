@@ -51,7 +51,7 @@ test("anchors each result popover below its table cell", async ({ page }) => {
     const trigger = page.getByRole("button", { name: triggerName });
     const cell = trigger.locator("xpath=..");
     await trigger.click();
-    const popover = page.locator("[popover]:popover-open");
+    const popover = page.locator(".anchored-popover:popover-open");
     await expect(popover).toBeVisible();
 
     const [cellBox, popoverBox] = await Promise.all([cell.boundingBox(), popover.boundingBox()]);
@@ -61,6 +61,15 @@ test("anchors each result popover below its table cell", async ({ page }) => {
 
     expect(popoverBox.y).toBeGreaterThan(cellBox.y + cellBox.height);
     expect(Math.abs(popoverBox.x + popoverBox.width - (cellBox.x + cellBox.width))).toBeLessThan(1);
+    const arrow = page.locator(".anchored-popover-arrow:popover-open");
+    await expect(arrow).toBeVisible();
+    const arrowBox = await arrow.boundingBox();
+    expect(arrowBox).not.toBeNull();
+    if (!arrowBox) return;
+
+    expect(
+      Math.abs(arrowBox.x + arrowBox.width / 2 - (cellBox.x + cellBox.width / 2)),
+    ).toBeLessThan(1);
     await page.keyboard.press("Escape");
   };
 
