@@ -131,6 +131,7 @@ describe("golden-path feedback stores", () => {
       edited: "L 90. Checks updated.",
       apca: "APCA: row 3 is no longer readable on background row 5.",
     });
+    expect(visibleFeedbackStore.get().wcag).toContain("WCAG:");
     expectSpokenSections();
 
     const beforeRestored = announcementStore.get().result.id;
@@ -139,6 +140,54 @@ describe("golden-path feedback stores", () => {
     expect(visibleFeedbackStore.get()).toMatchObject({
       edited: "L 60. Checks updated.",
       apca: "APCA: row 3 is now readable on background row 5.",
+    });
+    expectSpokenSections();
+  });
+
+  it("suppresses metric feedback when a numeric edit stays in the same category", () => {
+    const ids = createSequenceIds();
+    const derivedId = prepareGoldenPath(ids);
+    commitLightness(ids, derivedId, "60");
+    const before = announcementStore.get().result.id;
+
+    commitLightness(ids, derivedId, "59.9");
+
+    expect(announcementStore.get().result).toEqual({
+      id: before + 1,
+      text: "L 59.9. Checks updated.",
+    });
+    expect(visibleFeedbackStore.get()).toEqual({
+      edited: "L 59.9. Checks updated.",
+      apca: "",
+      wcag: "",
+      cvd: "",
+    });
+  });
+
+  it("keeps color-vision changes separate from contrast feedback", () => {
+    const ids = createSequenceIds();
+    addColor(ids, "#ffffff");
+    addColor(ids, "#000000");
+    const colorId = acceptedRevisionStore.get().document.colors.order[1];
+
+    beginEdit(colorId, "css");
+    updateDraft("#fefefe");
+    expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      edited: "CSS color #fefefe. Checks updated.",
+      apca: "",
+      wcag: "",
+      cvd: "Color vision: conflict between row 1 and row 2 detected; 1 remain.",
+    });
+    expectSpokenSections();
+
+    beginEdit(colorId, "css");
+    updateDraft("#000000");
+    expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
+    expect(visibleFeedbackStore.get()).toMatchObject({
+      apca: "",
+      wcag: "",
+      cvd: "Color vision: conflict between row 1 and row 2 resolved; 0 remain.",
     });
     expectSpokenSections();
   });
