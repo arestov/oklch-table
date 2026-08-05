@@ -18,7 +18,7 @@ test.afterEach(async ({ page }) => {
 test("completes the empty-workspace error-hover transcript", async ({ page, nvda }) => {
   await page.goto("/");
   await expect(page.getByPlaceholder("fill color")).toBeFocused();
-  await activateBrowser(page);
+  await activateBrowser(page, nvda, "CSS color for new row 1");
   await nvda.perform(nvda.keyboardCommands.exitFocusMode);
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 
