@@ -331,6 +331,31 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   const checkboxCenter = (checkboxBox?.y ?? 0) + (checkboxBox?.height ?? 0) / 2;
   expect(Math.abs(inputFirstLineCenter - checkboxCenter)).toBeLessThanOrEqual(1);
 
+  const controlGeometry = await firstRow.evaluate((row) => {
+    const rowHeading = row.querySelector('th[scope="row"]');
+    const action = row.querySelector<HTMLButtonElement>(".actions button");
+    const cssInput = row.querySelector<HTMLInputElement>("input.css-color");
+    if (!rowHeading || !action || !cssInput) throw new Error("Expected complete color row");
+    const heading = getComputedStyle(rowHeading);
+    const button = getComputedStyle(action);
+    const input = getComputedStyle(cssInput);
+    return {
+      inputType: cssInput.type,
+      headingTextTop: rowHeading.getBoundingClientRect().y + Number.parseFloat(heading.paddingTop),
+      buttonTextTop:
+        action.getBoundingClientRect().y +
+        Number.parseFloat(button.borderTopWidth) +
+        Number.parseFloat(button.paddingTop),
+      inputTextTop:
+        cssInput.getBoundingClientRect().y +
+        Number.parseFloat(input.borderTopWidth) +
+        Number.parseFloat(input.paddingTop),
+    };
+  });
+  expect(controlGeometry.inputType).toBe("text");
+  expect(controlGeometry.headingTextTop).toBe(controlGeometry.buttonTextTop);
+  expect(controlGeometry.inputTextTop).toBe(controlGeometry.buttonTextTop);
+
   const numericHeadingAlignment = await page
     .locator("thead .numeric-heading")
     .evaluateAll((headings) => headings.map((heading) => getComputedStyle(heading).textAlign));
