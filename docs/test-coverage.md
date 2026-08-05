@@ -46,7 +46,7 @@ Windows runner is unavailable.
 | TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps every opened popover accessible and restores its trigger focus` | automated |
 | TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
-| TC-25 | Browser + screen reader | `tests/e2e/golden-path.spec.ts`; `tests/screen-reader/golden-path.nvda.spec.ts` | `supports the error-hover token golden path`; `completes the empty-workspace error-hover transcript` | browser Clipboard API assertion plus native NVDA clipboard readback |
+| TC-25 | Browser + screen reader | `tests/e2e/golden-path.spec.ts`; `tests/screen-reader/golden-path.nvda.spec.ts` | `supports the error-hover token golden path`; `completes the empty-workspace error-hover transcript` | Chromium Clipboard API assertion plus native NVDA clipboard readback |
 | APCA oracle | Domain | `src/domain/apca-oracle.test.ts` | `matches independent APCA-W3 0.0.98G-4g reference fixtures` | automated |
 
 ## Golden-path feedback publication

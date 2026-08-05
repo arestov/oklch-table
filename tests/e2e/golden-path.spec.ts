@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { addColor, goldenPathColors } from "./support/workspace.ts";
 
-test("supports the error-hover token golden path", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("supports the error-hover token golden path", async ({ page, context, browserName }) => {
+  if (browserName === "chromium") {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  }
   await page.goto("/");
 
   // Start with the same empty-table input loop used by a person. The accent rows
@@ -74,6 +76,10 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   const expectedToken = await token.inputValue();
   await token.press("Control+A");
   await token.press("Control+C");
-  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(expectedToken);
+  if (browserName === "chromium") {
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(expectedToken);
+  }
   await expect(token).toHaveValue(expectedToken);
 });
