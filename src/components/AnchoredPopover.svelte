@@ -16,15 +16,31 @@ let {
 } = $props();
 
 let popover: HTMLElement;
+let arrow: HTMLElement;
 let open = $state(false);
 const titleId = $derived(`${id}-title`);
+const arrowId = $derived(`${id}-arrow`);
 
 const manageFocus = () => {
   open = popover.matches(":popover-open");
-  if (open) popover.querySelector<HTMLElement>("h2")?.focus();
-  else trigger?.focus();
+  if (open) {
+    arrow.showPopover();
+    popover.querySelector<HTMLElement>("h2")?.focus();
+  } else {
+    arrow.hidePopover();
+    trigger?.focus();
+  }
 };
 </script>
+
+<span
+  id={arrowId}
+  popover="manual"
+  class="anchored-popover-arrow"
+  aria-hidden="true"
+  style:position-anchor={anchorName}
+  bind:this={arrow}
+></span>
 
 <section
   {id}
