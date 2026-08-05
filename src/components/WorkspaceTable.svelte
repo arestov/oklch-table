@@ -37,6 +37,17 @@ let {
     <caption>
       Colors in the current workspace
     </caption>
+    <colgroup>
+      <col class="row-number-column">
+      <col class="actions-column">
+      <col class="css-color-column">
+      <col class="numeric-column">
+      <col class="numeric-column">
+      <col class="numeric-column">
+      <col class="contrast-background-column">
+      <col class="result-column">
+      <col class="result-column">
+    </colgroup>
     <thead>
       <tr>
         <th scope="col">#</th>
@@ -45,7 +56,7 @@ let {
         <th scope="col">L, %</th>
         <th scope="col">C</th>
         <th scope="col">H, °</th>
-        <th scope="col">Contrast background</th>
+        <th scope="col">Contrast<br>background</th>
         <th scope="col">Text contrast</th>
         <th scope="col">Checks</th>
       </tr>

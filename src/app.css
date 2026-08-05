@@ -163,8 +163,33 @@ kbd {
 
 table {
   width: 100%;
+  min-width: 69rem;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+.row-number-column {
+  width: 3rem;
+}
+
+.actions-column {
+  width: 10.5rem;
+}
+
+.css-color-column {
+  width: 15rem;
+}
+
+.numeric-column {
+  width: 6.5rem;
+}
+
+.contrast-background-column {
+  width: 7rem;
+}
+
+.result-column {
+  width: auto;
 }
 
 caption {
@@ -203,7 +228,6 @@ tbody tr + tr > * {
 }
 
 tbody th[scope="row"] {
-  width: 3rem;
   text-align: right;
   color: var(--muted);
 }

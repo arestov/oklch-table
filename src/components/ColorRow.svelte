@@ -151,7 +151,7 @@ const setBackground = (enabled: boolean) => {
       <p id={`field-error-${colorId}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
-  <td>
+  <td class="checkbox-cell">
     <input
       type="checkbox"
       checked={row.background}
