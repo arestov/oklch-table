@@ -60,6 +60,9 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   await page.keyboard.press("7");
   await expect(page.getByRole("heading", { name: "Text contrast — color 5" })).toBeFocused();
   await expect(page.locator("[popover]:popover-open")).toContainText("Color 3");
+  await expect(page.locator("[popover]:popover-open")).toContainText(
+    "Light text on dark background",
+  );
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Text contrast for row 5" })).toBeFocused();
 

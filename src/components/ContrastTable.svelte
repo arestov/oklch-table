@@ -17,6 +17,7 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
         <th scope="col">Regular 400</th>
         <th scope="col">Bold 700</th>
         <th scope="col">APCA</th>
+        <th scope="col">Polarity</th>
         <th scope="col">WCAG 2</th>
       </tr>
     </thead>
@@ -29,6 +30,7 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
           <td class={comparison.apcaClassName}>{comparison.regular}</td>
           <td class={comparison.apcaClassName}>{comparison.bold}</td>
           <td class={comparison.apcaClassName}>{comparison.apca}</td>
+          <td>{comparison.polarity}</td>
           <td class={comparison.wcagClassName}>{comparison.wcag}</td>
         </tr>
       {/each}

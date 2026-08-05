@@ -38,6 +38,7 @@ export interface ContrastRowView {
   regular: string;
   bold: string;
   apca: string;
+  polarity: string;
   wcag: string;
   apcaClassName: string;
   wcagClassName: string;
@@ -193,6 +194,12 @@ export function buildContrastRows(
       : "Not supported",
     bold: comparison.recommendation.bold ? `${comparison.recommendation.bold}px` : "Not supported",
     apca: `${round(comparison.apca, 1)} Lc`,
+    polarity:
+      comparison.apca < 0
+        ? "Light text on dark background"
+        : comparison.apca > 0
+          ? "Dark text on light background"
+          : "No polarity",
     wcag: `${round(comparison.ratio, 2)}:1 · ${comparison.wcag.label}`,
     apcaClassName: apcaClass(comparison),
     wcagClassName: wcagClass(comparison),
