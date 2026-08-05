@@ -1,4 +1,3 @@
-import { WindowsKeyCodes } from "@guidepup/guidepup";
 import { nvdaTest as test } from "@guidepup/playwright";
 import { expect } from "@playwright/test";
 import { goldenPath } from "../fixtures/golden-path.ts";
@@ -8,6 +7,7 @@ import {
   restoreBrowserSession,
 } from "./support/browser-session.ts";
 import { restoreNativeClipboard, setNativeClipboard } from "./support/clipboard.ts";
+import { typeNumericFast } from "./support/native-keyboard.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
 async function typeCssColor(
@@ -25,19 +25,6 @@ async function typeCssColor(
       await nvda.type(character);
     }
   }
-}
-
-/** Sends real native key events without Guidepup waiting for speech between each character. */
-async function typeContinuous(
-  nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"],
-  text: string,
-) {
-  const keyCode = [...text].map((character) =>
-    character === "."
-      ? WindowsKeyCodes.Period
-      : WindowsKeyCodes[`Digit${character}` as keyof typeof WindowsKeyCodes],
-  );
-  await nvda.perform({ keyCode }, { capture: false });
 }
 
 async function enterBrowseMode(nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"]) {
@@ -164,14 +151,14 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
   await expect(lightness).toBeFocused();
   await nvda.press("Control+A");
-  await typeContinuous(nvda, goldenPath.derivedLightness);
+  await typeNumericFast(nvda, goldenPath.derivedLightness);
   await nvda.press("Enter");
   await expect(lightness).toHaveValue(goldenPath.derivedLightness);
   await expect(page.getByRole("status")).toContainText("L 60. Checks updated.");
 
   const commitLightness = async (value: string, announcement: string | RegExp) => {
     await nvda.press("Control+A");
-    await typeContinuous(nvda, value);
+    await typeNumericFast(nvda, value);
     await nvda.press("Enter");
     await expect(lightness).toHaveValue(value);
     const status = page.getByRole("status");
