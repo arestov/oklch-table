@@ -60,7 +60,6 @@ h3 {
 }
 
 .panel,
-.table-shell,
 .feedback-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -152,6 +151,9 @@ kbd {
 
 .table-shell {
   overflow-x: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 table {
@@ -162,7 +164,7 @@ table {
 
 caption {
   text-align: left;
-  padding: 15px 17px 9px;
+  padding: 0 0 12px;
   font-weight: 760;
   font-size: 1.05rem;
 }
@@ -170,19 +172,24 @@ caption {
 th,
 td {
   padding: 10px 9px;
-  border-top: 1px solid var(--border);
+  border: 0;
   vertical-align: middle;
   white-space: nowrap;
 }
 
 thead th {
-  border-top: 0;
-  background: var(--surface-2);
+  background: transparent;
   color: var(--muted);
-  font-size: 0.78rem;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
   text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr + tr > * {
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
 .shortcut-badge {
@@ -323,11 +330,11 @@ input[type="number"] {
   overflow: auto;
   margin: auto;
   padding: 0;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 14px;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 20px 76px oklch(0 0 0 / 36%);
+  box-shadow: 0 20px 60px oklch(0 0 0 / 25%);
 }
 
 [popover]::backdrop {
@@ -361,7 +368,7 @@ input[type="number"] {
 }
 
 .popover-body table {
-  border: 1px solid var(--border);
+  border: 0;
 }
 
 .popover-body caption {
@@ -374,8 +381,14 @@ input[type="number"] {
 }
 
 .popover-body thead th {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
   text-transform: none;
   font-size: 0.86rem;
+}
+
+.popover-body tbody tr + tr > * {
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
 .empty-state {
@@ -492,7 +505,6 @@ input[type="number"] {
   button,
   input,
   .panel,
-  .table-shell,
   .feedback-panel,
   [popover] {
     forced-color-adjust: auto;
