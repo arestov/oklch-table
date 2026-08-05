@@ -13,7 +13,7 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium",
+  "postCreateCommand": "pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium firefox webkit",
   "customizations": {
     "vscode": {
       "extensions": ["biomejs.biome", "ms-playwright.playwright", "svelte.svelte-vscode"]

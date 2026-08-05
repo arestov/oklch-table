@@ -17,7 +17,11 @@ Every `VITE_*` environment variable is public and must never contain a secret.
 - Size Limit budgets initial JavaScript and application CSS.
 
 Run `pnpm check` for the fast quality gate and `pnpm verify` for the complete gate.
-All commands are cross-platform and are intended to be reused unchanged by future CI.
+The unit suite uses V8 coverage thresholds: 90% statements, 78% branches, 88%
+functions, and 92% lines. Local browser runs use Chromium by default; CI runs
+the same suite in Chromium, Firefox, and WebKit. Set `PLAYWRIGHT_ALL_BROWSERS`
+in a local shell to opt into that full browser matrix after installing the
+corresponding Playwright browsers.
 
 ## Screen readers
 
