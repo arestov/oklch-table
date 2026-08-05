@@ -43,18 +43,25 @@ represented as covered merely because a related UI is present.
 ## Screen reader suite
 
 The browser golden path is executable from an empty workspace and reaches the
-native clipboard. `tests/screen-reader/golden-path.nvda.spec.ts` starts empty
-and performs the acceptance workflow with NVDA/keyboard input; Playwright is
+native clipboard. `tests/screen-reader/golden-path.nvda.spec.ts` starts from
+the empty table; all user input is sent through NVDA/keyboard and Playwright is
 restricted to assertions and infrastructure setup.
 
-| Related TCs | Native test in `tests/screen-reader/nvda.spec.ts` | Status |
+| Related behaviour | Native test | Status |
 | --- | --- | --- |
-| TC-01 | `announces the initial color draft` | Guidepup |
-| TC-02—TC-04 | `adds the first and second colors without leaving the draft loop` | Guidepup |
-| TC-11—TC-17 | `jumps to Lightness and hears one grouped result` | Guidepup |
-| TC-05, TC-22—TC-23 | `reads contrast details and returns to the editing loop` | Guidepup |
-| TC-21 | `announces an invalid CSS color and preserves its focus` | Guidepup |
-| TC-06, TC-25 | `completes the error-hover golden path through the copied token` | Guidepup |
+| Initial draft focus | `nvda.spec.ts` — `announces the initial color draft` | covered |
+| Consecutive additions | `nvda.spec.ts` — `adds the first and second colors without leaving the draft loop` | covered |
+| Isolated field edit and feedback | `nvda.spec.ts` — `jumps to Lightness and hears one grouped result` | covered |
+| Isolated details/focus return | `nvda.spec.ts` — `reads contrast details and returns to the editing loop` | covered |
+| Invalid draft | `nvda.spec.ts` — `announces an invalid CSS color and preserves its focus` | covered |
+| Empty-workspace golden path | `golden-path.nvda.spec.ts` — `completes the empty-workspace error-hover transcript` | covered |
+
+The complete native path asserts the two-dimensional `Ctrl+Alt+Up/Down`
+navigation, column shortcuts, row-4 and row-5 contrast details, duplicate
+inheritance, APCA lost/restored/no-category transitions, one automatic
+utterance per action, and native clipboard readback. Browser Playwright covers
+the deterministic DOM, keyboard and clipboard contracts; native NVDA coverage
+is required for OS-generated focus/table speech.
 
 `pnpm test:screen-reader` is intentionally separate from the ordinary browser
 suite. It launches NVDA through Guidepup and therefore requires a Windows
@@ -77,9 +84,8 @@ English (US) for keyboard input and restores the original layout after every
 test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
-The six native scenarios cover initial focus, consecutive color entry, column
-jump and grouped feedback, contrast-detail reading and focus return, invalid
-input, and the complete error-hover golden path through clipboard verification.
-Native status requires a functioning Guidepup/NVDA browser fixture; the latest
-local run was blocked before app interaction by Guidepup's
-`browserContext.newPage` `_page` initialization error.
+The latest complete local native run passed on 2026-08-05 in the documented
+Windows NVDA + Firefox Guidepup environment (`golden-path.nvda.spec.ts`,
+one test, approximately 2.7 minutes). It is deliberately separate from
+`pnpm verify`; operating the foreground NVDA/Firefox session remains an
+environmental requirement, not a pre-commit requirement.
