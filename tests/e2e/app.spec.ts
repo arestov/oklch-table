@@ -210,6 +210,25 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
   ).toEqual(["Lightness 80 percent. Checks updated."]);
 });
 
+test("keeps a valid numeric draft transactional until an explicit boundary", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const status = page.getByRole("status");
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 1" });
+
+  await lightness.focus();
+  await page.keyboard.press("Control+A");
+  await page.keyboard.press("8");
+  await page.waitForTimeout(900);
+  await expect(status).toHaveText("Color added as row 1.");
+  await page.keyboard.press("0");
+  await page.waitForTimeout(900);
+  await expect(status).toHaveText("Color added as row 1.");
+
+  await lightness.press("Enter");
+  await expect(status).toContainText("Lightness 80 percent. Checks updated.");
+});
+
 test("uses bounded, unit-aware numeric controls", async ({ page }) => {
   await page.goto("/");
   await addColor(page, "#ffffff");

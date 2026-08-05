@@ -178,10 +178,9 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   );
   await expect(page.getByRole("status")).toHaveText("Lightness 59.9 percent. Checks updated.");
   expect(sameCategorySpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
-  await commitLightness("60", "APCA: Text row 3 now requires larger text on background row 5.");
-  await expect(page.getByRole("status")).toContainText(
-    "APCA: Text row 3 now requires larger text on background row 5.",
-  );
+  const finalEditSpeech = await commitLightness("60", "Lightness 60 percent. Checks updated.");
+  await expect(page.getByRole("status")).toHaveText("Lightness 60 percent. Checks updated.");
+  expect(finalEditSpeech).not.toMatch(/APCA:|WCAG:|Color vision:/);
 
   await nvda.press("Control+.");
   await nvda.press("7");
