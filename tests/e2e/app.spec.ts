@@ -139,11 +139,17 @@ test("keeps invalid input focused and publishes only an alert", async ({ page })
   await expect(status).toHaveText("");
 });
 
-test("cancels and rejects unavailable column jumps without moving draft focus", async ({
-  page,
-}) => {
+test("requires a populated row and cancels column jump without moving focus", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
+  await page.keyboard.press("Control+.");
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
+  await expect(page.locator(".jump-prompt")).toHaveText(
+    "Select a color row before using column jump.",
+  );
+  await addColor(page, "#ffffff");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  await css.focus();
   await page.keyboard.press("Control+.");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
   await draft.dispatchEvent("keydown", {
@@ -156,15 +162,17 @@ test("cancels and rejects unavailable column jumps without moving draft focus", 
   await page.keyboard.press("Escape");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
 
+  await draft.focus();
   await page.keyboard.press("Control+.");
   await page.keyboard.press("7");
   await expect(draft).toBeFocused();
-  await expect(page.getByRole("alert")).toContainText("unavailable until a valid color is entered");
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
 
+  await css.focus();
   await page.keyboard.press("Control+.");
   await page.keyboard.press("9");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
-  await expect(draft).toBeFocused();
+  await expect(css).toBeFocused();
 });
 
 test("keeps each opened popover accessible and restores its trigger focus", async ({ page }) => {

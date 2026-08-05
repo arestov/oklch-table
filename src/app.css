@@ -141,7 +141,7 @@ kbd {
 }
 
 .jump-prompt {
-  display: none;
+  visibility: hidden;
   margin-block: 0 14px;
   padding: 10px 14px;
   border: 2px solid var(--accent);
@@ -150,8 +150,8 @@ kbd {
   font-weight: 720;
 }
 
-[data-column-jump-active="true"] .jump-prompt {
-  display: block;
+:is([data-column-jump-active="true"], [data-column-jump-needs-row="true"]) .jump-prompt {
+  visibility: visible;
 }
 
 .table-shell {
