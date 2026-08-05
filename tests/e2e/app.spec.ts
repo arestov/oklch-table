@@ -64,6 +64,64 @@ test("preserves focus through duplicate, delete, shortcuts, and popover details"
   await expect(page.getByRole("button", { name: "Duplicate color 1" })).toBeFocused();
 });
 
+test("jumps to every supported column from a populated row", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+
+  const jump = async (column: string) => {
+    await css.focus();
+    await page.keyboard.press("Control+.");
+    await page.keyboard.press(column);
+  };
+
+  await jump("1");
+  await expect(page.getByRole("button", { name: "Duplicate color 1" })).toBeFocused();
+  await jump("2");
+  await expect(css).toBeFocused();
+  await jump("3");
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 1" }),
+  ).toBeFocused();
+  await jump("4");
+  await expect(page.getByRole("spinbutton", { name: "Chroma for row 1" })).toBeFocused();
+  await jump("5");
+  await expect(page.getByRole("spinbutton", { name: "Hue in degrees for row 1" })).toBeFocused();
+  await jump("6");
+  await expect(page.getByRole("checkbox", { name: "Contrast background for row 1" })).toBeFocused();
+  await jump("7");
+  await expect(page.getByRole("heading", { name: "Text contrast — color 1" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await jump("8");
+  await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
+});
+
+test("renders non-live summaries that update in place and explain their issues", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  await addColor(page, "#ffffff");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  const textContrast = page.getByRole("button", { name: /^Text contrast for row 1:/ });
+  const checks = page.getByRole("button", { name: /^Checks for row 1:/ });
+  const initialSummary = await textContrast.innerText();
+  await expect(textContrast).not.toHaveAttribute("aria-live");
+  await expect(checks).not.toHaveAttribute("aria-live");
+  await checks.click();
+  await expect(
+    page.getByLabel("Checks — color 1").getByText("Text row 1 on background row 2:"),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await css.fill("#000000");
+  await expect(css).toBeFocused();
+  await expect.poll(() => textContrast.innerText()).not.toBe(initialSummary);
+  await expect(textContrast.locator("small")).toBeVisible();
+});
+
 test("keeps invalid input focused and publishes only an alert", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
