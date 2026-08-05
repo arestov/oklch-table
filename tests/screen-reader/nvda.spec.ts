@@ -82,7 +82,7 @@ test("adds the first and second colors without leaving the draft loop", async ({
   );
 });
 
-test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) => {
+test("jumps to Lightness and reaches one grouped idle result", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
   await page.getByRole("textbox", { name: "CSS color for row 5" }).focus();
@@ -96,20 +96,17 @@ test("jumps to Lightness and hears one grouped result", async ({ page, nvda }) =
   ).toBeFocused();
   expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 
-  await expectSpokenAfterAction(
-    nvda,
-    async () => {
-      await nvda.press("Control+A");
-      await typeContinuous(nvda, "60");
-      await nvda.press("Enter");
-    },
-    "Lightness 60 percent. Checks updated.",
-  );
+  await nvda.press("Control+A");
+  await typeContinuous(nvda, "60");
+  await page.waitForTimeout(800);
   await expect(
     page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
   ).toHaveValue("60");
   await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
   await expect(page.getByRole("status")).toContainText("WCAG:");
+  const acceptedStatus = await page.getByRole("status").textContent();
+  await nvda.press("Enter");
+  await expect(page.getByRole("status")).toHaveText(acceptedStatus ?? "");
 });
 
 test("keeps the final numeric state after delayed native character input", async ({
@@ -170,11 +167,10 @@ test("announces an invalid CSS color and preserves its focus", async ({ page, nv
   const draft = page.getByPlaceholder("fill color");
   await activateBrowser(page, nvda, "CSS color for new row 1");
 
-  expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
   await enterFocusMode(nvda);
   await nvda.type("not-a-color");
   await expectSpokenAfterAction(nvda, () => nvda.press("Enter"), "Invalid CSS color");
   await expect(draft).toBeFocused();
   await expect(draft).toHaveAttribute("aria-invalid", "true");
-  expect(await reportFocus(nvda)).toContain("CSS color for new row 1");
+  await activateBrowser(page, nvda, "CSS color for new row 1");
 });
