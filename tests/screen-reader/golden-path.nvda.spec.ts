@@ -1,4 +1,4 @@
-import { nvdaTest as test } from "@guidepup/playwright";
+import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect } from "@playwright/test";
 import { goldenPath } from "../fixtures/golden-path.ts";
 import {
@@ -10,10 +10,7 @@ import { restoreNativeClipboard, setNativeClipboard } from "./support/clipboard.
 import { typeNumericFast } from "./support/native-keyboard.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
-async function typeCssColor(
-  nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"],
-  color: string,
-) {
+async function typeCssColor(nvda: NVDAPlaywright, color: string) {
   for (const character of color) {
     if (character === "(") {
       await nvda.press("Shift+9");
@@ -27,7 +24,7 @@ async function typeCssColor(
   }
 }
 
-async function enterBrowseMode(nvda: Parameters<Parameters<typeof test>[1]>[0]["nvda"]) {
+async function enterBrowseMode(nvda: NVDAPlaywright) {
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 }
 
