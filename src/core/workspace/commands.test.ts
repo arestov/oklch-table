@@ -12,9 +12,10 @@ import {
 } from "./commands.ts";
 import {
   acceptedRevisionStore,
+  activeEditStore,
   candidateStore,
-  draftStore,
   lastTransactionStore,
+  newColorDraftStore,
 } from "./stores.ts";
 
 afterEach(resetCoreForTest);
@@ -29,7 +30,7 @@ describe("workspace commands", () => {
       effects: [{ type: "focus-new-color" }],
     });
     expect(acceptedRevisionStore.get().document.colors.order).toEqual(["color_test_1"]);
-    expect(draftStore.get().newColor.raw).toBe("");
+    expect(newColorDraftStore.get()).toBe("");
   });
 
   it("rejects an invalid new-color draft without allocating an ID or transaction", () => {
@@ -111,7 +112,7 @@ describe("workspace commands", () => {
     });
     expect(deleteColor(sourceId, ids).status).toBe("accepted");
     expect(acceptedRevisionStore.get().document.colors.order).toEqual([duplicateId]);
-    expect(draftStore.get().active).toBeNull();
+    expect(activeEditStore.get()).toBeNull();
     expect(source.id).toBe(sourceId);
   });
 
@@ -150,5 +151,13 @@ describe("workspace commands", () => {
     stopRevision();
     stopTransaction();
     expect(pairs).toEqual([{ colors: 1, transaction: "tx_test_1" }]);
+  });
+
+  it("does not invalidate the candidate when only the new-color draft changes", () => {
+    const candidate = candidateStore.get();
+
+    setNewColorDraft("#ffffff");
+
+    expect(candidateStore.get()).toBe(candidate);
   });
 });

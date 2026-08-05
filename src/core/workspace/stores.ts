@@ -4,7 +4,7 @@ import { parseCssColor } from "../../domain/color.ts";
 import { createSemanticSnapshot } from "../../domain/semantic.ts";
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
 import { buildCandidateRevision } from "./candidate.ts";
-import { type CandidateRevision, createEmptyDraft, type DraftState } from "./draft.ts";
+import type { CandidateRevision, DraftEdit } from "./draft.ts";
 import { createEmptyDocument, type DocumentTree } from "./model.ts";
 import type { AcceptedRevision, WorkspaceTransaction } from "./transactions.ts";
 
@@ -27,11 +27,12 @@ const initial: AcceptedRevision<AnalysisTree, SemanticSnapshot> = {
 };
 
 export const acceptedRevisionStore = atom(initial);
-export const draftStore = atom<DraftState>(createEmptyDraft());
+export const activeEditStore = atom<DraftEdit | null>(null);
+export const newColorDraftStore = atom("");
 export const candidateStore = computed(
-  [acceptedRevisionStore, draftStore],
-  (accepted, draft): CandidateRevision<AnalysisTree> =>
-    buildCandidateRevision(accepted.document, draft, { parseCss, analyze }),
+  [acceptedRevisionStore, activeEditStore],
+  (accepted, activeEdit): CandidateRevision<AnalysisTree> =>
+    buildCandidateRevision(accepted.document, activeEdit, { parseCss, analyze }),
 );
 export const previewStore = computed(candidateStore, (candidate) =>
   candidate.status === "valid" ? candidate : candidate.lastValid,

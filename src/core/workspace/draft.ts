@@ -11,10 +11,6 @@ export interface DraftEdit {
   raw: string;
   lastValidPatch: ColorPatch | null;
 }
-export interface DraftState {
-  active: DraftEdit | null;
-  newColor: { raw: string };
-}
 export interface ValidCandidate<TAnalysis> {
   status: "valid";
   document: DocumentTree;
@@ -26,4 +22,3 @@ export interface InvalidCandidate<TAnalysis> {
   lastValid: ValidCandidate<TAnalysis>;
 }
 export type CandidateRevision<TAnalysis> = ValidCandidate<TAnalysis> | InvalidCandidate<TAnalysis>;
-export const createEmptyDraft = (): DraftState => ({ active: null, newColor: { raw: "" } });
