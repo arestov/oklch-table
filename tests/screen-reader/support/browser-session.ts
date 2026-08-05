@@ -6,6 +6,31 @@ import { setForegroundKeyboardLayout } from "./keyboard-layout.ts";
 const englishUsLayout = "00000409";
 const originalLayouts = new WeakMap<Page, string>();
 
+async function activateFirefoxPage(page: Page): Promise<void> {
+  const browser = page.context().browser();
+  if (!browser) throw new Error("Expected a browser for the NVDA test");
+  await page.bringToFront();
+  await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
+  await page.bringToFront();
+  await page.waitForTimeout(100);
+}
+
+/** Opens a stable app document before a test starts native window activation. */
+export async function openNativeWorkspace(page: Page): Promise<void> {
+  const response = await page.goto("/");
+  if (!response?.ok())
+    throw new Error(`Workspace navigation failed with status ${response?.status()}`);
+  await page.waitForLoadState("domcontentloaded");
+  const draft = page.getByPlaceholder("fill color");
+  await draft.waitFor({ state: "visible" });
+  await page.waitForFunction(() => document.readyState === "complete");
+  await page.waitForFunction(
+    (input) => document.activeElement === input,
+    await draft.elementHandle(),
+  );
+  await activateFirefoxPage(page);
+}
+
 /** Activates Firefox and proves that NVDA observes the expected native focus. */
 export async function activateBrowser(
   page: Page,
@@ -14,10 +39,9 @@ export async function activateBrowser(
 ): Promise<string> {
   const browser = page.context().browser();
   if (!browser) throw new Error("Expected a browser for the NVDA test");
-  await page.bringToFront();
   let observedFocus = "";
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
+    await activateFirefoxPage(page);
     if (!originalLayouts.has(page)) {
       originalLayouts.set(page, await setForegroundKeyboardLayout(englishUsLayout));
     }
