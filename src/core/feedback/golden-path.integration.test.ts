@@ -3,11 +3,14 @@ import { resetCoreForTest } from "../testing/reset-core.ts";
 import { createSequenceIds } from "../testing/sequence-ids.ts";
 import {
   addColorFromDraft,
+  beginEdit,
   duplicateColor,
+  finishEdit,
   setContrastBackground,
   setNewColorDraft,
+  updateDraft,
 } from "../workspace/commands.ts";
-import { acceptedRevisionStore } from "../workspace/stores.ts";
+import { acceptedRevisionStore, candidateStore } from "../workspace/stores.ts";
 import { announcementStore, visibleFeedbackStore } from "./stores.ts";
 
 afterEach(resetCoreForTest);
@@ -46,5 +49,39 @@ describe("golden-path feedback stores", () => {
       roles: { contrastBackground: true },
       provenance: { duplicatedFrom: backgroundId },
     });
+  });
+
+  it("keeps numeric preview silent until one explicit commit boundary", () => {
+    const ids = createSequenceIds();
+    setNewColorDraft("#ffffff");
+    addColorFromDraft(ids);
+    const colorId = acceptedRevisionStore.get().document.colors.order[0];
+    const before = announcementStore.get().result;
+
+    beginEdit(colorId, "l");
+    updateDraft("60");
+
+    const preview = candidateStore.get();
+    expect(preview.status).toBe("valid");
+    if (preview.status === "valid") {
+      expect(preview.document.colors.byId[colorId].value.l).toBe(0.6);
+    }
+    expect(acceptedRevisionStore.get().document.colors.byId[colorId].value.l).toBeCloseTo(1);
+    expect(announcementStore.get().result).toEqual(before);
+
+    expect(finishEdit("enter", ids)).toMatchObject({ status: "accepted" });
+    expect(acceptedRevisionStore.get().document.colors.byId[colorId].value.l).toBe(0.6);
+    expect(announcementStore.get().result).toEqual({
+      id: before.id + 1,
+      text: "L 60. Checks updated.",
+    });
+    expect(visibleFeedbackStore.get()).toEqual({
+      edited: "L 60. Checks updated.",
+      apca: "",
+      wcag: "",
+      cvd: "",
+    });
+    expect(finishEdit("enter", ids)).toEqual({ status: "unchanged" });
+    expect(announcementStore.get().result.id).toBe(before.id + 1);
   });
 });
