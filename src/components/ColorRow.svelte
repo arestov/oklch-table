@@ -1,13 +1,4 @@
 <script lang="ts">
-import { announceAlert } from "../core/feedback/index.ts";
-import {
-  deleteColor,
-  duplicateColor,
-  finishEdit,
-  setContrastBackground,
-  updateColorDraft,
-} from "../core/workspace/index.ts";
-import type { UiEffect } from "../core/workspace/transactions.ts";
 import type { PresentationIndex, RowView } from "../domain/presentation.ts";
 import type { ColorId } from "../domain/types.ts";
 import ChecksPopover from "./ChecksPopover.svelte";
@@ -19,8 +10,10 @@ let {
   invalidColorId,
   invalidField = null,
   fieldError = "",
-  onAction = () => {},
-  onDraftChanged = () => {},
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onSetBackground,
   onFinishEdit = () => undefined,
 }: {
   row: RowView;
@@ -28,15 +21,16 @@ let {
   invalidColorId: ColorId | null;
   invalidField?: "css" | "l" | "c" | "h" | null;
   fieldError?: string;
-  onAction?: (effects: readonly UiEffect[]) => void | Promise<void>;
-  onDraftChanged?: () => void;
+  onEdit: (colorId: ColorId, field: "css" | "l" | "c" | "h", raw: string) => void;
+  onDuplicate: (colorId: ColorId) => void | Promise<void>;
+  onDelete: (colorId: ColorId) => void | Promise<void>;
+  onSetBackground: (colorId: ColorId, enabled: boolean) => void | Promise<void>;
   onFinishEdit?: (reason: "enter" | "blur") => void;
 } = $props();
 let textContrastTrigger = $state<HTMLButtonElement>();
 let checksTrigger = $state<HTMLButtonElement>();
 const edit = (field: "css" | "l" | "c" | "h", raw: string) => {
-  updateColorDraft(row.id, field, raw);
-  onDraftChanged();
+  onEdit(row.id, field, raw);
 };
 const finishOnEnter = (event: KeyboardEvent) => {
   if (event.key !== "Enter") return;
@@ -44,26 +38,9 @@ const finishOnEnter = (event: KeyboardEvent) => {
   finish("enter");
 };
 const finish = (reason: "enter" | "blur") => onFinishEdit(reason);
-const duplicate = async () => {
-  const result = duplicateColor(row.id);
-  if (result.status === "invalid") {
-    announceAlert(result.message);
-    return;
-  }
-  if (result.status === "accepted") await onAction(result.effects);
-};
-const remove = async () => {
-  const result = deleteColor(row.id);
-  if (result.status === "invalid") {
-    announceAlert(result.message);
-    return;
-  }
-  if (result.status === "accepted") await onAction(result.effects);
-};
-const setBackground = (enabled: boolean) => {
-  const result = setContrastBackground(row.id, enabled);
-  if (result.status === "invalid") announceAlert(result.message);
-};
+const duplicate = () => onDuplicate(row.id);
+const remove = () => onDelete(row.id);
+const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
 </script>
 
 <tr data-row-id={row.id}>

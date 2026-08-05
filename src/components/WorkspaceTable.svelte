@@ -1,6 +1,5 @@
 <script lang="ts">
 import type { ValidCandidate } from "../core/workspace/draft.ts";
-import type { UiEffect } from "../core/workspace/transactions.ts";
 import { buildWorkspacePresentation } from "../domain/presentation.ts";
 import type { AnalysisTree, ColorId } from "../domain/types.ts";
 import ColorRow from "./ColorRow.svelte";
@@ -13,8 +12,10 @@ let {
   draftRaw,
   draftError,
   draftInput = $bindable(),
-  onAction,
-  onDraftChanged,
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onSetBackground,
   onFinishEdit,
   onNewColorInput,
   onNewColorKeydown,
@@ -26,8 +27,10 @@ let {
   draftRaw: string;
   draftError: string;
   draftInput?: HTMLInputElement;
-  onAction: (effects: readonly UiEffect[]) => void | Promise<void>;
-  onDraftChanged: () => void;
+  onEdit: (colorId: ColorId, field: "css" | "l" | "c" | "h", raw: string) => void;
+  onDuplicate: (colorId: ColorId) => void | Promise<void>;
+  onDelete: (colorId: ColorId) => void | Promise<void>;
+  onSetBackground: (colorId: ColorId, enabled: boolean) => void | Promise<void>;
   onFinishEdit: (reason: "enter" | "blur") => void;
   onNewColorInput: (raw: string) => void;
   onNewColorKeydown: (event: KeyboardEvent) => void;
@@ -72,8 +75,10 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
           {invalidColorId}
           {invalidField}
           {fieldError}
-          {onAction}
-          {onDraftChanged}
+          {onEdit}
+          {onDuplicate}
+          {onDelete}
+          {onSetBackground}
           {onFinishEdit}
         />
       {/each}
