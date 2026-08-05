@@ -131,7 +131,7 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       onchange={(event) => setBackground(event.currentTarget.checked)}
     >
   </td>
-  <td>
+  <td style:anchor-name={`--text-contrast-${row.id}`}>
     <button
       id={`text-contrast-trigger-${row.id}`}
       bind:this={textContrastTrigger}
@@ -151,7 +151,7 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       trigger={textContrastTrigger}
     />
   </td>
-  <td>
+  <td style:anchor-name={`--checks-${row.id}`}>
     <button
       id={`checks-trigger-${row.id}`}
       bind:this={checksTrigger}

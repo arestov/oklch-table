@@ -1,6 +1,7 @@
 <script lang="ts">
 import { buildContrastRows, buildCvdRows, type PresentationIndex } from "../domain/presentation.ts";
 import type { ColorId } from "../domain/types.ts";
+import AnchoredPopover from "./AnchoredPopover.svelte";
 
 let {
   index,
@@ -14,58 +15,40 @@ let {
   trigger: HTMLButtonElement | undefined;
 } = $props();
 let hidePass = $state(true);
-let popover: HTMLElement;
-let open = $state(false);
-const manageFocus = () => {
-  open = popover.matches(":popover-open");
-  if (open) popover.querySelector<HTMLElement>("h2")?.focus();
-  else trigger?.focus();
-};
 const rows = $derived(buildCvdRows(index, colorId).filter((item) => !hidePass || item.hasWarning));
 const contrastIssues = $derived(
   buildContrastRows(index, colorId, "all").filter((item) => item.wcagKey === 0),
 );
 </script>
 
-<section
+<AnchoredPopover
   id={`checks-${colorId}`}
-  popover="auto"
-  aria-labelledby={`checks-${colorId}-title`}
-  bind:this={popover}
-  ontoggle={manageFocus}
+  title={`Checks — color ${row}`}
+  {trigger}
+  anchorName={`--checks-${colorId}`}
 >
-  <div class="popover-head">
-    <h2 id={`checks-${colorId}-title`} tabindex="-1">Checks — color {row}</h2>
-    <button type="button" popovertarget={`checks-${colorId}`} popovertargetaction="hide">
-      Close
-    </button>
-  </div>
-  {#if open}
-    <div class="popover-body">
-      {#if contrastIssues.length}
-        <h3>WCAG issues</h3>
-        <ul>
-          {#each contrastIssues as item (item.key)}
-            <li>Text row {item.textRow} on background row {item.backgroundRow}: {item.wcag}</li>
-          {/each}
-        </ul>
-      {/if}
-      <h3>Color vision</h3>
-      <label><input type="checkbox" bind:checked={hidePass}> Hide all-pass comparisons</label>
-      {#if rows.length}
-        <ul>
-          {#each rows as item (item.key)}
-            <li>
-              Color {item.otherRow}:
-              {#each Object.entries(item.modes) as [mode, signal]}
-                {mode} {signal.label}{" "}
-              {/each}
-            </li>
-          {/each}
-        </ul>
-      {:else}
-        <p class="empty-state">No possible color-vision conflicts are visible.</p>
-      {/if}
-    </div>
+  {#if contrastIssues.length}
+    <h3>WCAG issues</h3>
+    <ul>
+      {#each contrastIssues as item (item.key)}
+        <li>Text row {item.textRow} on background row {item.backgroundRow}: {item.wcag}</li>
+      {/each}
+    </ul>
   {/if}
-</section>
+  <h3>Color vision</h3>
+  <label><input type="checkbox" bind:checked={hidePass}> Hide all-pass comparisons</label>
+  {#if rows.length}
+    <ul>
+      {#each rows as item (item.key)}
+        <li>
+          Color {item.otherRow}:
+          {#each Object.entries(item.modes) as [mode, signal]}
+            {mode} {signal.label}{" "}
+          {/each}
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <p class="empty-state">No possible color-vision conflicts are visible.</p>
+  {/if}
+</AnchoredPopover>
