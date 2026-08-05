@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ValidCandidate } from "../core/workspace/draft.ts";
-import { buildCvdRows } from "../domain/presentation.ts";
+import { buildContrastRows, buildCvdRows } from "../domain/presentation.ts";
 import type { AnalysisTree, ColorId } from "../domain/types.ts";
 
 let {
@@ -23,6 +23,9 @@ const manageFocus = () => {
 const rows = $derived(
   buildCvdRows(candidate, colorId).filter((item) => !hidePass || item.hasWarning),
 );
+const contrastIssues = $derived(
+  buildContrastRows(candidate, colorId, "all").filter((item) => item.className === "status-fail"),
+);
 </script>
 
 <section
@@ -39,11 +42,25 @@ const rows = $derived(
     </button>
   </div>
   <div class="popover-body">
+    {#if contrastIssues.length}
+      <h3>WCAG issues</h3>
+      <ul>
+        {#each contrastIssues as item (item.key)}
+          <li>Text row {item.textRow} on background row {item.backgroundRow}: {item.wcag}</li>
+        {/each}
+      </ul>
+    {/if}
+    <h3>Color vision</h3>
     <label><input type="checkbox" bind:checked={hidePass}> Hide all-pass comparisons</label>
     {#if rows.length}
       <ul>
         {#each rows as item (item.key)}
-          <li>Color {item.otherRow}: {item.hasWarning ? "Possible conflict" : "Pass"}</li>
+          <li>
+            Color {item.otherRow}:
+            {#each Object.entries(item.modes) as [mode, signal]}
+              {mode} {signal.label}{" "}
+            {/each}
+          </li>
         {/each}
       </ul>
     {:else}

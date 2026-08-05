@@ -63,12 +63,6 @@ export function contrastClass(comparison: ContrastComparison): string {
   return "status-pass";
 }
 
-function recommendationText(comparison: ContrastComparison): string {
-  const recommendation = comparison.recommendation;
-  if (!recommendation.regular) return "Not suitable for readable text";
-  return `From ${recommendation.regular}px/400 or ${recommendation.bold}px/700`;
-}
-
 export function comparisonsForColor(
   candidate: Candidate,
   id: ColorId,
@@ -98,13 +92,20 @@ export function summarizeTextContrast(candidate: Candidate, id: ColorId): Result
       className: "note",
     };
   }
-  const worst = [...list].sort(
-    (a, b) => a.recommendation.key - b.recommendation.key || a.wcag.key - b.wcag.key,
-  )[0];
-  const failures = list.filter((item) => contrastClass(item) === "status-fail").length;
+  const readable = list.filter((item) => item.readableTextSupported).length;
+  const unreadable = list.length - readable;
+  const worst = [...list].sort((a, b) => a.recommendation.key - b.recommendation.key)[0];
+  const worstMinimum = worst.recommendation.regular
+    ? `worst: ${worst.recommendation.regular}px/400`
+    : "worst: not readable";
   return {
-    text: recommendationText(worst),
-    detail: failures ? plural(failures, "failure") : plural(list.length, "comparison"),
+    text:
+      unreadable === 0
+        ? `All ${readable} usable`
+        : readable === 0
+          ? plural(unreadable, "not readable")
+          : `${plural(unreadable, "not readable")} · ${plural(readable, "usable")}`,
+    detail: `${plural(list.length, "comparison")} · ${worstMinimum}`,
     className: contrastClass(worst),
   };
 }
@@ -118,7 +119,7 @@ export function cvdComparisonsForColor(candidate: Candidate, id: ColorId): CvdCo
 export function summarizeChecks(candidate: Candidate, id: ColorId): ResultSummary {
   const comparisons = comparisonsForColor(candidate, id);
   const contrastIssues = [...comparisons.asBackground, ...comparisons.asText].filter(
-    (item) => contrastClass(item) === "status-fail",
+    (item) => !item.readableTextSupported || item.wcag.key === 0,
   ).length;
   const cvdWarnings = cvdComparisonsForColor(candidate, id).filter((item) =>
     Object.values(item.modes).some((mode) => mode.warning),
