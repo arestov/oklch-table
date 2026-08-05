@@ -3,12 +3,7 @@ import { onMount } from "svelte";
 import LiveRegions from "./components/LiveRegions.svelte";
 import ShortcutHelpPopover from "./components/ShortcutHelpPopover.svelte";
 import WorkspaceTable from "./components/WorkspaceTable.svelte";
-import {
-  announceAlert,
-  announcementStore,
-  announceShortcut,
-  createFeedbackCoordinator,
-} from "./core/feedback/index.ts";
+import { announceAlert, announcementStore, announceShortcut } from "./core/feedback/index.ts";
 import {
   addColorFromDraft,
   candidateStore,
@@ -24,9 +19,6 @@ let workspace = $state<HTMLElement>();
 let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
-const feedbackCoordinator = createFeedbackCoordinator(() => {
-  finishEdit("idle");
-});
 const mountedWorkspace = (): HTMLElement => {
   if (!workspace) throw new Error("Workspace focus effect ran before mount.");
   return workspace;
@@ -46,7 +38,6 @@ const onDraftKeydown = (event: KeyboardEvent) => {
 const onAction = async (effects: readonly import("./core/workspace/transactions.ts").UiEffect[]) =>
   executeUiEffects(mountedWorkspace(), effects);
 const onFinishEdit = (reason: "enter" | "blur") => {
-  feedbackCoordinator.cancel();
   const result = finishEdit(reason);
   if (result.status === "invalid") {
     announceAlert(result.message);
@@ -105,7 +96,6 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   }
   const control = row?.querySelector<HTMLElement>(selector);
   if (!control) return;
-  feedbackCoordinator.cancel();
   const boundary = finishEdit("navigation");
   if (boundary.status === "invalid") {
     announceAlert(boundary.message);
@@ -120,7 +110,6 @@ onMount(() => {
   window.addEventListener("keydown", onWorkspaceKeydown);
   return () => {
     window.removeEventListener("keydown", onWorkspaceKeydown);
-    feedbackCoordinator.destroy();
   };
 });
 </script>
@@ -151,7 +140,6 @@ onMount(() => {
     {draftError}
     bind:draftInput
     {onAction}
-    onDraftChanged={() => feedbackCoordinator.schedule()}
     {onFinishEdit}
     onNewColorInput={setNewColorDraft}
     onNewColorKeydown={onDraftKeydown}
