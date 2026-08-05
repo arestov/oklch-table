@@ -19,7 +19,7 @@ represented as covered merely because a related UI is present.
 | TC-03 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
 | TC-04 | Browser | `tests/e2e/app.spec.ts` | `adds consecutive colors and preserves OKLCH serialization` | automated |
 | TC-05 | Browser | `tests/e2e/app.spec.ts` | `compares two accent colors through the text-contrast details` | automated |
-| TC-06 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated |
+| TC-06 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated (empty workspace) |
 | TC-07 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-08 | Core | `src/core/workspace/commands.test.ts` | `preserves stable identity and background role through duplicate and delete` | automated |
 | TC-09 | Core | `src/core/workspace/commands.test.ts` | `accepts the idle boundary as exactly one transaction` | automated |
@@ -38,14 +38,15 @@ represented as covered merely because a related UI is present.
 | TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps each opened popover accessible and restores its trigger focus` | automated |
 | TC-24 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
-| TC-25 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated |
+| TC-25 | Browser | `tests/e2e/golden-path.spec.ts` | `supports the error-hover token golden path` | automated (native clipboard) |
 
 ## Screen reader suite
 
-The complete empty-workspace-to-clipboard NVDA transcript remains **pending**.
-The current native cases are focused diagnostics; none is counted as the full
-18-step acceptance flow until `golden-path.nvda.spec.ts` drives it exclusively
-through NVDA and keyboard input.
+The browser golden path is executable from an empty workspace and reaches the
+native clipboard. The complete empty-workspace-to-clipboard NVDA transcript
+remains **pending**: current native cases are focused diagnostics and do not
+count as the full 18-step acceptance flow until `golden-path.nvda.spec.ts`
+drives it exclusively through NVDA and keyboard input.
 
 | Related TCs | Native test in `tests/screen-reader/nvda.spec.ts` | Status |
 | --- | --- | --- |
