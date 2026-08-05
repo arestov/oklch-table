@@ -1,16 +1,16 @@
-import type { ValidCandidate as CandidateRevision } from "../core/workspace/draft.ts";
-import { formatLightnessPercent } from "../core/workspace/numeric-fields.ts";
 import { CVD_MODES } from "./analysis.ts";
-import { round } from "./color.ts";
+import { formatLightnessPercent, round } from "./color.ts";
 import type {
+  AnalysisTree,
   ColorId,
   ColorVisionKey,
   ContrastComparison,
   ContrastKey,
   CvdComparison,
+  DocumentTree,
 } from "./types.ts";
 
-type Candidate = CandidateRevision<import("./types.ts").AnalysisTree>;
+type Candidate = { document: DocumentTree; analysis: AnalysisTree };
 
 export interface ResultSummary {
   text: string;

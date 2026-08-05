@@ -1,5 +1,5 @@
+import { formatLightnessPercent } from "../../domain/color.ts";
 import type { AnalysisTree, SemanticChanges, SemanticSnapshot } from "../../domain/types.ts";
-import { formatLightnessPercent } from "../workspace/numeric-fields.ts";
 import type { WorkspaceTransaction } from "../workspace/transactions.ts";
 
 type Transaction = WorkspaceTransaction<AnalysisTree, SemanticSnapshot, SemanticChanges>;
