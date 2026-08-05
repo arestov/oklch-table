@@ -239,7 +239,7 @@ tbody button:hover {
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  min-width: 6.5rem;
+  min-width: 5.25rem;
   border: 1px solid transparent;
   border-radius: 5px;
   background: transparent;
@@ -266,7 +266,7 @@ input:focus-visible {
 }
 
 input.css-color {
-  min-width: 17.5rem;
+  min-width: 13rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -288,9 +288,11 @@ input[aria-invalid="true"] {
 }
 
 .result-button {
-  min-width: 12.5rem;
+  width: 100%;
+  min-width: 10rem;
   text-align: left;
   line-height: 1.25;
+  white-space: normal;
 }
 
 .result-button small {

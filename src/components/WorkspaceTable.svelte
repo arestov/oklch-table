@@ -64,7 +64,8 @@ let {
       {/each}
       <tr data-draft="true">
         <th scope="row">{candidate.document.colors.order.length + 1}</th>
-        <td colspan="2">
+        <td class="actions"></td>
+        <td class="draft-input-cell">
           <input
             bind:this={draftInput}
             class="css-color"

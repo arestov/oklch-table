@@ -188,3 +188,36 @@ test("uses bounded, unit-aware numeric controls", async ({ page }) => {
   await lightness.fill("60");
   await expect(lightness).not.toHaveAttribute("aria-invalid", "true");
 });
+
+test("keeps the populated table aligned without horizontal overflow at 1280px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/");
+  for (const color of [
+    "oklch(0.5 0.15 260)",
+    "oklch(0.6 0.15 260)",
+    "#ffffff",
+    "oklch(0.5 0.2 25)",
+  ]) {
+    await addColor(page, color);
+  }
+  await page.getByRole("checkbox", { name: "Contrast background for row 4" }).check();
+
+  const shell = page.locator(".table-shell");
+  const dimensions = await shell.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+
+  const cssCell = page.locator("tbody tr").first().locator("td").nth(1);
+  const draftInputCell = page.locator('tr[data-draft="true"] .draft-input-cell');
+  const [cssBox, draftBox] = await Promise.all([
+    cssCell.boundingBox(),
+    draftInputCell.boundingBox(),
+  ]);
+  expect(cssBox).not.toBeNull();
+  expect(draftBox).not.toBeNull();
+  expect(draftBox?.x).toBe(cssBox?.x);
+});
