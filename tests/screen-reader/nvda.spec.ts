@@ -283,10 +283,19 @@ test("reads contrast details and returns to the editing loop", async ({ page, nv
   await nvda.clearSpokenPhraseLog();
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
   await nvda.perform(nvda.keyboardCommands.moveToNextTable);
-  for (let index = 0; index < 20 && !(await spokenText(nvda)).includes("Lc"); index += 1) {
+  for (
+    let index = 0;
+    index < 50 && !(await spokenText(nvda)).includes("Light text on dark background");
+    index += 1
+  ) {
     await nvda.next();
   }
-  expect(await spokenText(nvda)).toContain("Lc");
+  const detailsSpeech = await spokenText(nvda);
+  expect(detailsSpeech).toContain("UI and non-body text");
+  expect(detailsSpeech).toContain("24px");
+  expect(detailsSpeech).toContain("16px");
+  expect(detailsSpeech).toContain("Lc");
+  expect(detailsSpeech).toContain("Light text on dark background");
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Text contrast for row 5" })).toBeFocused();
