@@ -1,4 +1,3 @@
-import { WindowsKeyCodes } from "@guidepup/guidepup";
 import { type NVDAPlaywright, nvdaTest as test } from "@guidepup/playwright";
 import { expect, type Page } from "@playwright/test";
 import { addColor, goldenPathColors } from "../e2e/support/workspace.ts";
@@ -7,6 +6,7 @@ import {
   openNativeWorkspace,
   restoreBrowserSession,
 } from "./support/browser-session.ts";
+import { typeNumericFast } from "./support/native-keyboard.ts";
 import { expectSpokenAfterAction } from "./support/speech.ts";
 
 test.use({
@@ -35,16 +35,6 @@ async function reportFocus(nvda: NVDAPlaywright): Promise<string> {
 async function enterFocusMode(nvda: NVDAPlaywright): Promise<void> {
   await nvda.perform(nvda.keyboardCommands.exitFocusMode);
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
-}
-
-/** Sends real native key events without Guidepup waiting for speech between each character. */
-async function typeContinuous(nvda: NVDAPlaywright, text: string): Promise<void> {
-  const keyCode = [...text].map((character) =>
-    character === "."
-      ? WindowsKeyCodes.Period
-      : WindowsKeyCodes[`Digit${character}` as keyof typeof WindowsKeyCodes],
-  );
-  await nvda.perform({ keyCode }, { capture: false });
 }
 
 async function prepareGoldenWorkspace(page: Page): Promise<void> {
@@ -103,7 +93,7 @@ test("jumps to Lightness and reaches one grouped idle result", async ({ page, nv
   expect(await reportFocus(nvda)).toContain("Lightness percentage for row 5");
 
   await nvda.press("Control+A");
-  await typeContinuous(nvda, "60");
+  await typeNumericFast(nvda, "60");
   await page.waitForTimeout(800);
   await expect(
     page.getByRole("spinbutton", { name: "Lightness percentage for row 5" }),
@@ -135,7 +125,7 @@ test("announces a fast numeric commit before the idle checkpoint", async ({ page
     nvda,
     async () => {
       await nvda.press("Control+A", { capture: false });
-      await typeContinuous(nvda, "80");
+      await typeNumericFast(nvda, "80");
       await nvda.press("Enter");
     },
     "L 80. Checks updated.",
@@ -167,7 +157,7 @@ test("announces APCA loss and restoration", async ({ page, nvda }) => {
       nvda,
       async () => {
         await nvda.press("Control+A", { capture: false });
-        await typeContinuous(nvda, value);
+        await typeNumericFast(nvda, value);
         await nvda.press("Enter");
       },
       announcement,
@@ -202,7 +192,7 @@ test("announces a no-category edit without metric sections", async ({ page, nvda
     nvda,
     async () => {
       await nvda.press("Control+A", { capture: false });
-      await typeContinuous(nvda, "59.9");
+      await typeNumericFast(nvda, "59.9");
       await nvda.press("Enter");
     },
     "L 59.9. Checks updated.",
