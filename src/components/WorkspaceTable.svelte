@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { ValidCandidate } from "../core/workspace/draft.ts";
 import type { UiEffect } from "../core/workspace/transactions.ts";
-import { buildRows } from "../domain/presentation.ts";
+import { buildRows, type RowView } from "../domain/presentation.ts";
 import type { AnalysisTree, ColorId } from "../domain/types.ts";
 import ColorRow from "./ColorRow.svelte";
 
@@ -32,6 +32,7 @@ let {
   onNewColorInput: (raw: string) => void;
   onNewColorKeydown: (event: KeyboardEvent) => void;
 } = $props();
+const rows = $derived(buildRows(candidate));
 </script>
 
 <div class="table-shell">
@@ -64,10 +65,10 @@ let {
       </tr>
     </thead>
     <tbody>
-      {#each buildRows(candidate) as row (row.id)}
+      {#each rows as row (row.id)}
         <ColorRow
           {candidate}
-          colorId={row.id}
+          {row}
           {invalidColorId}
           {invalidField}
           {fieldError}
