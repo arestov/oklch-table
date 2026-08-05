@@ -79,7 +79,7 @@ async function enterFocusMode(nvda: NVDAPlaywright): Promise<void> {
 async function prepareGoldenWorkspace(page: Page): Promise<void> {
   await addColor(page, goldenPathColors.accentBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
-  await addColor(page, goldenPathColors.accentHover);
+  await addColor(page, goldenPathColors.accentHoverBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
   await addColor(page, goldenPathColors.whiteText);
   await addColor(page, goldenPathColors.errorBackground);
@@ -107,7 +107,7 @@ test("adds the first and second colors without leaving the draft loop", async ({
   expect(await reportFocus(nvda)).toContain("CSS color for new row 2");
 
   const secondDraft = page.getByPlaceholder("fill color");
-  await secondDraft.fill(goldenPathColors.accentHover);
+  await secondDraft.fill(goldenPathColors.accentHoverBackground);
   await activateBrowser(page);
   await nvda.clearSpokenPhraseLog();
   await secondDraft.press("Enter");

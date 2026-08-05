@@ -8,7 +8,7 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   // Establish the two accent backgrounds and the white text color used to compare them.
   await addColor(page, goldenPathColors.accentBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 1" }).check();
-  await addColor(page, goldenPathColors.accentHover);
+  await addColor(page, goldenPathColors.accentHoverBackground);
   await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
   await addColor(page, goldenPathColors.whiteText);
 
