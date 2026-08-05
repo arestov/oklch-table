@@ -31,4 +31,8 @@ const asText = $derived(buildContrastRows(index, colorId, "text"));
     <ContrastTable caption={`Background color ${row}`} rows={asBackground} />
   {/if}
   <ContrastTable caption={`Color ${row} as text`} rows={asText} />
+  <p class="font-metrics-note">
+    Size guidance is based on Arial/Helvetica-like fonts. Fonts with a smaller x-height may require
+    a larger size.
+  </p>
 </AnchoredPopover>

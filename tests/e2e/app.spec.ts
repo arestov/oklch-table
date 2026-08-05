@@ -43,6 +43,17 @@ test("compares two accent colors through the text-contrast details", async ({ pa
   await expect(page.getByRole("table", { name: "Background color 1" })).toBeVisible();
 });
 
+test("explains the font-metrics limit of contrast size guidance", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+  await page.getByRole("button", { name: "Text contrast for row 1" }).click();
+  await expect(page.getByLabel("Text contrast — color 1")).toContainText(
+    "Size guidance is based on Arial/Helvetica-like fonts. Fonts with a smaller x-height may require a larger size.",
+  );
+});
+
 test("anchors each result popover below its table cell", async ({ page }) => {
   await page.goto("/");
   await addColor(page, "#ffffff");
