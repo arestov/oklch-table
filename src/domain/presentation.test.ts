@@ -81,15 +81,15 @@ function candidate(
 }
 
 describe("bounded result summaries", () => {
-  it("distinguishes unchecked, usable, mixed, and unreadable contrast", () => {
+  it("distinguishes unchecked, supported, mixed, and unreadable contrast", () => {
     expect(summarizeTextContrast(candidate([]), "color_target")).toMatchObject({
       text: "Not checked",
     });
     expect(summarizeTextContrast(candidate([true, true]), "color_target")).toMatchObject({
-      text: "All 2 usable",
+      text: "All 2 supported",
     });
     expect(summarizeTextContrast(candidate([true, false]), "color_target")).toMatchObject({
-      text: "1 not readable · 1 usable",
+      text: "1 not readable · 1 supported",
     });
     expect(summarizeTextContrast(candidate([false, false]), "color_target")).toMatchObject({
       text: "2 not readable",
@@ -115,7 +115,7 @@ describe("bounded result summaries", () => {
 
   it("keeps APCA text suitability independent from WCAG checks", () => {
     expect(summarizeTextContrast(candidate([true], [], true, [0]), "color_target")).toMatchObject({
-      text: "All 1 usable",
+      text: "All 1 supported",
       className: "status-pass",
     });
     expect(summarizeChecks(candidate([true], [], true, [0]), "color_target")).toMatchObject({
