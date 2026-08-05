@@ -38,6 +38,23 @@ test("supports the error-hover token golden path", async ({ page, context }) => 
   await derivedLightness.press("Enter");
   await expect(page.getByRole("status")).toContainText("Lightness 60 percent. Checks updated.");
 
+  await derivedLightness.fill("90");
+  await derivedLightness.press("Enter");
+  await expect(page.getByRole("status")).toContainText(
+    "APCA: Text row 3 is no longer readable on background row 5.",
+  );
+  await derivedLightness.fill("60");
+  await derivedLightness.press("Enter");
+  await expect(page.getByRole("status")).toContainText(
+    "APCA: Text row 3 is now readable on background row 5.",
+  );
+  await derivedLightness.fill("60.1");
+  await derivedLightness.press("Enter");
+  await expect(page.getByRole("status")).toHaveText("Lightness 60.1 percent. Checks updated.");
+  await derivedLightness.fill("60");
+  await derivedLightness.press("Enter");
+  await expect(page.getByRole("status")).toHaveText("Lightness 60 percent. Checks updated.");
+
   // Detailed contrast remains reachable from the edit loop and restores its trigger focus.
   await page.keyboard.press("Control+.");
   await page.keyboard.press("7");
