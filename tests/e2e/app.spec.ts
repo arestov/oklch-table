@@ -19,6 +19,26 @@ async function pasteText(input: import("@playwright/test").Locator, text: string
   }, text);
 }
 
+async function observeTextMutations(
+  page: import("@playwright/test").Page,
+  selector: string,
+  storageKey: string,
+): Promise<void> {
+  await page.evaluate(
+    ({ key, targetSelector }) => {
+      const target = document.querySelector(targetSelector);
+      if (!target) throw new Error(`Missing live region: ${targetSelector}`);
+      const mutations: string[] = [];
+      sessionStorage.setItem(key, JSON.stringify(mutations));
+      new MutationObserver(() => {
+        mutations.push(target.textContent ?? "");
+        sessionStorage.setItem(key, JSON.stringify(mutations));
+      }).observe(target, { childList: true, characterData: true, subtree: true });
+    },
+    { key: storageKey, targetSelector: selector },
+  );
+}
+
 test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await page.goto("/");
 
@@ -424,6 +444,38 @@ test("publishes one atomic status mutation for an accepted edit", async ({ page 
   expect(
     await page.evaluate(() => JSON.parse(sessionStorage.getItem("status-mutations") ?? "[]")),
   ).toEqual(["L 80. Checks updated."]);
+});
+
+test("mutates live regions when identical announcements are republished", async ({ page }) => {
+  await page.goto("/");
+  const draft = page.getByPlaceholder("fill color");
+  await observeTextMutations(page, '[role="alert"]', "repeated-alert-mutations");
+
+  await draft.fill("not-a-color");
+  await draft.press("Enter");
+  await draft.press("Enter");
+  const invalidMessage = "Invalid CSS color. Enter HEX, RGB, or OKLCH.";
+  await expect(page.getByRole("alert")).toHaveText(invalidMessage);
+  await expect
+    .poll(() =>
+      page.evaluate(() => JSON.parse(sessionStorage.getItem("repeated-alert-mutations") ?? "[]")),
+    )
+    .toEqual([invalidMessage, invalidMessage]);
+
+  await draft.fill("#ffffff");
+  await draft.press("Enter");
+  const css = page.getByRole("textbox", { name: "CSS color for row 1" });
+  await css.focus();
+  await observeTextMutations(page, '[role="status"]', "repeated-status-mutations");
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("Control+.");
+  const shortcutMessage = "Column jump. Press 1 through 8. Escape cancels.";
+  await expect(page.getByRole("status")).toHaveText(shortcutMessage);
+  await expect
+    .poll(() =>
+      page.evaluate(() => JSON.parse(sessionStorage.getItem("repeated-status-mutations") ?? "[]")),
+    )
+    .toEqual([shortcutMessage, shortcutMessage]);
 });
 
 test("creates one idle checkpoint after 700 ms and does not repeat it on Enter", async ({

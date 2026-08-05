@@ -187,7 +187,7 @@ onMount(() => {
     Keyboard shortcuts
   </button>
   <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
-  <LiveRegions status={$announcementStore.result.text} alert={$announcementStore.alert.text} />
+  <LiveRegions status={$announcementStore.result} alert={$announcementStore.alert} />
   <p class="jump-prompt">
     {columnJumpNeedsRow
       ? "Select a color row before using column jump."
