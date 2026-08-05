@@ -143,8 +143,7 @@ export function rgbForColor(color: ColorNode): Rgb {
   return oklabToRgb(oklchToOklab(color.value));
 }
 
-export function serializeColor(color: ColorNode): string {
-  const rgb = rgbForColor(color);
+export function serializeColor(color: ColorNode, rgb = rgbForColor(color)): string {
   if (color.serialization.format === "hex") {
     const toHex = (channel: number) => Math.round(channel).toString(16).padStart(2, "0");
     return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
