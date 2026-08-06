@@ -216,6 +216,43 @@ test("anchors each result popover below its table cell", async ({ page }) => {
   await verifyPopover("Checks for row 1");
 });
 
+test("keeps popover actions isolated from table control styles", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+
+  await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
+  const shortcutClose = page.getByRole("button", { name: "Close" });
+  const shortcutStyle = await shortcutClose.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      background: style.backgroundColor,
+      border: style.border,
+      minBlockSize: style.minBlockSize,
+      padding: style.padding,
+    };
+  });
+  await shortcutClose.click();
+
+  await page.getByRole("button", { name: /^Text contrast for row 1:/ }).click();
+  const anchoredClose = page.getByRole("button", { name: "Close" });
+  const anchoredStyle = await anchoredClose.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      background: style.backgroundColor,
+      border: style.border,
+      minBlockSize: style.minBlockSize,
+      padding: style.padding,
+    };
+  });
+  expect(anchoredStyle).toEqual(shortcutStyle);
+
+  const arrow = page.locator(".anchored-popover-arrow:popover-open");
+  if (await arrow.isVisible()) {
+    await expect(arrow).not.toHaveClass(/popover-root/);
+    await expect(arrow).toHaveCSS("border-radius", "0px");
+  }
+});
+
 test("preserves focus through duplicate, delete, shortcuts, and popover details", async ({
   page,
 }) => {

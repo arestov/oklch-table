@@ -20,16 +20,19 @@ let {
 let popover: HTMLElement;
 let arrow: HTMLElement;
 let open = $state(false);
+const supportsAnchorPositioning =
+  globalThis.CSS?.supports("position-anchor: --popover-anchor") === true &&
+  globalThis.CSS?.supports("top: anchor(bottom)") === true;
 const titleId = $derived(`${id}-title`);
 const arrowId = $derived(`${id}-arrow`);
 
 const manageFocus = () => {
   open = popover.matches(":popover-open");
   if (open) {
-    arrow.showPopover();
+    if (supportsAnchorPositioning) arrow.showPopover();
     popover.querySelector<HTMLElement>("h2")?.focus();
   } else {
-    arrow.hidePopover();
+    if (arrow.matches(":popover-open")) arrow.hidePopover();
     trigger?.focus();
   }
 };
@@ -47,7 +50,8 @@ const manageFocus = () => {
 <section
   {id}
   popover="auto"
-  class={`anchored-popover${wide ? " wide-popover" : ""}`}
+  class="popover-root anchored-popover"
+  class:wide-popover={wide}
   aria-labelledby={titleId}
   style:position-anchor={anchorName}
   bind:this={popover}
@@ -56,7 +60,9 @@ const manageFocus = () => {
   <div class="popover-surface">
     <div class="popover-head">
       <h2 id={titleId} tabindex="-1">{title}</h2>
-      <button type="button" popovertarget={id} popovertargetaction="hide">Close</button>
+      <button class="popover-close" type="button" popovertarget={id} popovertargetaction="hide">
+        Close
+      </button>
     </div>
     {#if open}
       <div class="popover-body">
