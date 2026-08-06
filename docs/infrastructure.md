@@ -16,13 +16,19 @@ Every `VITE_*` environment variable is public and must never contain a secret.
 - Vitest runs unit tests; Playwright and axe-core test the built application.
 - Size Limit budgets initial JavaScript and application CSS.
 
-Run `pnpm check` for the fast quality gate and `pnpm verify` for the complete local gate.
+Run `pnpm check` for the fast quality gate. The recommended complete local gate is
+`pnpm verify:full`: it runs quality checks, the build and size budgets, and all
+three Playwright engines. On Windows it then runs the five-case NVDA smoke suite.
+Use `pnpm verify:full:native` on Windows when all native NVDA cases are required.
+Both commands reuse the build and stop on the first failed phase. Because NVDA
+controls the foreground Firefox window, leave the keyboard and mouse untouched
+during the final Windows phase. `pnpm verify` remains the stable Chromium-only
+gate for hooks and environments without every Playwright browser installed.
 The unit suite uses V8 coverage thresholds: 90% statements, 78% branches, 88%
-functions, and 92% lines. Local browser runs use Chromium by default; CI runs
-the same suite in Chromium, Firefox, and WebKit. Set `PLAYWRIGHT_ALL_BROWSERS`
-in a local shell to opt into that full browser matrix after installing the
-corresponding Playwright browsers. `pnpm test:e2e:run` runs the browser suite
-against an existing build; `pnpm test:e2e` builds first.
+functions, and 92% lines. Local browser runs use Chromium by default; CI and
+`pnpm verify:full` run the same suite in Chromium, Firefox, and WebKit.
+`pnpm test:e2e:run` runs the browser suite against an existing build;
+`pnpm test:e2e` builds first.
 
 The required Linux workflow has independent `quality` and `browser` jobs. The
 quality job runs formatting, lint, type, and coverage gates. The browser job
@@ -40,6 +46,8 @@ English (US) for the foreground browser thread. Run
 `pnpm test:screen-reader:full` for all native cases. `pnpm test:screen-reader`
 is a compatibility alias for the full suite. When running locally, use an
 interactive desktop and leave the foreground untouched until it exits.
+The recommended `pnpm verify:full` adds smoke automatically on Windows;
+`pnpm verify:full:native` substitutes the complete native suite.
 The native stack is intentionally pinned to `@guidepup/guidepup` 0.31.0,
 `@guidepup/playwright` 0.18.0, and `@playwright/test` 1.62.1. Update these three
 packages as a tested compatibility set: older `@guidepup/playwright` 0.14.x

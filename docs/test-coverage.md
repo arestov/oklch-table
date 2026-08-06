@@ -117,7 +117,9 @@ The native scripts are intentionally separate from the ordinary browser suite.
 `pnpm test:screen-reader` aliases the full suite. They launch NVDA through
 Guidepup and therefore require Windows with the Guidepup environment prepared.
 They are not part of `pnpm verify`; a missing OS-level screen-reader setup must
-not make the ordinary local hook unstable.
+not make the ordinary local hook unstable. The recommended `pnpm verify:full`
+runs all browser engines everywhere and adds NVDA smoke on Windows.
+`pnpm verify:full:native` is Windows-only and runs every native NVDA case.
 
 Before native acceptance, run the Guidepup setup commands in an interactive
 Windows session with permission to create its local assets:
@@ -139,13 +141,12 @@ and the default manual dispatch run the smoke cases; a manual `full` selection
 and the nightly schedule run every native case. Native job logs are retained by
 GitHub, but foreground-session test artifacts are not uploaded.
 
-On 2026-08-05, the focused background/duplicate, fast-numeric, APCA
-lost/restored, and no-category native cases passed in the documented Windows
-NVDA + Firefox Guidepup environment. The full native golden path is not claimed
-as rerun after these focused regressions. Native cases are run in bounded groups
-because they control the foreground session. The suite is deliberately separate
-from `pnpm verify`; operating the foreground NVDA/Firefox session remains an
-environmental requirement, not a pre-commit requirement.
+On 2026-08-06, the complete native suite and copy/paste golden path were run in
+the documented Windows NVDA + Firefox Guidepup environment. Native cases control
+the foreground session, so they remain separate from `pnpm verify`; operating
+NVDA/Firefox is an environmental requirement, not a pre-commit requirement. Use
+`pnpm verify:full` as the normal comprehensive command and
+`pnpm verify:full:native` before changes that need the complete NVDA transcript.
 
 ## APCA reference oracle
 
