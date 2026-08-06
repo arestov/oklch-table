@@ -1,6 +1,6 @@
-import { windowsActivate } from "@guidepup/guidepup";
 import type { NVDAPlaywright } from "@guidepup/playwright";
 import type { Page } from "@playwright/test";
+import { activateWindow } from "./activate-window.ts";
 import { setForegroundKeyboardLayout } from "./keyboard-layout.ts";
 
 const englishUsLayout = "00000409";
@@ -11,13 +11,13 @@ async function activateFirefoxPage(page: Page): Promise<void> {
   const browser = page.context().browser();
   if (!browser) throw new Error("Expected a browser for the NVDA test");
   await page.bringToFront();
-  await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
+  await activateWindow(browser.browserType().executablePath(), "OKLCH Table");
   await page.bringToFront();
   await page.waitForFunction(() => document.hasFocus());
   await page.waitForTimeout(250);
 }
 
-/** Opens a stable app document before a test starts native window activation. */
+/** Opens a stable app document and waits for its initial DOM focus. */
 export async function openNativeWorkspace(page: Page): Promise<void> {
   const response = await page.goto("/");
   if (!response?.ok())
@@ -30,7 +30,7 @@ export async function openNativeWorkspace(page: Page): Promise<void> {
     (input) => document.activeElement === input,
     await draft.elementHandle(),
   );
-  await activateFirefoxPage(page);
+  await page.bringToFront();
 }
 
 /** Activates Firefox and proves that NVDA observes the expected native focus. */
@@ -69,7 +69,7 @@ export async function restoreBrowserSession(page: Page): Promise<void> {
   if (!originalLayout || page.isClosed()) return;
   const browser = page.context().browser();
   if (!browser) return;
-  await windowsActivate(browser.browserType().executablePath(), "OKLCH Table");
+  await activateWindow(browser.browserType().executablePath(), "OKLCH Table");
   await setForegroundKeyboardLayout(originalLayout);
   originalLayouts.delete(page);
 }

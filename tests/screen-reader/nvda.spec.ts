@@ -156,8 +156,13 @@ test("reads WCAG and color-vision issues from Checks and returns to its trigger"
   expect(checksSpeech).toContain("WCAG issues");
   expect(checksSpeech).toContain("Text row 1 on background row 2");
   expect(checksSpeech).toContain("Color vision");
+  expect(checksSpeech).toContain("Color vision comparisons for color 1");
+  expect(checksSpeech).toContain("Compared color");
+  expect(checksSpeech).toContain("Protanopia");
+  expect(checksSpeech).toContain("Deuteranopia");
+  expect(checksSpeech).toContain("Tritanopia");
   expect(checksSpeech).toContain("Color 2");
-  expect(checksSpeech).toContain("protanopia Possible conflict");
+  expect(checksSpeech).toContain("Possible conflict");
 
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
   await nvda.press("Escape");
