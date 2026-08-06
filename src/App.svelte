@@ -30,6 +30,7 @@ let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
 let columnJumpNeedsRow = $state(false);
+let columnJumpRow: HTMLTableRowElement | null = null;
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
@@ -126,9 +127,12 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
     if (!row) {
       columnJumpPending = false;
       columnJumpNeedsRow = true;
+      columnJumpRow = null;
       announceShortcut("Select a color row before using column jump.");
       return;
     }
+    row.querySelector<HTMLElement>(".anchored-popover:popover-open")?.hidePopover();
+    columnJumpRow = row;
     columnJumpPending = true;
     columnJumpNeedsRow = false;
     announceShortcut("Column jump. Press 1 through 8. Escape cancels.");
@@ -140,13 +144,14 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
     event.preventDefault();
     columnJumpPending = false;
     columnJumpNeedsRow = false;
+    columnJumpRow = null;
     announceShortcut("Column jump canceled.");
     return;
   }
-  const target = event.target instanceof HTMLElement ? event.target : null;
-  const row = target?.closest<HTMLTableRowElement>("tr");
+  const row = columnJumpRow;
   const selector = columnTargets[event.key];
   columnJumpPending = false;
+  columnJumpRow = null;
   if (!selector) return;
   if (row?.dataset.draft === "true") {
     event.preventDefault();
