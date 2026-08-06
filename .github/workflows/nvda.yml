@@ -43,6 +43,8 @@ jobs:
       - name: Prepare NVDA
         uses: guidepup/setup-action@0.21.0
       - name: Install NVDA assets
-        run: npx --yes @guidepup/setup@0.21.0 install nvda
+        run: |
+          npx --yes @guidepup/setup@0.24.1 install nvda
+          node -e "if (!require('@guidepup/guidepup/lib/windows/NVDA/isNVDAInstalled').isNVDAInstalled()) throw new Error('Guidepup installed no detectable NVDA asset')"
       - name: Run native suite
         run: pnpm run "test:screen-reader:${{ env.NVDA_SUITE }}"
