@@ -58,11 +58,13 @@ The Linux Dev Container remains suitable for Biome, type checks, Vitest, Vite,
 Playwright, and axe-core; it is not a replacement for native screen-reader
 automation.
 
-`.github/workflows/nvda.yml` prepares portable NVDA with Guidepup on a
-GitHub-hosted Windows Server 2025 runner. A push to `main` runs the smoke suite;
-`workflow_dispatch` can select smoke or full; the scheduled 03:00 UTC run uses
-the full suite. Native output remains in the job log and is not uploaded as an
-artifact because it originates from a foreground assistive-technology session.
+`.github/workflows/nvda.yml` is a manual, non-required diagnostic workflow. It
+prepares portable NVDA with Guidepup on the free standard GitHub-hosted Windows
+Server 2025 runner; `workflow_dispatch` selects smoke or full. It does not run
+on pushes or a schedule because hosted foreground automation is not reliable
+enough to be a merge signal. Native output remains in the job log and is not
+uploaded as an artifact because it originates from a foreground
+assistive-technology session.
 This workflow supplements the required Linux accessibility contract: only
 actual NVDA speech, browse/table navigation, and native clipboard readback are
 allowed to depend exclusively on Windows.
