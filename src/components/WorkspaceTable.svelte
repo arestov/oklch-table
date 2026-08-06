@@ -41,7 +41,7 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
 </script>
 
 <div class="table-shell">
-  <table>
+  <table class="workspace-table">
     <caption>
       Colors in the current workspace
     </caption>
@@ -84,7 +84,7 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
           {onFinishEdit}
         />
       {/each}
-      <tr data-draft="true">
+      <tr class="workspace-row workspace-draft-row" data-draft="true">
         <th class="workspace-row-number" scope="row">
           {candidate.document.colors.order.length + 1}
         </th>
@@ -116,3 +116,91 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
     </tbody>
   </table>
 </div>
+
+<style>
+.table-shell {
+  overflow-x: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.workspace-table {
+  --control-text-inset: 7px;
+
+  width: 100%;
+  min-width: 69rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+
+  & caption {
+    padding: 0 0 12px;
+    font-size: 1.05rem;
+    font-weight: 760;
+    text-align: left;
+  }
+
+  & > thead > tr > th,
+  & .workspace-draft-row > * {
+    padding: 10px 9px;
+    border: 0;
+    vertical-align: top;
+    white-space: nowrap;
+  }
+
+  & > thead > tr > th {
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-align: left;
+    text-transform: none;
+  }
+
+  & .numeric-heading {
+    text-align: right;
+  }
+}
+
+.workspace-table :global(.workspace-row + .workspace-row > *) {
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.row-number-column {
+  width: 3rem;
+}
+
+.actions-column {
+  width: 10.5rem;
+}
+
+.css-color-column {
+  width: 15rem;
+}
+
+.numeric-column {
+  width: 6.5rem;
+}
+
+.contrast-background-column {
+  width: 7rem;
+}
+
+.result-column {
+  width: auto;
+}
+
+.workspace-row-number {
+  padding-block-start: calc(10px + var(--control-text-inset));
+  color: var(--muted);
+  line-height: 1.25rem;
+  text-align: right;
+}
+
+.row-text-cell {
+  padding-block-start: calc(10px + var(--control-text-inset));
+  line-height: 1.25rem;
+}
+</style>

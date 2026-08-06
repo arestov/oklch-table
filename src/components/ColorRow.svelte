@@ -43,7 +43,7 @@ const remove = () => onDelete(row.id);
 const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
 </script>
 
-<tr data-row-id={row.id}>
+<tr class="workspace-row" data-row-id={row.id}>
   <th class="workspace-row-number" scope="row">{row.row}</th>
   <td class="actions">
     <button
@@ -184,3 +184,100 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
     <ChecksPopover {index} colorId={row.id} row={row.row} trigger={checksTrigger} />
   </td>
 </tr>
+
+<style>
+.workspace-row > * {
+  padding: 10px 9px;
+  border: 0;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.workspace-row-number {
+  padding-block-start: calc(10px + var(--control-text-inset));
+  color: var(--muted);
+  line-height: 1.25rem;
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+:is(.row-action, .result-button) {
+  min-block-size: 2.125rem;
+  border-color: transparent;
+  background: transparent;
+  padding: 6px 7px;
+  line-height: 1.25rem;
+
+  &:hover {
+    border-color: transparent;
+    background: var(--surface-2);
+  }
+}
+
+.checkbox-cell {
+  text-align: center;
+
+  & input {
+    inline-size: 1.2rem;
+    block-size: 1.2rem;
+    margin: calc(7px + (1.25rem - 1.2rem) / 2) 0 0;
+  }
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  min-width: 5.25rem;
+  min-block-size: 2.125rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  padding: 6px 7px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
+
+  &:hover {
+    border-color: var(--border);
+    background: var(--surface-2);
+  }
+
+  &:focus-visible {
+    border-color: transparent;
+    background: var(--surface);
+    outline: 3px solid var(--focus);
+    outline-offset: 1px;
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+}
+
+input[type="number"] {
+  text-align: right;
+}
+
+input.css-color {
+  min-width: 13rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.result-button {
+  width: 100%;
+  min-width: 10rem;
+  text-align: left;
+  white-space: normal;
+
+  & small {
+    display: block;
+    margin-block-start: 3px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+}
+</style>
