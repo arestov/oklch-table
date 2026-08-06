@@ -249,4 +249,8 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
   padding-block-start: calc(10px + var(--control-text-inset));
   line-height: 1.25rem;
 }
+
+.workspace-draft-row > .row-text-cell {
+  padding-block-start: calc(10px + var(--control-text-inset));
+}
 </style>

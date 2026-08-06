@@ -779,6 +779,12 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   expect(headingGeometry.draft.paddingBlockStart).toBe(headingGeometry.ordinary.paddingBlockStart);
   expect(headingGeometry.draft.textOffset).toBe(headingGeometry.ordinary.textOffset);
 
+  const draftTextCell = page.locator('tr[data-draft="true"] .row-text-cell');
+  const draftTextCellPadding = await draftTextCell.evaluate(
+    (cell) => getComputedStyle(cell).paddingBlockStart,
+  );
+  expect(draftTextCellPadding).toBe(headingGeometry.draft.paddingBlockStart);
+
   const glyphTops = await firstRow.evaluate((row) => {
     const rangeTop = (element: Element | null) => {
       if (!element) throw new Error("Expected text element");
