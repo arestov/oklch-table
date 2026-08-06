@@ -182,6 +182,7 @@ onMount(() => {
 
 <main
   bind:this={workspace}
+  class="workspace"
   id="workspace"
   aria-labelledby="page-title"
   data-column-jump-active={columnJumpPending ? "true" : "false"}
@@ -228,3 +229,29 @@ onMount(() => {
     <p id="draft-error" class="error-message">{draftError}</p>
   {/if}
 </main>
+
+<style>
+.workspace {
+  width: min(1500px, calc(100% - 28px));
+  margin: 28px auto 72px;
+}
+
+.workspace > h1 {
+  margin-block-end: 8px;
+  font-size: clamp(1.75rem, 3vw, 2.55rem);
+}
+
+.jump-prompt {
+  visibility: hidden;
+  margin-block: 0 14px;
+  padding: 10px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 720;
+}
+
+.workspace:is([data-column-jump-active="true"], [data-column-jump-needs-row="true"]) .jump-prompt {
+  visibility: visible;
+}
+</style>
