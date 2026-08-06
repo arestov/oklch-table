@@ -158,7 +158,7 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       aria-label={`Text contrast for row ${row.row}: ${row.textContrast.text}. ${row.textContrast.detail}`}
       popovertarget={`text-contrast-${row.id}`}
     >
-      <span class={row.textContrast.className}>{row.textContrast.text}</span>
+      <span data-tone={row.textContrast.tone}>{row.textContrast.text}</span>
       <small>{row.textContrast.detail}</small>
     </button>
     <TextContrastPopover
@@ -178,7 +178,7 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       aria-label={`Checks for row ${row.row}: ${row.checks.text}. ${row.checks.detail}`}
       popovertarget={`checks-${row.id}`}
     >
-      <span class={row.checks.className}>{row.checks.text}</span>
+      <span data-tone={row.checks.tone}>{row.checks.text}</span>
       <small>{row.checks.detail}</small>
     </button>
     <ChecksPopover {index} colorId={row.id} row={row.row} trigger={checksTrigger} />
@@ -279,5 +279,23 @@ input.css-color {
     color: var(--muted);
     font-weight: 400;
   }
+}
+
+[data-tone="pass"] {
+  color: var(--success);
+}
+
+[data-tone="warning"] {
+  color: var(--warning);
+}
+
+[data-tone="fail"] {
+  color: var(--danger);
+  font-weight: 720;
+}
+
+[data-tone="muted"] {
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 </style>

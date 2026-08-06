@@ -73,7 +73,7 @@ const cvdModeLabels = {
                 <th scope="row">Color {item.otherRow}</th>
                 {#each CVD_MODES as mode}
                   {@const signal = item.modes[mode]}
-                  <td><span class={signal.className}>{signal.label}</span></td>
+                  <td><span data-tone={signal.tone}>{signal.label}</span></td>
                 {/each}
               </tr>
             {/each}
@@ -146,5 +146,13 @@ const cvdModeLabels = {
   border: 1px dashed var(--border);
   border-radius: 9px;
   color: var(--muted);
+}
+
+[data-tone="pass"] {
+  color: var(--success);
+}
+
+[data-tone="warning"] {
+  color: var(--warning);
 }
 </style>

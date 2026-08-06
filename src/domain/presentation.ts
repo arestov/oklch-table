@@ -13,11 +13,12 @@ import type {
 } from "./types.ts";
 
 type Candidate = { document: DocumentTree; analysis: AnalysisTree };
+export type Tone = "pass" | "warning" | "fail" | "muted";
 
 export interface ResultSummary {
   text: string;
   detail: string;
-  className: string;
+  tone: Tone;
 }
 
 export interface RowView {
@@ -42,15 +43,15 @@ export interface ContrastRowView {
   apca: string;
   polarity: string;
   wcag: string;
-  apcaClassName: string;
-  wcagClassName: string;
+  apcaTone: Tone;
+  wcagTone: Tone;
   wcagKey: number;
 }
 
 export interface CvdRowView {
   key: ColorVisionKey;
   otherRow: number;
-  modes: Record<CvdMode, { label: string; className: string }>;
+  modes: Record<CvdMode, { label: string; tone: Tone }>;
   hasWarning: boolean;
 }
 
@@ -70,16 +71,16 @@ function plural(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-export function apcaClass(comparison: ContrastComparison): string {
-  if (comparison.recommendation.key === 0) return "status-fail";
-  if (comparison.recommendation.key === 1) return "status-warning";
-  return "status-pass";
+export function apcaTone(comparison: ContrastComparison): Tone {
+  if (comparison.recommendation.key === 0) return "fail";
+  if (comparison.recommendation.key === 1) return "warning";
+  return "pass";
 }
 
-export function wcagClass(comparison: ContrastComparison): string {
-  if (comparison.wcag.key === 0) return "status-fail";
-  if (comparison.wcag.key === 1) return "status-warning";
-  return "status-pass";
+export function wcagTone(comparison: ContrastComparison): Tone {
+  if (comparison.wcag.key === 0) return "fail";
+  if (comparison.wcag.key === 1) return "warning";
+  return "pass";
 }
 
 export function createPresentationIndex(candidate: Candidate): PresentationIndex {
@@ -131,7 +132,7 @@ export function summarizeTextContrast(
       detail: color.roles.contrastBackground
         ? "Add another color to use as text"
         : "Select a contrast background",
-      className: "note",
+      tone: "muted",
     };
   }
   let readable = 0;
@@ -152,7 +153,7 @@ export function summarizeTextContrast(
           ? plural(unreadable, "not readable", "not readable")
           : `${plural(unreadable, "not readable", "not readable")} · ${plural(readable, "supported")}`,
     detail: `${plural(list.length, "comparison")} · ${worstMinimum}`,
-    className: apcaClass(worst),
+    tone: apcaTone(worst),
   };
 }
 
@@ -182,7 +183,7 @@ export function summarizeChecks(
     return {
       text: hasAny ? "No issues" : "Not checked",
       detail: hasAny ? "All available signals pass" : "Add more colors",
-      className: hasAny ? "status-pass" : "note",
+      tone: hasAny ? "pass" : "muted",
     };
   }
   const parts: string[] = [];
@@ -191,7 +192,7 @@ export function summarizeChecks(
   return {
     text: parts.join(", "),
     detail: "Open for details",
-    className: wcagIssues ? "status-fail" : "status-warning",
+    tone: wcagIssues ? "fail" : "warning",
   };
 }
 
@@ -254,8 +255,8 @@ export function buildContrastRows(
           ? "Dark text on light background"
           : "No polarity",
     wcag: `${round(comparison.ratio, 2)}:1 · ${comparison.wcag.label}`,
-    apcaClassName: apcaClass(comparison),
-    wcagClassName: wcagClass(comparison),
+    apcaTone: apcaTone(comparison),
+    wcagTone: wcagTone(comparison),
     wcagKey: comparison.wcag.key,
   }));
 }
@@ -270,7 +271,7 @@ export function buildCvdRows(index: PresentationIndex, id: ColorId): CvdRowView[
           mode,
           {
             label: warning ? "Possible conflict" : "Pass",
-            className: warning ? "status-warning" : "status-pass",
+            tone: warning ? "warning" : "pass",
           },
         ];
       }),
