@@ -50,13 +50,10 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
 
   const addColor = async (color: string, index: number) => {
-    const draft = page.getByRole("textbox", { name: `CSS color for new row ${index + 1}` });
     await setNativeClipboard(page, color);
-    await nvda.press("Control+V");
-    await expect(draft).toHaveValue(color);
     await expectSpokenAfterAction(
       nvda,
-      () => nvda.press("Enter"),
+      () => nvda.press("Control+V"),
       `Color added as row ${index + 1}.`,
     );
     await expect(page.locator("tbody tr")).toHaveCount(index + 2);

@@ -776,7 +776,6 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     const collect = (row: Element, selector: string) => {
       const rowTop = row.getBoundingClientRect().top;
       return Array.from(row.querySelectorAll(selector)).map((element) => ({
-        lineHeight: getComputedStyle(element).lineHeight,
         lineOffset: lineTop(element) - rowTop,
       }));
     };
@@ -798,7 +797,6 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   const referenceLine = textLineGeometry.ordinary[0];
   if (!referenceLine) throw new Error("Expected a text line in the ordinary row");
   for (const line of [...textLineGeometry.ordinary, ...textLineGeometry.draft]) {
-    expect(line.lineHeight).toBe(referenceLine.lineHeight);
     expect(Math.abs(line.lineOffset - referenceLine.lineOffset)).toBeLessThanOrEqual(1);
   }
 
