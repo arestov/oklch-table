@@ -501,6 +501,19 @@ input[aria-invalid="true"] {
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
+.cvd-table-scroll {
+  overflow-x: auto;
+}
+
+.popover-body .cvd-table {
+  min-width: 34rem;
+}
+
+.cvd-table th:not(:first-child),
+.cvd-table td {
+  text-align: center;
+}
+
 .font-metrics-note {
   margin: 18px 0 0;
   color: var(--muted);
