@@ -10,7 +10,7 @@ const manageFocus = () => {
 
 <section
   {id}
-  class="help-dialog"
+  class="popover-root help-dialog"
   popover="auto"
   aria-labelledby={`${id}-title`}
   bind:this={popover}
@@ -18,7 +18,9 @@ const manageFocus = () => {
 >
   <div class="popover-head">
     <h2 id={`${id}-title`} tabindex="-1">Column shortcuts</h2>
-    <button type="button" popovertarget={id} popovertargetaction="hide">Close</button>
+    <button class="popover-close" type="button" popovertarget={id} popovertargetaction="hide">
+      Close
+    </button>
   </div>
   <div class="popover-body">
     <p>Press <kbd>Control</kbd>+<kbd>.</kbd>, then press 1 through 8 to select a table column.</p>

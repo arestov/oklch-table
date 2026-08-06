@@ -46,10 +46,22 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
 <tr data-row-id={row.id}>
   <th class="workspace-row-number" scope="row">{row.row}</th>
   <td class="actions">
-    <button type="button" aria-label={`Duplicate color ${row.row}`} onclick={duplicate}>
+    <button
+      class="row-action"
+      type="button"
+      aria-label={`Duplicate color ${row.row}`}
+      onclick={duplicate}
+    >
       Duplicate
     </button>
-    <button type="button" aria-label={`Delete color ${row.row}`} onclick={remove}>Delete</button>
+    <button
+      class="row-action"
+      type="button"
+      aria-label={`Delete color ${row.row}`}
+      onclick={remove}
+    >
+      Delete
+    </button>
   </td>
   <td>
     <input

@@ -100,7 +100,7 @@ button {
   cursor: pointer;
 }
 
-tbody button {
+:is(.row-action, .result-button) {
   min-block-size: 2.125rem;
   border-color: transparent;
   background: transparent;
@@ -252,7 +252,7 @@ tbody tr + tr > * {
   gap: 6px;
 }
 
-tbody button:hover {
+:is(.row-action, .result-button):hover {
   background: var(--surface-2);
   border-color: transparent;
 }
@@ -377,7 +377,7 @@ input[aria-invalid="true"] {
   margin: 0;
 }
 
-[popover] {
+.popover-root {
   width: min(880px, calc(100vw - 28px));
   max-height: min(82vh, 820px);
   overflow: auto;
@@ -396,7 +396,7 @@ input[aria-invalid="true"] {
   width: calc(100dvw - var(--popover-gutter) - var(--popover-gutter));
 }
 
-[popover]::backdrop {
+.popover-root::backdrop {
   background: oklch(0 0 0 / 15%);
 }
 
@@ -646,7 +646,7 @@ input[aria-invalid="true"] {
   button,
   input,
   .panel,
-  [popover] {
+  .popover-root {
     forced-color-adjust: auto;
   }
 }
