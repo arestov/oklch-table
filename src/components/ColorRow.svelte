@@ -242,7 +242,7 @@ input[type="number"] {
   min-width: 5.25rem;
   min-block-size: 2.125rem;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: var(--input-radius);
   background: transparent;
   color: var(--text);
   padding: 6px 7px;
