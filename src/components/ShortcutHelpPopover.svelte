@@ -17,13 +17,21 @@ const manageFocus = () => {
   ontoggle={manageFocus}
 >
   <div class="popover-head">
-    <h2 id={`${id}-title`} tabindex="-1">Column shortcuts</h2>
+    <h2 id={`${id}-title`} tabindex="-1">Table shortcuts</h2>
     <button class="popover-close" type="button" popovertarget={id} popovertargetaction="hide">
       Close
     </button>
   </div>
   <div class="popover-body">
-    <p>Press <kbd>Control</kbd>+<kbd>.</kbd>, then press 1 through 8 to select a table column.</p>
+    <p>
+      Press <kbd>Control</kbd>+<kbd>.</kbd>, then press 1 through 8 to select a table column. When
+      focus is outside the table, column navigation starts in row 1.
+    </p>
+    <p>
+      Press <kbd>Shift</kbd> plus a digit after <kbd>Control</kbd>+<kbd>.</kbd>
+      to select that row while keeping the current column. <kbd>Shift</kbd>+<kbd>0</kbd>
+      selects row 10. When focus is outside the table, row navigation starts in the Actions column.
+    </p>
     <p><kbd>Escape</kbd> closes an open popover or cancels the sequence.</p>
   </div>
 </section>

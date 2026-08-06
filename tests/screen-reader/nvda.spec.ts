@@ -90,7 +90,7 @@ test("announces background selection and inherited duplication", async ({ page, 
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("6", { capture: false });
   await expect(background).toBeFocused();
@@ -104,7 +104,7 @@ test("announces background selection and inherited duplication", async ({ page, 
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("1", { capture: false });
   await expect(page.getByRole("button", { name: "Duplicate color 1" })).toBeFocused();
@@ -137,7 +137,7 @@ test("reads WCAG and color-vision issues from Checks and returns to its trigger"
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("8", { capture: false });
   await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
@@ -286,7 +286,7 @@ test("announces a fast numeric commit before the idle checkpoint", { tag: "@smok
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("3", { capture: false });
   await expect(lightness).toBeFocused();
@@ -317,7 +317,7 @@ test("announces APCA loss and restoration", async ({ page, nvda }) => {
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("3", { capture: false });
   await expect(lightness).toBeFocused();
@@ -406,7 +406,7 @@ test("announces a no-category edit without metric sections", async ({ page, nvda
   await expectSpokenAfterAction(
     nvda,
     () => nvda.press("Control+."),
-    "Column jump. Press 1 through 8. Escape cancels.",
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
   );
   await nvda.press("3", { capture: false });
   await expect(lightness).toBeFocused();
