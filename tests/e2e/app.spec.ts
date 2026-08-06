@@ -698,9 +698,21 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     firstRow.getByRole("button", { name: /^Text contrast/ }).boundingBox(),
     firstRow.getByRole("checkbox").boundingBox(),
   ]);
+  const draftInput = page.getByRole("textbox", { name: "CSS color for new row 5" });
+  const [draftInputBox, draftRowBox, firstRowBox] = await Promise.all([
+    draftInput.boundingBox(),
+    page.locator('tr[data-draft="true"]').boundingBox(),
+    firstRow.boundingBox(),
+  ]);
   expect(cssInputBox?.y).toBe(resultButtonBox?.y);
   expect(cssInputBox).not.toBeNull();
+  expect(draftInputBox).not.toBeNull();
+  expect(draftRowBox).not.toBeNull();
+  expect(firstRowBox).not.toBeNull();
   expect(checkboxBox).not.toBeNull();
+  expect((draftInputBox?.y ?? 0) - (draftRowBox?.y ?? 0)).toBe(
+    (cssInputBox?.y ?? 0) - (firstRowBox?.y ?? 0),
+  );
   const inputFirstLineCenter = (cssInputBox?.y ?? 0) + 17;
   const checkboxCenter = (checkboxBox?.y ?? 0) + (checkboxBox?.height ?? 0) / 2;
   expect(Math.abs(inputFirstLineCenter - checkboxCenter)).toBeLessThanOrEqual(1);
@@ -731,6 +743,21 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     Math.abs(controlGeometry.headingTextTop - controlGeometry.buttonTextTop),
   ).toBeLessThanOrEqual(0.5);
   expect(controlGeometry.inputTextTop).toBe(controlGeometry.buttonTextTop);
+
+  const draftGeometry = await draftInput.evaluate((input) => {
+    const style = getComputedStyle(input);
+    return {
+      minBlockSize: style.minBlockSize,
+      textTop:
+        input.getBoundingClientRect().y +
+        Number.parseFloat(style.borderTopWidth) +
+        Number.parseFloat(style.paddingTop),
+    };
+  });
+  expect(draftGeometry.minBlockSize).toBe("34px");
+  expect(draftGeometry.textTop - (draftRowBox?.y ?? 0)).toBe(
+    controlGeometry.buttonTextTop - (firstRowBox?.y ?? 0),
+  );
 
   const glyphTops = await firstRow.evaluate((row) => {
     const rangeTop = (element: Element | null) => {

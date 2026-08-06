@@ -168,6 +168,48 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
+.workspace-draft-row {
+  background: color-mix(in srgb, var(--surface-2) 74%, transparent);
+
+  & :where(td:not(.draft-input-cell), th) {
+    color: var(--muted);
+  }
+}
+
+.workspace-draft-row input[type="text"] {
+  width: 100%;
+  min-width: 5.25rem;
+  min-block-size: 2.125rem;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  padding: 6px 7px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25rem;
+}
+
+.workspace-draft-row input[type="text"]:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.workspace-draft-row input[type="text"]:focus-visible {
+  border-color: transparent;
+  background: var(--surface);
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.workspace-draft-row input[type="text"][aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.workspace-draft-row input.css-color {
+  min-width: 13rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 .row-number-column {
   width: 3rem;
 }
