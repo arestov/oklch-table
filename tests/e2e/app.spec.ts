@@ -759,6 +759,26 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
     controlGeometry.buttonTextTop - (firstRowBox?.y ?? 0),
   );
 
+  const headingGeometry = await page.locator("tbody tr").evaluateAll((rows) => {
+    const read = (row: Element) => {
+      const heading = row.querySelector<HTMLTableCellElement>("th[scope='row']");
+      if (!heading) throw new Error("Expected row heading");
+      const style = getComputedStyle(heading);
+      const range = document.createRange();
+      range.selectNodeContents(heading);
+      return {
+        paddingBlockStart: style.paddingBlockStart,
+        textOffset: range.getBoundingClientRect().top - heading.getBoundingClientRect().top,
+      };
+    };
+    const ordinary = rows[0];
+    const draft = rows.at(-1);
+    if (!ordinary || !draft) throw new Error("Expected ordinary and draft rows");
+    return { ordinary: read(ordinary), draft: read(draft) };
+  });
+  expect(headingGeometry.draft.paddingBlockStart).toBe(headingGeometry.ordinary.paddingBlockStart);
+  expect(headingGeometry.draft.textOffset).toBe(headingGeometry.ordinary.textOffset);
+
   const glyphTops = await firstRow.evaluate((row) => {
     const rangeTop = (element: Element | null) => {
       if (!element) throw new Error("Expected text element");
