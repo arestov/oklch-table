@@ -187,7 +187,19 @@ test("anchors each result popover below its table cell", async ({ page }) => {
     if (!cellBox || !popoverBox) return;
 
     expect(popoverBox.y).toBeGreaterThan(cellBox.y + cellBox.height);
-    expect(Math.abs(popoverBox.x + popoverBox.width - (cellBox.x + cellBox.width))).toBeLessThan(1);
+    if (triggerName.startsWith("Text contrast")) {
+      const viewport = page.viewportSize();
+      expect(viewport).not.toBeNull();
+      if (viewport) {
+        expect(popoverBox.x).toBeGreaterThanOrEqual(12);
+        expect(popoverBox.x + popoverBox.width).toBeLessThanOrEqual(viewport.width - 12);
+        expect(popoverBox.width).toBeGreaterThan(viewport.width - 60);
+      }
+    } else {
+      expect(Math.abs(popoverBox.x + popoverBox.width - (cellBox.x + cellBox.width))).toBeLessThan(
+        1,
+      );
+    }
     const arrow = page.locator(".anchored-popover-arrow:popover-open");
     await expect(arrow).toBeVisible();
     const arrowBox = await arrow.boundingBox();

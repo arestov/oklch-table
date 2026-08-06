@@ -26,6 +26,7 @@ const asText = $derived(buildContrastRows(index, colorId, "text"));
   title={`Text contrast — color ${row}`}
   {trigger}
   anchorName={`--text-contrast-${colorId}`}
+  wide
 >
   {#if background}
     <ContrastTable caption={`Background color ${row}`} rows={asBackground} />

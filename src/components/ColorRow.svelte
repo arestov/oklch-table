@@ -44,7 +44,7 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
 </script>
 
 <tr data-row-id={row.id}>
-  <th scope="row">{row.row}</th>
+  <th class="workspace-row-number" scope="row">{row.row}</th>
   <td class="actions">
     <button type="button" aria-label={`Duplicate color ${row.row}`} onclick={duplicate}>
       Duplicate

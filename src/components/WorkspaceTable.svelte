@@ -85,7 +85,9 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
         />
       {/each}
       <tr data-draft="true">
-        <th scope="row">{candidate.document.colors.order.length + 1}</th>
+        <th class="workspace-row-number" scope="row">
+          {candidate.document.colors.order.length + 1}
+        </th>
         <td class="actions"></td>
         <td class="draft-input-cell">
           <input
