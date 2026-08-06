@@ -717,87 +717,48 @@ test("keeps the populated table aligned without horizontal overflow at 1280px", 
   const checkboxCenter = (checkboxBox?.y ?? 0) + (checkboxBox?.height ?? 0) / 2;
   expect(Math.abs(inputFirstLineCenter - checkboxCenter)).toBeLessThanOrEqual(1);
 
-  const controlGeometry = await firstRow.evaluate((row) => {
-    const rowHeading = row.querySelector('th[scope="row"]');
-    const action = row.querySelector<HTMLButtonElement>(".actions button");
-    const cssInput = row.querySelector<HTMLInputElement>("input.css-color");
-    if (!rowHeading || !action || !cssInput) throw new Error("Expected complete color row");
-    const heading = getComputedStyle(rowHeading);
-    const button = getComputedStyle(action);
-    const input = getComputedStyle(cssInput);
-    return {
-      inputType: cssInput.type,
-      headingTextTop: rowHeading.getBoundingClientRect().y + Number.parseFloat(heading.paddingTop),
-      buttonTextTop:
-        action.getBoundingClientRect().y +
-        Number.parseFloat(button.borderTopWidth) +
-        Number.parseFloat(button.paddingTop),
-      inputTextTop:
-        cssInput.getBoundingClientRect().y +
-        Number.parseFloat(input.borderTopWidth) +
-        Number.parseFloat(input.paddingTop),
-    };
-  });
-  expect(controlGeometry.inputType).toBe("text");
-  expect(
-    Math.abs(controlGeometry.headingTextTop - controlGeometry.buttonTextTop),
-  ).toBeLessThanOrEqual(0.5);
-  expect(controlGeometry.inputTextTop).toBe(controlGeometry.buttonTextTop);
-
-  const draftGeometry = await draftInput.evaluate((input) => {
-    const style = getComputedStyle(input);
-    return {
-      minBlockSize: style.minBlockSize,
-      textTop:
-        input.getBoundingClientRect().y +
-        Number.parseFloat(style.borderTopWidth) +
-        Number.parseFloat(style.paddingTop),
-    };
-  });
-  expect(draftGeometry.minBlockSize).toBe("34px");
-  expect(draftGeometry.textTop - (draftRowBox?.y ?? 0)).toBe(
-    controlGeometry.buttonTextTop - (firstRowBox?.y ?? 0),
-  );
-
-  const headingGeometry = await page.locator("tbody tr").evaluateAll((rows) => {
-    const read = (row: Element) => {
-      const heading = row.querySelector<HTMLTableCellElement>("th[scope='row']");
-      if (!heading) throw new Error("Expected row heading");
-      const style = getComputedStyle(heading);
-      const range = document.createRange();
-      range.selectNodeContents(heading);
-      return {
-        paddingBlockStart: style.paddingBlockStart,
-        textOffset: range.getBoundingClientRect().top - heading.getBoundingClientRect().top,
-      };
-    };
-    const ordinary = rows[0];
-    const draft = rows.at(-1);
-    if (!ordinary || !draft) throw new Error("Expected ordinary and draft rows");
-    return { ordinary: read(ordinary), draft: read(draft) };
-  });
-  expect(headingGeometry.draft.paddingBlockStart).toBe(headingGeometry.ordinary.paddingBlockStart);
-  expect(headingGeometry.draft.textOffset).toBe(headingGeometry.ordinary.textOffset);
-
-  const draftTextCell = page.locator('tr[data-draft="true"] .row-text-cell');
-  const draftTextCellPadding = await draftTextCell.evaluate(
-    (cell) => getComputedStyle(cell).paddingBlockStart,
-  );
-  expect(draftTextCellPadding).toBe(headingGeometry.draft.paddingBlockStart);
-
-  const glyphTops = await firstRow.evaluate((row) => {
-    const rangeTop = (element: Element | null) => {
-      if (!element) throw new Error("Expected text element");
+  const textLineGeometry = await page.locator("tbody tr").evaluateAll((rows) => {
+    const lineTop = (element: Element) => {
+      if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
+        const style = getComputedStyle(element);
+        return (
+          element.getBoundingClientRect().top +
+          Number.parseFloat(style.borderTopWidth) +
+          Number.parseFloat(style.paddingTop)
+        );
+      }
       const range = document.createRange();
       range.selectNodeContents(element);
       return range.getBoundingClientRect().top;
     };
+    const collect = (row: Element, selector: string) => {
+      const rowTop = row.getBoundingClientRect().top;
+      return Array.from(row.querySelectorAll(selector)).map((element) => ({
+        lineHeight: getComputedStyle(element).lineHeight,
+        lineOffset: lineTop(element) - rowTop,
+      }));
+    };
+    const ordinary = rows[0];
+    const draft = rows.at(-1);
+    if (!ordinary || !draft) throw new Error("Expected ordinary and draft rows");
+    const draftTextInput = draft.querySelector("input[type='text']");
+    if (!(draftTextInput instanceof HTMLInputElement)) throw new Error("Expected draft input");
     return {
-      heading: rangeTop(row.querySelector('th[scope="row"]')),
-      action: rangeTop(row.querySelector(".actions button")),
+      ordinary: collect(
+        ordinary,
+        "th[scope='row'], .actions button, input[type='text'], input[type='number'], .result-button",
+      ),
+      draft: collect(draft, "th[scope='row'], input[type='text'], .row-text-cell"),
+      draftInputMinBlockSize: getComputedStyle(draftTextInput).minBlockSize,
     };
   });
-  expect(glyphTops.heading).toBe(glyphTops.action);
+  expect(textLineGeometry.draftInputMinBlockSize).toBe("34px");
+  const referenceLine = textLineGeometry.ordinary[0];
+  if (!referenceLine) throw new Error("Expected a text line in the ordinary row");
+  for (const line of [...textLineGeometry.ordinary, ...textLineGeometry.draft]) {
+    expect(line.lineHeight).toBe(referenceLine.lineHeight);
+    expect(Math.abs(line.lineOffset - referenceLine.lineOffset)).toBeLessThanOrEqual(1);
+  }
 
   const numericHeadingAlignment = await page
     .locator("thead .numeric-heading")
