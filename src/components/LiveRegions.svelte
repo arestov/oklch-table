@@ -45,3 +45,56 @@ let {
     </div>
   </div>
 </section>
+
+<style>
+/* The actual live regions stay visible so sighted users can observe screen-reader feedback. */
+.announcement-monitor {
+  margin-block: 14px 18px;
+
+  & h2 {
+    margin-block-end: 6px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 650;
+  }
+}
+
+.announcement-viewport {
+  block-size: 7.5rem;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 9px 11px;
+  border-inline-start: 3px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
+}
+
+.announcement-channel {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 8px;
+
+  & + & {
+    margin-block-start: 7px;
+  }
+}
+
+.announcement-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.alert-label {
+  color: var(--danger);
+}
+
+.announcement-content p {
+  margin: 0;
+}
+
+.announcement-placeholder {
+  color: var(--muted);
+}
+</style>

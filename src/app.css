@@ -28,21 +28,11 @@ body {
   line-height: 1.45;
 }
 
-main {
-  width: min(1500px, calc(100% - 28px));
-  margin: 28px auto 72px;
-}
-
 h1,
 h2,
 h3,
 p {
   margin-block-start: 0;
-}
-
-h1 {
-  margin-block-end: 8px;
-  font-size: clamp(1.75rem, 3vw, 2.55rem);
 }
 
 h2 {
@@ -51,39 +41,6 @@ h2 {
 
 h3 {
   margin-block-end: 7px;
-}
-
-.intro {
-  max-width: 86ch;
-  color: var(--muted);
-  margin-block-end: 20px;
-}
-
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-}
-
-.toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
-  padding: 15px 16px;
-  margin-block-end: 14px;
-  align-items: start;
-}
-
-.toolbar p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.toolbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: end;
 }
 
 button,
@@ -134,20 +91,6 @@ kbd {
   letter-spacing: normal;
 }
 
-.jump-prompt {
-  visibility: hidden;
-  margin-block: 0 14px;
-  padding: 10px 14px;
-  border: 2px solid var(--accent);
-  border-radius: 10px;
-  background: var(--surface);
-  font-weight: 720;
-}
-
-:is([data-column-jump-active="true"], [data-column-jump-needs-row="true"]) .jump-prompt {
-  visibility: visible;
-}
-
 .status-pass {
   color: var(--success);
 }
@@ -166,22 +109,6 @@ kbd {
   font-size: 0.92rem;
 }
 
-.feedback-section {
-  padding: 11px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-2);
-}
-
-.feedback-section strong {
-  display: block;
-  margin-block-end: 3px;
-}
-
-.feedback-section p {
-  margin: 0;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -194,71 +121,9 @@ kbd {
   border: 0;
 }
 
-/* The actual live regions stay visible so sighted users can observe screen-reader feedback. */
-.announcement-monitor {
-  margin-block: 14px 18px;
-}
-
-.announcement-monitor h2 {
-  margin-block-end: 6px;
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 650;
-}
-
-.announcement-viewport {
-  block-size: 7.5rem;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-  padding: 9px 11px;
-  border-inline-start: 3px solid var(--border);
-  background: color-mix(in srgb, var(--surface-2) 45%, transparent);
-}
-
-.announcement-channel {
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 8px;
-}
-
-.announcement-channel + .announcement-channel {
-  margin-block-start: 7px;
-}
-
-.announcement-label {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.alert-label {
-  color: var(--danger);
-}
-
-.announcement-content p {
-  margin: 0;
-}
-
-.announcement-placeholder {
-  color: var(--muted);
-}
-
-@media (width <= 850px) {
-  .toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .toolbar-actions {
-    justify-content: start;
-  }
-}
-
 @media (forced-colors: active) {
   button,
-  input,
-  .panel {
+  input {
     forced-color-adjust: auto;
   }
 }
