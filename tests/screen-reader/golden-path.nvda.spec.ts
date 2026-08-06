@@ -108,8 +108,8 @@ test("completes the empty-workspace error-hover transcript", async ({ page, nvda
   await nvda.press("2");
   await enterBrowseMode(nvda);
   await nvda.press("Control+Alt+Down");
-  expect(await nvda.itemText()).toContain("CSS color for new row 3");
   await nvda.perform(nvda.keyboardCommands.toggleBetweenBrowseAndFocusMode);
+  await expect(page.getByRole("textbox", { name: "CSS color for new row 3" })).toBeFocused();
 
   await addColor(goldenPath.whiteText, 2);
   await addColor(goldenPath.errorBackground, 3);

@@ -6,7 +6,8 @@ const execFileAsync = promisify(execFile);
 const originalClipboard = new WeakMap<Page, string>();
 
 function clipboardScript(text: string): string {
-  if (text === "") return "Clear-Clipboard";
+  if (text === "")
+    return "Add-Type -AssemblyName System.Windows.Forms; [Windows.Forms.Clipboard]::Clear()";
   const encoded = Buffer.from(text, "utf8").toString("base64");
   return `$text = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${encoded}')); Set-Clipboard -Value $text`;
 }
