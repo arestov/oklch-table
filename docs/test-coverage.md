@@ -125,8 +125,8 @@ Before native acceptance, run the Guidepup setup commands in an interactive
 Windows session with permission to create its local assets:
 
 ```text
-npx @guidepup/setup setup
-npx @guidepup/setup install
+npx @guidepup/setup@0.21.0 setup
+npx @guidepup/setup@0.21.0 install nvda
 pnpm exec playwright install firefox
 ```
 
@@ -139,8 +139,9 @@ keyboard, mouse, or application switcher while this command is running.
 GitHub Actions exposes the same pinned stack on the free standard
 `windows-2025` runner. Pull requests and pushes to `main` run the full suite;
 `workflow_dispatch` selects smoke or full for an explicit diagnostic run. The
-Linux jobs never attempt to launch NVDA. Native job logs are retained by GitHub,
-but foreground-session test artifacts are not uploaded.
+workflow configures Windows and then explicitly installs the project-compatible
+NVDA assets. The Linux jobs never attempt to launch NVDA. Native job logs are
+retained by GitHub, but foreground-session test artifacts are not uploaded.
 
 On 2026-08-06, the complete native suite and copy/paste golden path were run in
 the documented Windows NVDA + Firefox Guidepup environment. Native cases control
