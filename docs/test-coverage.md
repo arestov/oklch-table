@@ -137,11 +137,10 @@ test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
 GitHub Actions exposes the same pinned stack on the free standard
-`windows-2025` runner as a separate manual diagnostic. `workflow_dispatch`
-selects smoke or full. It is not triggered by pushes or a schedule and is not a
-required check because hosted foreground automation is not reliable enough to
-act as a merge signal. Native job logs are retained by GitHub, but
-foreground-session test artifacts are not uploaded.
+`windows-2025` runner. Pull requests and pushes to `main` run the full suite;
+`workflow_dispatch` selects smoke or full for an explicit diagnostic run. The
+Linux jobs never attempt to launch NVDA. Native job logs are retained by GitHub,
+but foreground-session test artifacts are not uploaded.
 
 On 2026-08-06, the complete native suite and copy/paste golden path were run in
 the documented Windows NVDA + Firefox Guidepup environment. Native cases control
