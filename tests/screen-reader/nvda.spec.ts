@@ -205,10 +205,7 @@ test("traverses compact Checks summaries vertically", { tag: "@smoke" }, async (
   }
 });
 
-test("announces WCAG and color-vision transitions after one committed edit", async ({
-  page,
-  nvda,
-}) => {
+test("announces resolved WCAG and color-vision conflicts", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await addColor(page, "#ffffff");
   await addColor(page, "#ffffff");
@@ -242,12 +239,37 @@ test("announces WCAG and color-vision transitions after one committed edit", asy
   );
   expect(resolved).toContain("WCAG: 1 failure resolved; 0 remain.");
   await expect(lightness).toHaveValue("0");
+});
 
-  const detected = await commit(
-    "96",
+test("announces detected WCAG and color-vision conflicts", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await addColor(page, "#ffffff");
+  await addColor(page, "#ffffff");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+  const css = page.getByRole("textbox", { name: "CSS color for row 2" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 2" });
+  await lightness.fill("0");
+  await lightness.press("Enter");
+  await expect(page.getByRole("status")).toContainText(
+    "Color vision: conflict between row 1 and row 2 resolved; 0 remain.",
+  );
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 2");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const speech = await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeNumericFast(nvda, "96");
+      await nvda.press("Enter");
+    },
     "Color vision: conflict between row 1 and row 2 detected; 1 remain.",
   );
-  expect(detected).toContain("WCAG: 1 failure added; 1 remain.");
+  expect(speech).toContain("WCAG: 1 failure added; 1 remain.");
   await expect(lightness).toHaveValue("96");
 });
 
@@ -312,7 +334,7 @@ test("announces a fast numeric commit before the idle checkpoint", { tag: "@smok
   expect(speech).toContain("L 80. Checks updated.");
 });
 
-test("announces APCA loss and restoration", async ({ page, nvda }) => {
+test("announces APCA loss", async ({ page, nvda }) => {
   await openNativeWorkspace(page);
   await prepareGoldenWorkspace(page);
   const css = page.getByRole("textbox", { name: "CSS color for row 5" });
@@ -328,20 +350,44 @@ test("announces APCA loss and restoration", async ({ page, nvda }) => {
   await nvda.press("3", { capture: false });
   await expect(lightness).toBeFocused();
 
-  const commit = (value: string, announcement: string | RegExp) =>
-    expectSpokenAfterAction(
-      nvda,
-      async () => {
-        await nvda.press("Control+A", { capture: false });
-        await typeNumericFast(nvda, value);
-        await nvda.press("Enter");
-      },
-      announcement,
-    );
-
-  await commit("90", "APCA: row 3 is no longer readable on background row 5.");
+  await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeNumericFast(nvda, "90");
+      await nvda.press("Enter");
+    },
+    "APCA: row 3 is no longer readable on background row 5.",
+  );
   await expect(lightness).toHaveValue("90");
-  const restoredSpeech = await commit("60", "APCA: row 3 is now readable on background row 5.");
+});
+
+test("announces APCA restoration", async ({ page, nvda }) => {
+  await openNativeWorkspace(page);
+  await prepareGoldenWorkspace(page);
+  const css = page.getByRole("textbox", { name: "CSS color for row 5" });
+  const lightness = page.getByRole("spinbutton", { name: "Lightness percentage for row 5" });
+  await lightness.fill("90");
+  await lightness.press("Enter");
+  await expect(page.getByRole("status")).toContainText(
+    "APCA: row 3 is no longer readable on background row 5.",
+  );
+  await css.focus();
+  await activateBrowser(page, nvda, "CSS color for row 5");
+  await enterFocusMode(nvda);
+  await nvda.press("Control+.");
+  await nvda.press("3", { capture: false });
+  await expect(lightness).toBeFocused();
+
+  const restoredSpeech = await expectSpokenAfterAction(
+    nvda,
+    async () => {
+      await nvda.press("Control+A", { capture: false });
+      await typeNumericFast(nvda, "60");
+      await nvda.press("Enter");
+    },
+    "APCA: row 3 is now readable on background row 5.",
+  );
   await expect(lightness).toHaveValue("60");
   expect(restoredSpeech).toContain("L 60. Checks updated.");
 });
