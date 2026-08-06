@@ -37,3 +37,11 @@ const asText = $derived(buildContrastRows(index, colorId, "text"));
     a larger size.
   </p>
 </AnchoredPopover>
+
+<style>
+.font-metrics-note {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+</style>
