@@ -1,6 +1,9 @@
 name: Native NVDA
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       suite:
@@ -21,9 +24,11 @@ concurrency:
 
 jobs:
   native:
-    name: NVDA ${{ inputs.suite }}
+    name: NVDA (${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'full' }})
     runs-on: windows-2025
     timeout-minutes: 60
+    env:
+      NVDA_SUITE: ${{ github.event_name == 'workflow_dispatch' && inputs.suite || 'full' }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
@@ -38,4 +43,4 @@ jobs:
       - name: Prepare NVDA
         uses: guidepup/setup-action@0.21.0
       - name: Run native suite
-        run: pnpm run "test:screen-reader:${{ inputs.suite }}"
+        run: pnpm run "test:screen-reader:${{ env.NVDA_SUITE }}"
