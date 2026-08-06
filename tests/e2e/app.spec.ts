@@ -257,6 +257,38 @@ test("jumps to every supported column from a populated row", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "Checks — color 1" })).toBeFocused();
 });
 
+test("leaves row details before a column jump and keeps the selected row", async ({ page }) => {
+  await page.goto("/");
+  await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  await page.getByRole("checkbox", { name: "Contrast background for row 2" }).check();
+
+  const textContrast = page.getByRole("button", { name: "Text contrast for row 2" });
+  const checks = page.getByRole("button", { name: "Checks for row 2" });
+  const textPopover = page.getByLabel("Text contrast — color 2");
+  const checksPopover = page.getByLabel("Checks — color 2");
+
+  await textContrast.click();
+  await expect(page.getByRole("heading", { name: "Text contrast — color 2" })).toBeFocused();
+  await page.keyboard.press("Control+.");
+  await expect(textPopover).not.toBeVisible();
+  await expect(textContrast).toBeFocused();
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
+  await page.keyboard.press("3");
+  await expect(
+    page.getByRole("spinbutton", { name: "Lightness percentage for row 2" }),
+  ).toBeFocused();
+
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("8");
+  await expect(page.getByRole("heading", { name: "Checks — color 2" })).toBeFocused();
+  await page.keyboard.press("Control+.");
+  await expect(checksPopover).not.toBeVisible();
+  await expect(checks).toBeFocused();
+  await page.keyboard.press("7");
+  await expect(page.getByRole("heading", { name: "Text contrast — color 2" })).toBeFocused();
+});
+
 test("renders non-live summaries that update in place and explain their issues", async ({
   page,
 }) => {
