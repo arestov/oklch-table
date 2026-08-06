@@ -40,8 +40,9 @@ canceled.
 ## Screen readers
 
 Guidepup screen-reader suites run natively. The automated Windows acceptance
-suite pairs NVDA with Playwright Firefox, uses eSpeak, and temporarily selects
-English (US) for the foreground browser thread. Run
+suite pairs NVDA with Playwright Firefox, fixes both the browser locale and the
+NVDA interface language to English, uses eSpeak, and temporarily selects English
+(US) for the foreground browser thread. Run
 `pnpm test:screen-reader:smoke` for the five-case transport smoke suite or
 `pnpm test:screen-reader:full` for all native cases. `pnpm test:screen-reader`
 is a compatibility alias for the full suite. When running locally, use an

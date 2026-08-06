@@ -130,10 +130,12 @@ npx @guidepup/setup@0.21.0 install nvda
 pnpm exec playwright install firefox
 ```
 
-The suite uses the supported NVDA + Firefox pairing and a locale-independent
-eSpeak synthesizer. Its fixture switches only the foreground Firefox thread to
-English (US) for keyboard input and restores the original layout after every
-test. Because NVDA controls the native foreground window, do not use the
+The suite uses the supported NVDA + Firefox pairing, fixes the browser locale
+and NVDA's session-only interface language to English, and uses eSpeak. Its
+fixture switches only the foreground Firefox thread to English (US) for
+keyboard input and restores the original layout after every test. It does not
+change the Windows display or regional language. Because NVDA controls the
+native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
 GitHub Actions exposes the same pinned stack on the free standard

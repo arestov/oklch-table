@@ -30,7 +30,11 @@ async function enterBrowseMode(nvda: NVDAPlaywright) {
 
 test.use({
   nvdaStartOptions: {
-    settings: { presentation: { reportDynamicContentChanges: true }, speech: { synth: "espeak" } },
+    settings: {
+      general: { language: "en" },
+      presentation: { reportDynamicContentChanges: true },
+      speech: { synth: "espeak" },
+    },
   },
 });
 
