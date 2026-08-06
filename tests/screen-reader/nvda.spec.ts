@@ -12,6 +12,7 @@ import { expectSpokenAfterAction } from "./support/speech.ts";
 test.use({
   nvdaStartOptions: {
     settings: {
+      general: { language: "en" },
       presentation: { reportDynamicContentChanges: true },
       speech: { synth: "espeak" },
     },
