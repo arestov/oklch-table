@@ -189,7 +189,12 @@ onMount(() => {
   data-column-jump-needs-row={columnJumpNeedsRow ? "true" : "false"}
 >
   <h1 id="page-title">OKLCH color checks</h1>
-  <button bind:this={shortcutHelpTrigger} type="button" popovertarget="shortcut-help">
+  <button
+    bind:this={shortcutHelpTrigger}
+    class="shortcut-help-trigger"
+    type="button"
+    popovertarget="shortcut-help"
+  >
     Keyboard shortcuts
   </button>
   <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
@@ -232,8 +237,15 @@ onMount(() => {
 
 <style>
 .workspace {
+  position: relative;
   width: min(1500px, calc(100% - 28px));
   margin: 28px auto 72px;
+}
+
+.shortcut-help-trigger {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .workspace > h1 {
