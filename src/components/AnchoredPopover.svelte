@@ -6,12 +6,14 @@ let {
   title,
   trigger,
   anchorName,
+  wide = false,
   children,
 }: {
   id: string;
   title: string;
   trigger: HTMLButtonElement | undefined;
   anchorName: string;
+  wide?: boolean;
   children: Snippet;
 } = $props();
 
@@ -45,7 +47,7 @@ const manageFocus = () => {
 <section
   {id}
   popover="auto"
-  class="anchored-popover"
+  class={`anchored-popover${wide ? " wide-popover" : ""}`}
   aria-labelledby={titleId}
   style:position-anchor={anchorName}
   bind:this={popover}

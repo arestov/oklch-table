@@ -235,7 +235,7 @@ tbody tr + tr > * {
   opacity: 82%;
 }
 
-tbody th[scope="row"] {
+.workspace-row-number {
   padding-block-start: calc(10px + var(--control-text-inset));
   text-align: right;
   color: var(--muted);
@@ -390,6 +390,12 @@ input[aria-invalid="true"] {
   box-shadow: 0 20px 60px oklch(0 0 0 / 25%);
 }
 
+.wide-popover {
+  --popover-gutter: clamp(12px, 2vw, 24px);
+
+  width: calc(100dvw - var(--popover-gutter) - var(--popover-gutter));
+}
+
 [popover]::backdrop {
   background: oklch(0 0 0 / 15%);
 }
@@ -406,6 +412,12 @@ input[aria-invalid="true"] {
     border: 0;
     background: transparent;
     box-shadow: none;
+  }
+
+  .anchored-popover.wide-popover {
+    right: var(--popover-gutter);
+    left: var(--popover-gutter);
+    width: auto;
   }
 
   .anchored-popover-arrow {
@@ -501,8 +513,16 @@ input[aria-invalid="true"] {
   border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
+.contrast-table-scroll,
 .cvd-table-scroll {
+  max-inline-size: 100%;
   overflow-x: auto;
+}
+
+.popover-body .contrast-table {
+  width: 100%;
+  min-width: 69rem;
+  margin-inline: auto;
 }
 
 .popover-body .cvd-table {
