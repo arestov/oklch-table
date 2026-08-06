@@ -85,3 +85,66 @@ const cvdModeLabels = {
     {/if}
   </div>
 </AnchoredPopover>
+
+<style>
+.filter-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin-block: 8px 13px;
+}
+
+.cvd-table-scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+.cvd-table {
+  min-width: 34rem;
+  border: 0;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+
+  & caption {
+    padding: 0 0 8px;
+    font-size: 1.05rem;
+    font-weight: 760;
+    text-align: left;
+  }
+
+  & thead th {
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-align: left;
+    text-transform: none;
+  }
+
+  & th,
+  & td {
+    padding: 10px 9px;
+    border: 0;
+    vertical-align: top;
+    white-space: normal;
+  }
+
+  & tbody tr + tr > * {
+    border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  }
+
+  & th:not(:first-child),
+  & td {
+    text-align: center;
+  }
+}
+
+.empty-state {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 9px;
+  color: var(--muted);
+}
+</style>
