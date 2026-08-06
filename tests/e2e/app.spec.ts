@@ -327,12 +327,23 @@ test("reveals all passing color-vision comparisons from Checks on request", asyn
   const hidePass = popover.getByRole("checkbox", { name: "Hide all-pass comparisons" });
 
   await expect(hidePass).toBeChecked();
-  await expect(popover.getByText("Color 3:")).toBeVisible();
-  await expect(popover.getByText("Color 2:")).toHaveCount(0);
+  await expect(hidePass).toHaveAttribute("aria-controls", /color-vision-results-/);
+  const table = popover.getByRole("table", { name: "Color vision comparisons for color 1" });
+  await expect(table).toBeVisible();
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Compared color",
+    "Protanopia",
+    "Deuteranopia",
+    "Tritanopia",
+  ]);
+  await expect(table.getByRole("rowheader", { name: "Color 3" })).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Color 2" })).toHaveCount(0);
+  await expect(popover.getByRole("status")).toHaveText("Showing 1 color comparison.");
 
   await hidePass.uncheck();
-  await expect(popover.getByText("Color 2:")).toBeVisible();
-  await expect(popover.getByText("Color 3:")).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Color 2" })).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Color 3" })).toBeVisible();
+  await expect(popover.getByRole("status")).toHaveText("Showing 2 color comparisons.");
 });
 
 test("keeps invalid input focused and publishes only an alert", async ({ page }) => {

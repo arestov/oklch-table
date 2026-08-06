@@ -8,6 +8,7 @@ import type {
   ContrastComparison,
   ContrastKey,
   CvdComparison,
+  CvdMode,
   DocumentTree,
 } from "./types.ts";
 
@@ -49,7 +50,7 @@ export interface ContrastRowView {
 export interface CvdRowView {
   key: ColorVisionKey;
   otherRow: number;
-  modes: Record<string, { label: string; className: string }>;
+  modes: Record<CvdMode, { label: string; className: string }>;
   hasWarning: boolean;
 }
 
@@ -273,7 +274,7 @@ export function buildCvdRows(index: PresentationIndex, id: ColorId): CvdRowView[
           },
         ];
       }),
-    );
+    ) as CvdRowView["modes"];
     return {
       key: comparison.key,
       otherRow: requireValue(index.rowById[otherId], `Missing row for ${otherId}`),
