@@ -23,14 +23,20 @@ import {
   updateColorDraft,
 } from "./core/workspace/index.ts";
 import { executeUiEffects } from "./ui/focus-effects.ts";
+import { beginTableJump, reduceTableJump, type TableJumpState } from "./ui/table-jump.ts";
+import {
+  closeOpenPopovers,
+  coordinateFromTarget,
+  resolveNavigationTarget,
+  type TableCoordinate,
+  tableColumnLabel,
+} from "./ui/table-navigation.ts";
 
 let draftInput = $state<HTMLInputElement>();
 let workspace = $state<HTMLElement>();
 let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
-let columnJumpPending = $state(false);
-let columnJumpRow: HTMLTableRowElement | null = null;
-let columnJumpColumn = "1";
+let tableJump = $state<TableJumpState>({ status: "idle" });
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
@@ -98,91 +104,16 @@ const onFinishEdit = (reason: "enter" | "blur") => {
     if (active && field && field !== "new-color") focusInvalidField(active.colorId, field);
   }
 };
-const columnTargets: Record<string, string> = {
-  "1": "button",
-  "2": "input.css-color",
-  "3": 'input[data-field="l"]',
-  "4": 'input[data-field="c"]',
-  "5": 'input[data-field="h"]',
-  "6": 'input[type="checkbox"]',
-  "7": 'button[aria-label^="Text contrast"]',
-  "8": 'button[aria-label^="Checks"]',
-};
-const columnNames: Record<string, string> = {
-  "1": "Actions",
-  "2": "CSS color",
-  "3": "Lightness",
-  "4": "Chroma",
-  "5": "Hue",
-  "6": "Contrast background",
-  "7": "Text contrast",
-  "8": "Checks",
-};
-const workspaceRows = () =>
-  Array.from(mountedWorkspace().querySelectorAll<HTMLTableRowElement>("tbody > tr.workspace-row"));
-const rowFromTarget = (target: HTMLElement | null): HTMLTableRowElement | null =>
-  target?.closest<HTMLTableRowElement>("tr.workspace-row") ?? null;
-const columnFromTarget = (row: HTMLTableRowElement | null, target: HTMLElement | null): string => {
-  if (!row || !target) return "1";
-  const cell = Array.from(row.cells).find((item) => item.contains(target));
-  return cell && cell.cellIndex >= 1 && cell.cellIndex <= 8 ? String(cell.cellIndex) : "1";
-};
-const digitFromEvent = (event: KeyboardEvent): string | null => {
-  if (/^Digit\d$/.test(event.code)) return event.code.slice(-1);
-  return /^\d$/.test(event.key) ? event.key : null;
-};
-const closeOpenPopovers = () => {
-  for (const popover of mountedWorkspace().querySelectorAll<HTMLElement>(
-    "[popover]:popover-open",
-  )) {
-    popover.hidePopover();
-  }
-};
-const onWorkspaceKeydown = (event: KeyboardEvent) => {
-  if (event.ctrlKey && event.key === ".") {
-    event.preventDefault();
-    const target = event.target instanceof HTMLElement ? event.target : null;
-    const currentRow = rowFromTarget(target);
-    columnJumpRow = currentRow ?? workspaceRows()[0] ?? null;
-    columnJumpColumn = columnFromTarget(currentRow, target);
-    closeOpenPopovers();
-    columnJumpPending = true;
-    announceShortcut(
-      "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
-    );
-    return;
-  }
-  if (!columnJumpPending) return;
-  if (["Alt", "Control", "Meta", "Shift"].includes(event.key)) return;
-  if (event.key === "Escape") {
-    event.preventDefault();
-    columnJumpPending = false;
-    columnJumpRow = null;
-    announceShortcut("Table jump canceled.");
-    return;
-  }
-  const digit = digitFromEvent(event);
-  const rowNumber = digit === "0" ? 10 : Number(digit);
-  const row = event.shiftKey && digit ? (workspaceRows()[rowNumber - 1] ?? null) : columnJumpRow;
-  const column = event.shiftKey ? columnJumpColumn : digit;
-  const selector = column ? columnTargets[column] : undefined;
-  columnJumpPending = false;
-  columnJumpRow = null;
-  if (!digit) return;
-  if (!column || !selector) {
-    event.preventDefault();
-    return;
-  }
+const navigateTo = (coordinate: TableCoordinate) => {
+  const { row, target } = resolveNavigationTarget(mountedWorkspace(), coordinate);
   if (!row) {
-    event.preventDefault();
-    announceAlert(`Row ${rowNumber} is unavailable.`);
+    announceAlert(`Row ${coordinate.row} is unavailable.`);
     return;
   }
-  const control = row?.querySelector<HTMLElement>(selector);
-  if (!control) {
-    event.preventDefault();
-    const selectedRow = workspaceRows().indexOf(row) + 1;
-    announceAlert(`${columnNames[column]} is unavailable for row ${selectedRow}.`);
+  if (!target) {
+    announceAlert(
+      `${tableColumnLabel(coordinate.column)} is unavailable for row ${coordinate.row}.`,
+    );
     return;
   }
   feedbackCoordinator.cancel();
@@ -191,15 +122,35 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
     announceAlert(boundary.message);
     return;
   }
+  target.focus();
+  if (coordinate.column === "text-contrast" || coordinate.column === "checks") target.click();
+};
+const onWindowKeydown = (event: KeyboardEvent) => {
+  if (event.ctrlKey && event.key === ".") {
+    event.preventDefault();
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    tableJump = beginTableJump(coordinateFromTarget(mountedWorkspace(), target));
+    closeOpenPopovers(mountedWorkspace());
+    announceShortcut(
+      "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
+    );
+    return;
+  }
+  const transition = reduceTableJump(tableJump, event);
+  tableJump = transition.state;
+  if (transition.type === "none" || transition.type === "pass") return;
   event.preventDefault();
-  control.focus();
-  if (column === "7" || column === "8") control.click();
+  if (transition.type === "cancel") {
+    announceShortcut("Table jump canceled.");
+    return;
+  }
+  if (transition.type === "navigate") navigateTo(transition.coordinate);
 };
 onMount(() => {
   draftInput?.focus();
-  window.addEventListener("keydown", onWorkspaceKeydown);
+  window.addEventListener("keydown", onWindowKeydown);
   return () => {
-    window.removeEventListener("keydown", onWorkspaceKeydown);
+    window.removeEventListener("keydown", onWindowKeydown);
     feedbackCoordinator.destroy();
   };
 });
@@ -210,7 +161,7 @@ onMount(() => {
   class="workspace"
   id="workspace"
   aria-labelledby="page-title"
-  data-column-jump-active={columnJumpPending ? "true" : "false"}
+  data-column-jump-active={tableJump.status === "pending" ? "true" : "false"}
 >
   <h1 id="page-title">OKLCH color checks</h1>
   <button

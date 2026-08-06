@@ -43,11 +43,12 @@ const remove = () => onDelete(row.id);
 const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
 </script>
 
-<tr class="workspace-row" data-row-id={row.id}>
+<tr class="workspace-row" data-row-id={row.id} data-navigation-row={row.row}>
   <th class="workspace-row-number" scope="row">{row.row}</th>
-  <td class="actions">
+  <td class="actions" data-navigation-column="actions">
     <button
       class="row-action"
+      data-navigation-target="actions"
       type="button"
       aria-label={`Duplicate color ${row.row}`}
       onclick={duplicate}
@@ -63,12 +64,13 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       Delete
     </button>
   </td>
-  <td>
+  <td data-navigation-column="css">
     <input
       type="text"
       class="css-color"
       value={row.css}
       data-field="css"
+      data-navigation-target="css"
       aria-label={`CSS color for row ${row.row}`}
       aria-invalid={invalidColorId === row.id && invalidField === "css" ? "true" : undefined}
       aria-describedby={invalidColorId === row.id && invalidField === "css"
@@ -82,11 +84,12 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       <p id={`field-error-${row.id}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
-  <td>
+  <td data-navigation-column="lightness">
     <input
       type="number"
       value={row.lPercent}
       data-field="l"
+      data-navigation-target="lightness"
       min="0"
       max="100"
       step="0.1"
@@ -102,11 +105,12 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       <p id={`field-error-${row.id}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
-  <td>
+  <td data-navigation-column="chroma">
     <input
       type="number"
       value={row.c}
       data-field="c"
+      data-navigation-target="chroma"
       min="0"
       step="0.001"
       inputmode="decimal"
@@ -121,11 +125,12 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       <p id={`field-error-${row.id}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
-  <td>
+  <td data-navigation-column="hue">
     <input
       type="number"
       value={row.h}
       data-field="h"
+      data-navigation-target="hue"
       min="0"
       max="360"
       step="0.1"
@@ -141,20 +146,22 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       <p id={`field-error-${row.id}`} class="visually-hidden">{fieldError}</p>
     {/if}
   </td>
-  <td class="checkbox-cell">
+  <td class="checkbox-cell" data-navigation-column="background">
     <input
       type="checkbox"
       checked={row.background}
       aria-label={`Contrast background for row ${row.row}`}
+      data-navigation-target="background"
       onchange={(event) => setBackground(event.currentTarget.checked)}
     >
   </td>
-  <td style:anchor-name={`--text-contrast-${row.id}`}>
+  <td data-navigation-column="text-contrast" style:anchor-name={`--text-contrast-${row.id}`}>
     <button
       id={`text-contrast-trigger-${row.id}`}
       bind:this={textContrastTrigger}
       type="button"
       class="result-button"
+      data-navigation-target="text-contrast"
       aria-label={`Text contrast for row ${row.row}: ${row.textContrast.text}. ${row.textContrast.detail}`}
       popovertarget={`text-contrast-${row.id}`}
     >
@@ -169,12 +176,13 @@ const setBackground = (enabled: boolean) => onSetBackground(row.id, enabled);
       trigger={textContrastTrigger}
     />
   </td>
-  <td style:anchor-name={`--checks-${row.id}`}>
+  <td data-navigation-column="checks" style:anchor-name={`--checks-${row.id}`}>
     <button
       id={`checks-trigger-${row.id}`}
       bind:this={checksTrigger}
       type="button"
       class="result-button"
+      data-navigation-target="checks"
       aria-label={`Checks for row ${row.row}: ${row.checks.text}. ${row.checks.detail}`}
       popovertarget={`checks-${row.id}`}
     >
