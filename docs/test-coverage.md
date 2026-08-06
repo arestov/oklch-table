@@ -136,10 +136,12 @@ English (US) for keyboard input and restores the original layout after every
 test. Because NVDA controls the native foreground window, do not use the
 keyboard, mouse, or application switcher while this command is running.
 
-GitHub Actions uses the same pinned stack on `windows-2025`. Pushes to `main`
-and the default manual dispatch run the smoke cases; a manual `full` selection
-and the nightly schedule run every native case. Native job logs are retained by
-GitHub, but foreground-session test artifacts are not uploaded.
+GitHub Actions exposes the same pinned stack on the free standard
+`windows-2025` runner as a separate manual diagnostic. `workflow_dispatch`
+selects smoke or full. It is not triggered by pushes or a schedule and is not a
+required check because hosted foreground automation is not reliable enough to
+act as a merge signal. Native job logs are retained by GitHub, but
+foreground-session test artifacts are not uploaded.
 
 On 2026-08-06, the complete native suite and copy/paste golden path were run in
 the documented Windows NVDA + Firefox Guidepup environment. Native cases control
