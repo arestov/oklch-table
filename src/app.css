@@ -91,24 +91,6 @@ kbd {
   letter-spacing: normal;
 }
 
-.status-pass {
-  color: var(--success);
-}
-
-.status-warning {
-  color: var(--warning);
-}
-
-.status-fail {
-  color: var(--danger);
-  font-weight: 720;
-}
-
-.note {
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -27,12 +27,12 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
           <tr>
             <th scope="row">Color {comparison.textRow}</th>
             <td>Color {comparison.backgroundRow}</td>
-            <td class={comparison.apcaClassName}>{comparison.recommendation}</td>
-            <td class={comparison.apcaClassName}>{comparison.regular}</td>
-            <td class={comparison.apcaClassName}>{comparison.bold}</td>
-            <td class={comparison.apcaClassName}>{comparison.apca}</td>
+            <td data-tone={comparison.apcaTone}>{comparison.recommendation}</td>
+            <td data-tone={comparison.apcaTone}>{comparison.regular}</td>
+            <td data-tone={comparison.apcaTone}>{comparison.bold}</td>
+            <td data-tone={comparison.apcaTone}>{comparison.apca}</td>
             <td>{comparison.polarity}</td>
-            <td class={comparison.wcagClassName}>{comparison.wcag}</td>
+            <td data-tone={comparison.wcagTone}>{comparison.wcag}</td>
           </tr>
         {/each}
       </tbody>
@@ -94,5 +94,18 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
   border: 1px dashed var(--border);
   border-radius: 9px;
   color: var(--muted);
+}
+
+[data-tone="pass"] {
+  color: var(--success);
+}
+
+[data-tone="warning"] {
+  color: var(--warning);
+}
+
+[data-tone="fail"] {
+  color: var(--danger);
+  font-weight: 720;
 }
 </style>

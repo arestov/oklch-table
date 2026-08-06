@@ -116,19 +116,19 @@ describe("bounded result summaries", () => {
   it("keeps APCA text suitability independent from WCAG checks", () => {
     expect(textSummary(candidate([true], [], true, [0]))).toMatchObject({
       text: "All 1 supported",
-      className: "status-pass",
+      tone: "pass",
     });
     expect(checksSummary(candidate([true], [], true, [0]))).toMatchObject({
       text: "1 WCAG issue",
-      className: "status-fail",
+      tone: "fail",
     });
     expect(textSummary(candidate([false], [], true, [2]))).toMatchObject({
       text: "1 not readable",
-      className: "status-fail",
+      tone: "fail",
     });
     expect(checksSummary(candidate([false], [], true, [2]))).toMatchObject({
       text: "No issues",
-      className: "status-pass",
+      tone: "pass",
     });
   });
 });
