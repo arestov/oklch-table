@@ -64,7 +64,8 @@ standard GitHub-hosted Windows Server 2025 runner. Pull requests and pushes to
 `main` run the complete native suite automatically; `workflow_dispatch` selects
 smoke or full for an explicit diagnostic run. After configuring the operating
 system, the workflow explicitly installs the NVDA assets required by the pinned
-Guidepup version. Native output remains in the job log and is not uploaded as an
+Guidepup version and verifies that the runtime can detect them before starting
+Playwright. Native output remains in the job log and is not uploaded as an
 artifact because it originates from a foreground assistive-technology session.
 This workflow supplements the required Linux accessibility contract: only
 actual NVDA speech, browse/table navigation, and native clipboard readback are

@@ -125,8 +125,8 @@ Before native acceptance, run the Guidepup setup commands in an interactive
 Windows session with permission to create its local assets:
 
 ```text
-npx @guidepup/setup@0.21.0 setup
-npx @guidepup/setup@0.21.0 install nvda
+npx @guidepup/setup@0.24.1 setup
+npx @guidepup/setup@0.24.1 install nvda
 pnpm exec playwright install firefox
 ```
 
