@@ -72,12 +72,15 @@ let { caption, rows }: { caption: string; rows: ContrastRowView[] } = $props();
     font-size: 0.86rem;
     font-weight: 600;
     letter-spacing: normal;
+    padding: 10px 9px;
     text-align: left;
     text-transform: none;
+    vertical-align: top;
+    white-space: normal;
   }
 
-  & th,
-  & td {
+  & tbody th,
+  & tbody td {
     padding: 10px 9px;
     border: 0;
     vertical-align: top;

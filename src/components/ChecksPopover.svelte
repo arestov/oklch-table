@@ -119,12 +119,15 @@ const cvdModeLabels = {
     font-size: 0.86rem;
     font-weight: 600;
     letter-spacing: normal;
+    padding: 10px 9px;
     text-align: left;
     text-transform: none;
+    vertical-align: top;
+    white-space: normal;
   }
 
-  & th,
-  & td {
+  & tbody th,
+  & tbody td {
     padding: 10px 9px;
     border: 0;
     vertical-align: top;
@@ -135,8 +138,8 @@ const cvdModeLabels = {
     border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
   }
 
-  & th:not(:first-child),
-  & td {
+  & thead th:not(:first-child),
+  & tbody td {
     text-align: center;
   }
 }
