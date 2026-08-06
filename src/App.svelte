@@ -29,8 +29,8 @@ let workspace = $state<HTMLElement>();
 let shortcutHelpTrigger = $state<HTMLButtonElement>();
 let draftError = $state("");
 let columnJumpPending = $state(false);
-let columnJumpNeedsRow = $state(false);
 let columnJumpRow: HTMLTableRowElement | null = null;
+let columnJumpColumn = "1";
 const feedbackCoordinator = createFeedbackCoordinator(() => {
   finishEdit("idle");
 });
@@ -100,7 +100,7 @@ const onFinishEdit = (reason: "enter" | "blur") => {
 };
 const columnTargets: Record<string, string> = {
   "1": "button",
-  "2": 'input[data-field="css"]',
+  "2": "input.css-color",
   "3": 'input[data-field="l"]',
   "4": 'input[data-field="c"]',
   "5": 'input[data-field="h"]',
@@ -118,24 +118,38 @@ const columnNames: Record<string, string> = {
   "7": "Text contrast",
   "8": "Checks",
 };
+const workspaceRows = () =>
+  Array.from(mountedWorkspace().querySelectorAll<HTMLTableRowElement>("tbody > tr.workspace-row"));
+const rowFromTarget = (target: HTMLElement | null): HTMLTableRowElement | null =>
+  target?.closest<HTMLTableRowElement>("tr.workspace-row") ?? null;
+const columnFromTarget = (row: HTMLTableRowElement | null, target: HTMLElement | null): string => {
+  if (!row || !target) return "1";
+  const cell = Array.from(row.cells).find((item) => item.contains(target));
+  return cell && cell.cellIndex >= 1 && cell.cellIndex <= 8 ? String(cell.cellIndex) : "1";
+};
+const digitFromEvent = (event: KeyboardEvent): string | null => {
+  if (/^Digit\d$/.test(event.code)) return event.code.slice(-1);
+  return /^\d$/.test(event.key) ? event.key : null;
+};
+const closeOpenPopovers = () => {
+  for (const popover of mountedWorkspace().querySelectorAll<HTMLElement>(
+    "[popover]:popover-open",
+  )) {
+    popover.hidePopover();
+  }
+};
 const onWorkspaceKeydown = (event: KeyboardEvent) => {
-  if (!(event.target instanceof Node) || !workspace?.contains(event.target)) return;
   if (event.ctrlKey && event.key === ".") {
     event.preventDefault();
     const target = event.target instanceof HTMLElement ? event.target : null;
-    const row = target?.closest<HTMLTableRowElement>("tr[data-row-id]");
-    if (!row) {
-      columnJumpPending = false;
-      columnJumpNeedsRow = true;
-      columnJumpRow = null;
-      announceShortcut("Select a color row before using column jump.");
-      return;
-    }
-    row.querySelector<HTMLElement>(".anchored-popover:popover-open")?.hidePopover();
-    columnJumpRow = row;
+    const currentRow = rowFromTarget(target);
+    columnJumpRow = currentRow ?? workspaceRows()[0] ?? null;
+    columnJumpColumn = columnFromTarget(currentRow, target);
+    closeOpenPopovers();
     columnJumpPending = true;
-    columnJumpNeedsRow = false;
-    announceShortcut("Column jump. Press 1 through 8. Escape cancels.");
+    announceShortcut(
+      "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.",
+    );
     return;
   }
   if (!columnJumpPending) return;
@@ -143,23 +157,34 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.key === "Escape") {
     event.preventDefault();
     columnJumpPending = false;
-    columnJumpNeedsRow = false;
     columnJumpRow = null;
-    announceShortcut("Column jump canceled.");
+    announceShortcut("Table jump canceled.");
     return;
   }
-  const row = columnJumpRow;
-  const selector = columnTargets[event.key];
+  const digit = digitFromEvent(event);
+  const rowNumber = digit === "0" ? 10 : Number(digit);
+  const row = event.shiftKey && digit ? (workspaceRows()[rowNumber - 1] ?? null) : columnJumpRow;
+  const column = event.shiftKey ? columnJumpColumn : digit;
+  const selector = column ? columnTargets[column] : undefined;
   columnJumpPending = false;
   columnJumpRow = null;
-  if (!selector) return;
-  if (row?.dataset.draft === "true") {
+  if (!digit) return;
+  if (!column || !selector) {
     event.preventDefault();
-    announceAlert(`${columnNames[event.key]} is unavailable until a valid color is entered.`);
+    return;
+  }
+  if (!row) {
+    event.preventDefault();
+    announceAlert(`Row ${rowNumber} is unavailable.`);
     return;
   }
   const control = row?.querySelector<HTMLElement>(selector);
-  if (!control) return;
+  if (!control) {
+    event.preventDefault();
+    const selectedRow = workspaceRows().indexOf(row) + 1;
+    announceAlert(`${columnNames[column]} is unavailable for row ${selectedRow}.`);
+    return;
+  }
   feedbackCoordinator.cancel();
   const boundary = finishEdit("navigation");
   if (boundary.status === "invalid") {
@@ -168,7 +193,7 @@ const onWorkspaceKeydown = (event: KeyboardEvent) => {
   }
   event.preventDefault();
   control.focus();
-  if (event.key === "7" || event.key === "8") control.click();
+  if (column === "7" || column === "8") control.click();
 };
 onMount(() => {
   draftInput?.focus();
@@ -186,7 +211,6 @@ onMount(() => {
   id="workspace"
   aria-labelledby="page-title"
   data-column-jump-active={columnJumpPending ? "true" : "false"}
-  data-column-jump-needs-row={columnJumpNeedsRow ? "true" : "false"}
 >
   <h1 id="page-title">OKLCH color checks</h1>
   <button
@@ -200,9 +224,8 @@ onMount(() => {
   <ShortcutHelpPopover trigger={shortcutHelpTrigger} />
   <LiveRegions status={$announcementStore.result} alert={$announcementStore.alert} />
   <p class="jump-prompt">
-    {columnJumpNeedsRow
-      ? "Select a color row before using column jump."
-      : "Column jump is active. Press 1 through 8, or Escape to cancel."}
+    Table jump is active. Press 1 through 8 for columns, Shift plus a digit for rows, or Escape to
+    cancel.
   </p>
   <WorkspaceTable
     candidate={$previewStore}
@@ -263,7 +286,7 @@ onMount(() => {
   font-weight: 720;
 }
 
-.workspace:is([data-column-jump-active="true"], [data-column-jump-needs-row="true"]) .jump-prompt {
+.workspace[data-column-jump-active="true"] .jump-prompt {
   visibility: visible;
 }
 </style>

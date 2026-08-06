@@ -479,17 +479,35 @@ test("associates an invalid CSS edit with its field error and clears the alert o
   await expect(page.getByRole("status")).toContainText("CSS color #000000. Checks updated.");
 });
 
-test("requires a populated row and cancels column jump without moving focus", async ({ page }) => {
+test("starts table jumps anywhere and navigates by column or row", async ({ page }) => {
   await page.goto("/");
   const draft = page.getByPlaceholder("fill color");
-  await page.keyboard.press("Control+.");
-  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
-  await expect(page.locator(".jump-prompt")).toHaveText(
-    "Select a color row before using column jump.",
-  );
   await addColor(page, "#ffffff");
+  await addColor(page, "#000000");
+  await addColor(page, "#ff0000");
+
+  const shortcutHelp = page.getByRole("button", { name: "Keyboard shortcuts" });
+  await shortcutHelp.focus();
+  await page.keyboard.press("Control+.");
+  await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
+  await page.keyboard.press("4");
+  await expect(page.getByRole("spinbutton", { name: "Chroma for row 1" })).toBeFocused();
+
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("Shift+3");
+  await expect(page.getByRole("spinbutton", { name: "Chroma for row 3" })).toBeFocused();
+
+  await shortcutHelp.focus();
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("Shift+2");
+  await expect(page.getByRole("button", { name: "Duplicate color 2" })).toBeFocused();
+
   const css = page.getByRole("textbox", { name: "CSS color for row 1" });
   await css.focus();
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("Shift+4");
+  await expect(draft).toBeFocused();
+
   await page.keyboard.press("Control+.");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "true");
   await draft.dispatchEvent("keydown", {
@@ -502,17 +520,25 @@ test("requires a populated row and cancels column jump without moving focus", as
   await page.keyboard.press("Escape");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
 
-  await draft.focus();
+  await css.focus();
   await page.keyboard.press("Control+.");
-  await page.keyboard.press("7");
-  await expect(draft).toBeFocused();
+  await page.keyboard.press("Shift+9");
+  await expect(css).toBeFocused();
+  await expect(page.getByRole("alert")).toHaveText("Row 9 is unavailable.");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
 
-  await css.focus();
   await page.keyboard.press("Control+.");
   await page.keyboard.press("9");
   await expect(page.locator("main")).toHaveAttribute("data-column-jump-active", "false");
   await expect(css).toBeFocused();
+
+  for (const color of ["#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff", "#808080"]) {
+    await addColor(page, color);
+  }
+  await css.focus();
+  await page.keyboard.press("Control+.");
+  await page.keyboard.press("Shift+0");
+  await expect(draft).toBeFocused();
 });
 
 test("keeps every opened popover accessible and restores its trigger focus", async ({ page }) => {
@@ -532,7 +558,7 @@ test("keeps every opened popover accessible and restores its trigger focus", asy
 
   await verifyPopover(/^Text contrast for row 1:/, "Text contrast — color 1");
   await verifyPopover(/^Checks for row 1:/, "Checks — color 1");
-  await verifyPopover("Keyboard shortcuts", "Column shortcuts");
+  await verifyPopover("Keyboard shortcuts", "Table shortcuts");
 });
 
 test("publishes one atomic status mutation for an accepted edit", async ({ page }) => {
@@ -581,7 +607,8 @@ test("mutates live regions when identical announcements are republished", async 
   await observeTextMutations(page, '[role="status"]', "repeated-status-mutations");
   await page.keyboard.press("Control+.");
   await page.keyboard.press("Control+.");
-  const shortcutMessage = "Column jump. Press 1 through 8. Escape cancels.";
+  const shortcutMessage =
+    "Table jump. Press 1 through 8 for columns. Press Shift plus a digit for rows; 0 selects row 10. Escape cancels.";
   await expect(page.getByRole("status")).toHaveText(shortcutMessage);
   await expect
     .poll(() =>
