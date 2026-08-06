@@ -1,9 +1,19 @@
 {
   "extends": "@logux/stylelint-config",
   "ignoreFiles": ["dist/**/*"],
+  "overrides": [
+    {
+      "files": ["**/*.svelte"],
+      "customSyntax": "postcss-html"
+    }
+  ],
   "rules": {
     "function-disallowed-list": ["rgb", "rgba", "hsl", "hsla"],
     "alpha-value-notation": "percentage",
-    "color-named": "never"
+    "color-named": "never",
+    "max-nesting-depth": 1,
+    "selector-max-compound-selectors": 5,
+    "selector-max-id": 0,
+    "selector-max-specificity": "0,3,1"
   }
 }
