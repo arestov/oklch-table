@@ -38,10 +38,10 @@ Windows runner is unavailable.
 | TC-14 | Feedback | `src/core/feedback/english-announcement.test.ts` | `renders edit, APCA, WCAG, and color-vision sections in deterministic order` | automated |
 | TC-15 | Feedback | `src/core/feedback/english-announcement.test.ts` | `orders lost support before restored support and omits unchanged sections` | automated |
 | TC-16 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
-| TC-17 | Browser | `tests/e2e/app.spec.ts` | `requires a populated row and cancels column jump without moving focus` | automated |
-| TC-18 | Browser | `tests/e2e/app.spec.ts` | `requires a populated row and cancels column jump without moving focus` | automated |
-| TC-19 | Browser | `tests/e2e/app.spec.ts` | `requires a populated row and cancels column jump without moving focus` | automated |
-| TC-20 | Browser | `tests/e2e/app.spec.ts` | `requires a populated row and cancels column jump without moving focus` | automated |
+| TC-17 | Browser | `tests/e2e/app.spec.ts` | `starts table jumps anywhere and navigates by column or row` | automated |
+| TC-18 | Browser | `tests/e2e/app.spec.ts` | `starts table jumps anywhere and navigates by column or row` | automated |
+| TC-19 | Browser | `tests/e2e/app.spec.ts` | `starts table jumps anywhere and navigates by column or row` | automated |
+| TC-20 | Browser | `tests/e2e/app.spec.ts` | `starts table jumps anywhere and navigates by column or row` | automated |
 | TC-21 | Browser | `tests/e2e/app.spec.ts` | `keeps invalid input focused and publishes only an alert` | automated |
 | TC-22 | Browser | `tests/e2e/app.spec.ts` | `preserves focus through duplicate, delete, shortcuts, and popover details` | automated |
 | TC-23 | Browser | `tests/e2e/app.spec.ts` | `keeps every opened popover accessible and restores its trigger focus` | automated |

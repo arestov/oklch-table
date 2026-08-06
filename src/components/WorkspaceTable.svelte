@@ -84,15 +84,20 @@ const presentation = $derived(buildWorkspacePresentation(candidate));
           {onFinishEdit}
         />
       {/each}
-      <tr class="workspace-row workspace-draft-row" data-draft="true">
+      <tr
+        class="workspace-row workspace-draft-row"
+        data-draft="true"
+        data-navigation-row={candidate.document.colors.order.length + 1}
+      >
         <th class="workspace-row-number" scope="row">
           {candidate.document.colors.order.length + 1}
         </th>
-        <td class="actions"></td>
-        <td class="draft-input-cell">
+        <td class="actions" data-navigation-column="actions"></td>
+        <td class="draft-input-cell" data-navigation-column="css">
           <input
             bind:this={draftInput}
             class="css-color"
+            data-navigation-target="css"
             type="text"
             value={draftRaw}
             placeholder="fill color"
