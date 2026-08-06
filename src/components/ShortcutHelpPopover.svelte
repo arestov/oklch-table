@@ -27,3 +27,50 @@ const manageFocus = () => {
     <p><kbd>Escape</kbd> closes an open popover or cancels the sequence.</p>
   </div>
 </section>
+
+<style>
+.help-dialog {
+  width: min(880px, calc(100vw - 28px));
+  max-height: min(82vh, 820px);
+  overflow: auto;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 60px oklch(0 0 0 / 25%);
+
+  &::backdrop {
+    background: oklch(0 0 0 / 15%);
+  }
+}
+
+.popover-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 18px;
+  padding: 17px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+
+  & h2 {
+    margin: 0;
+    font-size: 1.22rem;
+  }
+}
+
+.popover-body {
+  padding: 17px;
+}
+
+@media (forced-colors: active) {
+  .help-dialog {
+    forced-color-adjust: auto;
+  }
+}
+</style>
