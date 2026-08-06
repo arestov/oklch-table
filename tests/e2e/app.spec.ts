@@ -54,6 +54,21 @@ test("adds a color and keeps the workspace accessible", async ({ page }) => {
   await expectNoAxeViolations(page);
 });
 
+test("anchors keyboard shortcuts to the workspace corner", async ({ page }) => {
+  await page.goto("/");
+
+  const [workspace, shortcut] = await Promise.all([
+    page.locator(".workspace").boundingBox(),
+    page.getByRole("button", { name: "Keyboard shortcuts" }).boundingBox(),
+  ]);
+  expect(workspace).not.toBeNull();
+  expect(shortcut).not.toBeNull();
+  if (!workspace || !shortcut) return;
+
+  expect(shortcut.y).toBe(workspace.y);
+  expect(shortcut.x + shortcut.width).toBe(workspace.x + workspace.width);
+});
+
 test("adds a pasted CSS color immediately", async ({ page, context, browserName }) => {
   await page.goto("/");
 
